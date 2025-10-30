@@ -42,10 +42,12 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
 
   const navigation = [
     { name: "Dashboard", href: "/admin/dashboard", icon: "📊" },
+    { name: "Heat Map", href: "/admin/heat-map", icon: "🗺️" },
+    { name: "Fleet View", href: "/admin/fleet-map", icon: "🚗" },
     { name: "Users", href: "/admin/users", icon: "👥" },
-    { name: "Drivers", href: "/admin/drivers", icon: "🚗" },
+    { name: "Drivers", href: "/admin/drivers", icon: "🚙" },
     { name: "Pricing", href: "/admin/pricing", icon: "💰" },
-    { name: "Zones", href: "/admin/zones", icon: "🗺️" },
+    { name: "Zones", href: "/admin/zones", icon: "🌍" },
     { name: "Fleet", href: "/admin/fleet", icon: "🚛" },
     { name: "Analytics", href: "/admin/analytics", icon: "📈" },
     { name: "Wallet", href: "/admin/wallet", icon: "💳" },

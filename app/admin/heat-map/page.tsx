@@ -1,0 +1,285 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "@/utils/store/store";
+import { getAnalyticsHeatmap } from "@/utils/reducers/adminReducers";
+import { toast } from "react-hot-toast";
+import EnhancedHeatMap from "@/components/Admin/EnhancedHeatMap";
+
+export default function HeatMapPage() {
+  const dispatch = useAppDispatch();
+  const [viewMode, setViewMode] = useState<"overview" | "compare">("overview");
+  const [selectedZone, setSelectedZone] = useState<string>("all");
+  const [dateRange, setDateRange] = useState({
+    from: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    to: new Date().toISOString().split('T')[0],
+  });
+  const [tempDateRange, setTempDateRange] = useState(dateRange);
+
+  const { heatmap } = useAppSelector((state) => state.adminAnalytics);
+  const { zones } = useAppSelector((state) => state.zone);
+
+  // Mock zone data with ride counts (replace with real data)
+  const zoneData = zones.map(zone => ({
+    id: zone.id.toString(),
+    name: zone.name,
+    rideCount: Math.floor(Math.random() * 1000), // Replace with real data
+    parcelCount: 0,
+  }));
+
+  // Calculate total trips
+  const totalTrips = heatmap.data.reduce((sum, point) => sum + (point.weight || 1), 0);
+
+  // Generate daily trip data for the selected range
+  const generateDailyData = () => {
+    const days = [];
+    const start = new Date(dateRange.from);
+    const end = new Date(dateRange.to);
+    
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      const rides = Math.floor(Math.random() * 100); // Replace with real data
+      days.push({ date: dateStr, rides, parcels: 0 });
+    }
+    
+    return days;
+  };
+
+  const dailyData = generateDailyData();
+
+  const fetchHeatmapData = async () => {
+    try {
+      await dispatch(getAnalyticsHeatmap({
+        from: `${dateRange.from}T00:00:00`,
+        to: `${dateRange.to}T23:59:59`,
+      }));
+    } catch (error) {
+      console.error("Failed to fetch heatmap:", error);
+      toast.error("Failed to fetch heatmap data");
+    }
+  };
+
+  useEffect(() => {
+    fetchHeatmapData();
+  }, [dateRange]);
+
+  const handleSubmit = () => {
+    setDateRange(tempDateRange);
+  };
+
+  const handleReset = () => {
+    const defaultRange = {
+      from: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      to: new Date().toISOString().split('T')[0],
+    };
+    setTempDateRange(defaultRange);
+    setDateRange(defaultRange);
+    setSelectedZone("all");
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Trip Heat Map</h1>
+        <p className="text-gray-600">Monitor your trips from here</p>
+      </div>
+
+      {/* Filters Section */}
+      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+          {/* Zone Selector */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Zone
+            </label>
+            <select
+              value={selectedZone}
+              onChange={(e) => setSelectedZone(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
+            >
+              <option value="all">All Zones</option>
+              {zoneData.map((zone) => (
+                <option key={zone.id} value={zone.id}>
+                  {zone.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Date From */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              From Date
+            </label>
+            <input
+              type="date"
+              value={tempDateRange.from}
+              onChange={(e) => setTempDateRange({ ...tempDateRange, from: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
+            />
+          </div>
+
+          {/* Date To */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              To Date
+            </label>
+            <input
+              type="date"
+              value={tempDateRange.to}
+              onChange={(e) => setTempDateRange({ ...tempDateRange, to: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-end gap-2">
+            <button
+              onClick={handleReset}
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 font-medium"
+            >
+              RESET
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 font-medium"
+            >
+              SUBMIT
+            </button>
+          </div>
+        </div>
+
+        {/* View Mode Toggle */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => setViewMode("overview")}
+            className={`px-6 py-2 rounded-md font-medium transition-colors ${
+              viewMode === "overview"
+                ? "bg-teal-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setViewMode("compare")}
+            className={`px-6 py-2 rounded-md font-medium transition-colors ${
+              viewMode === "compare"
+                ? "bg-teal-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            Compare
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
+          <div className="text-sm text-gray-600">Total Trips</div>
+          <div className="text-2xl font-bold text-teal-600">{totalTrips}</div>
+        </div>
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
+          <div className="text-sm text-gray-600">Total Rides</div>
+          <div className="text-2xl font-bold text-blue-600">{totalTrips}</div>
+        </div>
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
+          <div className="text-sm text-gray-600">Total Parcels</div>
+          <div className="text-2xl font-bold text-purple-600">0</div>
+        </div>
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
+          <div className="text-sm text-gray-600">Active Zones</div>
+          <div className="text-2xl font-bold text-green-600">{zoneData.length}</div>
+        </div>
+      </div>
+
+      {/* Main Content - Overview Mode */}
+      {viewMode === "overview" && (
+        <div>
+          <EnhancedHeatMap
+            data={heatmap.data}
+            isLoading={heatmap.isLoading}
+            error={heatmap.error}
+            zones={zoneData}
+            onZoneSelect={setSelectedZone}
+            showZoneList={true}
+            mode="overview"
+          />
+        </div>
+      )}
+
+      {/* Main Content - Compare Mode */}
+      {viewMode === "compare" && (
+        <div className="space-y-6">
+          {/* Daily Trip List */}
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Daily Trip List</h3>
+            <div className="space-y-2">
+              {dailyData.slice(0, 4).map((day, index) => (
+                <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <span className="text-gray-700 font-medium">{day.date}</span>
+                  <span className="text-gray-600 text-sm">
+                    Ride: <span className="font-semibold text-teal-600">{day.rides}</span> | 
+                    Parcel: <span className="font-semibold text-purple-600">{day.parcels}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Comparison Maps Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {dailyData.slice(0, 4).map((day, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+                <div className="p-4 border-b border-gray-200 bg-teal-50">
+                  <h4 className="font-semibold text-gray-900">{day.date}</h4>
+                  <p className="text-sm text-gray-600">
+                    Rides: {day.rides} | Parcels: {day.parcels}
+                  </p>
+                </div>
+                <EnhancedHeatMap
+                  data={heatmap.data.slice(index * 5, (index + 1) * 5)} // Distribute data
+                  isLoading={false}
+                  error={null}
+                  showZoneList={false}
+                  mode="compare"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Trip Statistics Chart */}
+      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Trip Statistics</h3>
+          <div className="text-sm text-gray-600">
+            Total Trips: <span className="font-bold text-teal-600">{totalTrips}</span>
+          </div>
+        </div>
+        
+        {/* Simple Bar Chart */}
+        <div className="space-y-3">
+          {dailyData.map((day, index) => (
+            <div key={index} className="flex items-center gap-3">
+              <div className="w-24 text-sm text-gray-600 truncate">{day.date}</div>
+              <div className="flex-1">
+                <div className="bg-gray-200 rounded-full h-8 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-teal-500 to-teal-600 h-full flex items-center justify-end px-3 text-white text-sm font-medium transition-all duration-300"
+                    style={{ width: `${Math.min((day.rides / 100) * 100, 100)}%` }}
+                  >
+                    {day.rides > 0 && day.rides}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+

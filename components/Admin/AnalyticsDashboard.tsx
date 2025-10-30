@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useAppSelector } from "@/utils/store/store";
+import HeatMap from "./HeatMap";
 
 interface ErrorResponse {
   status?: number;
@@ -52,9 +53,18 @@ interface AnalyticsDashboardProps {
     isLoading: boolean;
     error: ErrorResponse | string | null;
   };
+  heatmap: {
+    data: Array<{
+      lat: number;
+      lng: number;
+      weight?: number;
+    }>;
+    isLoading: boolean;
+    error: ErrorResponse | string | null;
+  };
 }
 
-function AnalyticsDashboard({ dateRange, onDateRangeChange, stats, summary, recentActivities }: AnalyticsDashboardProps) {
+function AnalyticsDashboard({ dateRange, onDateRangeChange, stats, summary, recentActivities, heatmap }: AnalyticsDashboardProps) {
   const [mounted, setMounted] = useState(false);
   
   useEffect(() => {
@@ -310,19 +320,25 @@ function AnalyticsDashboard({ dateRange, onDateRangeChange, stats, summary, rece
         </div>
       </div>
 
-      {/* Heatmap Placeholder */}
+      {/* Ride Heatmap */}
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
         <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Ride Heatmap</h3>
-          <div className="bg-gray-100 rounded-lg p-8 text-center">
-            <div className="text-gray-500">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              <p className="mt-2 text-sm text-gray-500">Heatmap visualization will be displayed here</p>
-              <p className="text-xs text-gray-400">Integration with mapping service required</p>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">Ride Heatmap</h3>
+              <p className="text-sm text-gray-500">Geographic distribution of ride requests and pickups</p>
             </div>
+            {!heatmap.isLoading && !heatmap.error && heatmap.data.length > 0 && (
+              <div className="text-sm text-gray-600">
+                Showing {heatmap.data.length} locations
+              </div>
+            )}
           </div>
+          <HeatMap
+            data={heatmap.data}
+            isLoading={heatmap.isLoading}
+            error={heatmap.error ? getErrorMessage(heatmap.error) : null}
+          />
         </div>
       </div>
 

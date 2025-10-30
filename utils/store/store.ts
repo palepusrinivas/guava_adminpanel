@@ -6,6 +6,7 @@ import adminReducer from "@/utils/slices/adminSlice";
 import adminAnalyticsReducer from "@/utils/slices/adminAnalyticsSlice";
 import adminDashboardReducer from "@/utils/slices/adminDashboardSlice";
 import zoneReducer from "@/utils/slices/zoneSlice";
+import fleetReducer from "@/utils/slices/fleetSlice";
 import { useDispatch, useSelector } from "react-redux";
 const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ const store = configureStore({
     adminAnalytics: adminAnalyticsReducer,
     adminDashboard: adminDashboardReducer,
     zone: zoneReducer,
+    fleet: fleetReducer,
   },
 });
 

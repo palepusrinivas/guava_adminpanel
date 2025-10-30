@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/utils/store/store";
-import { getAnalyticsStats, getAnalyticsSummary, getRecentActivities } from "@/utils/reducers/adminReducers";
+import { getAnalyticsStats, getAnalyticsSummary, getRecentActivities, getAnalyticsHeatmap } from "@/utils/reducers/adminReducers";
 import { config } from "@/utils/config";
 import { toast } from "react-hot-toast";
 import AnalyticsDashboard from "@/components/Admin/AnalyticsDashboard";
@@ -13,7 +13,7 @@ export default function AdminAnalyticsPage() {
     to: new Date().toISOString().split('T')[0] + 'T23:59:59'
   });
 
-  const { stats, summary, recentActivities } = useAppSelector((state) => state.adminAnalytics);
+  const { stats, summary, recentActivities, heatmap } = useAppSelector((state) => state.adminAnalytics);
   
   const fetchAnalytics = async () => {
     if (!config.ENABLE_ANALYTICS) {
@@ -26,6 +26,7 @@ export default function AdminAnalyticsPage() {
         dispatch(getAnalyticsStats(dateRange)),
         dispatch(getAnalyticsSummary(dateRange)),
         dispatch(getRecentActivities({ limit: 10 })),
+        dispatch(getAnalyticsHeatmap(dateRange)),
       ]);
     } catch (error) {
       console.error("Failed to fetch analytics:", error);
@@ -45,6 +46,7 @@ export default function AdminAnalyticsPage() {
         stats={stats}
         summary={summary}
         recentActivities={recentActivities}
+        heatmap={heatmap}
       />
     </div>
   );
