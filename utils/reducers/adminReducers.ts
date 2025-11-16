@@ -650,7 +650,7 @@ export const updateDriverAccessConfig = createAsyncThunk(
 
 export const processDriverDailyFees = createAsyncThunk(
   "admin/processDriverDailyFees",
-  async (date?: string, { rejectWithValue }) => {
+  async ({ date }: { date?: string } = {}, { rejectWithValue }) => {
     try {
       const response = await adminAxios.post(adminDriverAccessProcessDailyFeesUrl, null, {
         params: date ? { date } : undefined,
@@ -1798,9 +1798,9 @@ export const getParcelFareSetupByZone = createAsyncThunk(
 // Transaction Management
 export const getTransactions = createAsyncThunk(
   "admin/getTransactions",
-  async (params?: { searchQuery?: string }, { rejectWithValue }) => {
+  async ({ searchQuery }: { searchQuery?: string } = {}, { rejectWithValue }) => {
     try {
-      const response = await adminAxios.get(adminTransactionsUrl, { params });
+      const response = await adminAxios.get(adminTransactionsUrl, { params: searchQuery ? { searchQuery } : undefined });
       return response.data;
     } catch (error) {
       return rejectWithValue(extractErrorMessage(error));
@@ -1823,9 +1823,9 @@ export const getTransactionById = createAsyncThunk(
 // Report Management
 export const getEarningReports = createAsyncThunk(
   "admin/getEarningReports",
-  async (params?: { timeRange?: string }, { rejectWithValue }) => {
+  async ({ timeRange }: { timeRange?: string } = {}, { rejectWithValue }) => {
     try {
-      const response = await adminAxios.get(adminEarningReportsUrl, { params });
+      const response = await adminAxios.get(adminEarningReportsUrl, { params: timeRange ? { timeRange } : undefined });
       return response.data;
     } catch (error) {
       return rejectWithValue(extractErrorMessage(error));
@@ -1835,9 +1835,9 @@ export const getEarningReports = createAsyncThunk(
 
 export const getExpenseReports = createAsyncThunk(
   "admin/getExpenseReports",
-  async (params?: { timeRange?: string }, { rejectWithValue }) => {
+  async ({ timeRange }: { timeRange?: string } = {}, { rejectWithValue }) => {
     try {
-      const response = await adminAxios.get(adminExpenseReportsUrl, { params });
+      const response = await adminAxios.get(adminExpenseReportsUrl, { params: timeRange ? { timeRange } : undefined });
       return response.data;
     } catch (error) {
       return rejectWithValue(extractErrorMessage(error));
@@ -1847,9 +1847,9 @@ export const getExpenseReports = createAsyncThunk(
 
 export const getZoneWiseStatistics = createAsyncThunk(
   "admin/getZoneWiseStatistics",
-  async (params?: { timeRange?: string }, { rejectWithValue }) => {
+  async ({ timeRange }: { timeRange?: string } = {}, { rejectWithValue }) => {
     try {
-      const response = await adminAxios.get(adminZoneWiseStatisticsUrl, { params });
+      const response = await adminAxios.get(adminZoneWiseStatisticsUrl, { params: timeRange ? { timeRange } : undefined });
       return response.data;
     } catch (error) {
       return rejectWithValue(extractErrorMessage(error));
@@ -1859,9 +1859,9 @@ export const getZoneWiseStatistics = createAsyncThunk(
 
 export const getTripWiseEarning = createAsyncThunk(
   "admin/getTripWiseEarning",
-  async (params?: { timeRange?: string }, { rejectWithValue }) => {
+  async ({ timeRange }: { timeRange?: string } = {}, { rejectWithValue }) => {
     try {
-      const response = await adminAxios.get(adminTripWiseEarningUrl, { params });
+      const response = await adminAxios.get(adminTripWiseEarningUrl, { params: timeRange ? { timeRange } : undefined });
       return response.data;
     } catch (error) {
       return rejectWithValue(extractErrorMessage(error));
@@ -1872,9 +1872,9 @@ export const getTripWiseEarning = createAsyncThunk(
 // Chatting Management
 export const getChattingDrivers = createAsyncThunk(
   "admin/getChattingDrivers",
-  async (params?: { searchQuery?: string }, { rejectWithValue }) => {
+  async ({ searchQuery }: { searchQuery?: string } = {}, { rejectWithValue }) => {
     try {
-      const response = await adminAxios.get(adminChattingDriversUrl, { params });
+      const response = await adminAxios.get(adminChattingDriversUrl, { params: searchQuery ? { searchQuery } : undefined });
       return response.data;
     } catch (error) {
       return rejectWithValue(extractErrorMessage(error));

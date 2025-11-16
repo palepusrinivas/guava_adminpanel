@@ -27,7 +27,7 @@ export default function TransactionList() {
   );
 
   useEffect(() => {
-    dispatch(getTransactions()).catch(() => {});
+    dispatch(getTransactions({})).catch(() => {});
   }, [dispatch]);
 
   const filteredTransactions = useMemo(() => {

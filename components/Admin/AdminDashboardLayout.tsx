@@ -49,7 +49,7 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
         { name: "Fleet View", href: "/admin/fleet-map", icon: "🚗" },
       ],
     },
-    ...(admin.role === "SUPER_ADMIN"
+    ...(admin && admin.role === "SUPER_ADMIN"
       ? [{
           title: "SUPER ADMIN",
           items: [

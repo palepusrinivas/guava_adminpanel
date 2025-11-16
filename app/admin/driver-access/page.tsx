@@ -118,7 +118,7 @@ export default function DriverAccessPage() {
     try {
       setLoading(true);
       setError(null);
-      await dispatch(processDriverDailyFees(processDate || undefined)).unwrap();
+      await dispatch(processDriverDailyFees({ date: processDate || undefined })).unwrap();
       // No list update required here; it's a server process action
     } catch (err: any) {
       setError(typeof err === "string" ? err : "Failed to process daily fees");

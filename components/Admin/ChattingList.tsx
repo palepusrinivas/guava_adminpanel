@@ -11,7 +11,7 @@ export default function ChattingList() {
   const [messageInput, setMessageInput] = useState("");
 
   useEffect(() => {
-    dispatch(getChattingDrivers()).catch(() => {});
+    dispatch(getChattingDrivers({})).catch(() => {});
   }, [dispatch]);
 
   useEffect(() => {
