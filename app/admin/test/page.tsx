@@ -105,7 +105,7 @@ export default function AdminTestPage() {
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
               <h3 className="font-medium text-gray-900">Backend Connection</h3>
-              <p className="text-sm text-gray-600">Base URL: https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net//p>
+              <p className="text-sm text-gray-600">Base URL: https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net</p>
               <p className="text-sm text-gray-600">Status: {error ? "❌ Error" : "✅ Ready"}</p>
             </div>
           </div>

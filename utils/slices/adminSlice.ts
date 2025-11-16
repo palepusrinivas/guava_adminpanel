@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { adminLoginUrl } from "../apiRoutes";
 import adminAxios from "../axiosConfig";
-import { config } from "../config";
+import { config, getApiUrl } from "../config";
 
 // Error Response Interface
 interface ErrorResponse {
@@ -82,7 +82,8 @@ export const adminLogin = createAsyncThunk(
     try {
       console.log("[adminSlice] Attempting login to:", config.ENDPOINTS.ADMIN.LOGIN);
       console.log("[adminSlice] Credentials:", { username: credentials.username, password: "***" });
-      const response = await adminAxios.post(config.ENDPOINTS.ADMIN.LOGIN, credentials);
+      const url = getApiUrl(config.ENDPOINTS.ADMIN.LOGIN);
+      const response = await adminAxios.post(url, credentials);
       try {
         console.log("[adminSlice] login response:", response.data);
       } catch (e) {}
