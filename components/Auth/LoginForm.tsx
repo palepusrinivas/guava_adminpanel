@@ -126,7 +126,7 @@ function LoginForm() {
               Welcome Back
             </Typography>
             <Typography variant="body2" className="text-gray-600">
-              Sign in to your RideFast account
+              Sign in to your Gauva account
             </Typography>
           </div>
 

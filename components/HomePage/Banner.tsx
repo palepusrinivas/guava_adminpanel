@@ -61,7 +61,7 @@ function Banner() {
             >
               <span className="text-white font-semibold">
                 Search
-                <span className="text-green-300"> RideFast</span>
+                <span className="text-green-300"> Gauva Mobility Services </span>
               </span>
               <ArrowRightIcon className="text-green-300 ml-2" />
             </Button>

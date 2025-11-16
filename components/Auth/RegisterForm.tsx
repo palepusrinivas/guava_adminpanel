@@ -107,7 +107,7 @@ function RegisterForm() {
               Create Account
             </Typography>
             <Typography variant="body2" className="text-gray-600">
-              Join RideFast and start your journey
+              Join Gauva Mobility Services and start your journey
             </Typography>
           </div>
 

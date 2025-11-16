@@ -72,6 +72,7 @@ export default function AdminLoginPage() {
       <div className="max-w-md w-full">
         <div className="bg-white rounded-lg shadow-xl p-8">
           <div className="text-center mb-8">
+            <h4 className="text-2xl font-bold text-gray-900 mb-2" style={{ color: "#2CC963" }}>Gauva Mobility Services</h4>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Portal</h1>
             <p className="text-gray-600">Sign in to access the admin dashboard</p>
           </div>
