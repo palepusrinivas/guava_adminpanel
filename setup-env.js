@@ -5,7 +5,7 @@ const path = require('path');
 
 // Environment variables template
 const envTemplate = `# API Configuration
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+NEXT_PUBLIC_API_BASE_URL=https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net
 NEXT_PUBLIC_LOCATIONIQ_API_KEY=pk.1dca78a113a7c45533e83e6c9f2196ae
 
 # App Configuration

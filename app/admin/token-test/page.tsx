@@ -11,7 +11,7 @@ export default function TokenTestPage() {
   const testTokenInRequest = async () => {
     try {
       // This will show us if the token is being added to requests
-      const response = await adminAxios.get("http://localhost:8080/api/admin/users?page=0&size=1");
+      const response = await adminAxios.get("https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/admin/users?page=0&size=1");
     setTestResults(prev => ({ ...prev, tokenTest: "✅ Request successful with token" }));
     } catch (error: any) {
       if (error.response?.status === 401) {
@@ -25,7 +25,7 @@ export default function TokenTestPage() {
   const testWithoutToken = async () => {
     try {
       // This will fail without token
-      const response = await adminAxios.get("http://localhost:8080/api/admin/users?page=0&size=1");
+      const response = await adminAxios.get("https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/admin/users?page=0&size=1");
   setTestResults(prev => ({ ...prev, noTokenTest: "✅ Request successful" }));
     } catch (error: any) {
       if (error.response?.status === 401) {

@@ -45,7 +45,7 @@ npm install
 3. Create environment variables:
 Create a `.env.local` file in the root directory:
 ```env
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+NEXT_PUBLIC_API_BASE_URL=https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net
 NEXT_PUBLIC_LOCATIONIQ_API_KEY=your_locationiq_api_key
 NEXT_PUBLIC_APP_NAME=RideFast
 NEXT_PUBLIC_APP_DESCRIPTION=A Ride Sharing Application similar to that of Rapido or Ola where a customer can book their ride conveniently
@@ -93,7 +93,7 @@ ride_fast_frontend/
 
 ## API Integration
 
-The application integrates with a backend API that should be running on `http://localhost:8080` by default. The API endpoints include:
+The application integrates with a backend API that should be running on `https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net` by default. The API endpoints include:
 
 - Authentication (login, register, profile)
 - Ride management (request, accept, start, complete)

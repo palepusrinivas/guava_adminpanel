@@ -133,7 +133,7 @@ export const completeRide = createAsyncThunk(
 export const getRideById = createAsyncThunk(
   "ride/getride",
   async (rideData: { rideId: number; token: string }, { rejectWithValue }) => {
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net";
     try {
       const response = await axios.get(`${API_BASE_URL}/api/v1/ride/${rideData.rideId}`, {
         headers: {

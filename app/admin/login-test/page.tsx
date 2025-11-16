@@ -66,10 +66,10 @@ export default function LoginTestPage() {
         <div className="bg-white p-6 rounded-lg shadow mt-6">
           <h2 className="text-lg font-semibold mb-4">API Endpoints</h2>
           <div className="text-sm space-y-1">
-            <p><strong>Login:</strong> POST http://localhost:8080/api/v1/admin/login</p>
-            <p><strong>Users:</strong> GET http://localhost:8080/api/admin/users</p>
-            <p><strong>Drivers:</strong> GET http://localhost:8080/api/admin/drivers</p>
-            <p><strong>Fleet:</strong> GET http://localhost:8080/api/admin/fleet/locations</p>
+            <p><strong>Login:</strong> POST https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/v1/admin/login</p>
+            <p><strong>Users:</strong> GET https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/admin/users</p>
+            <p><strong>Drivers:</strong> GET https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/admin/drivers</p>
+            <p><strong>Fleet:</strong> GET https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/admin/fleet/locations</p>
           </div>
         </div>
       </div>

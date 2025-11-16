@@ -105,7 +105,7 @@ export default function AdminTestPage() {
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
               <h3 className="font-medium text-gray-900">Backend Connection</h3>
-              <p className="text-sm text-gray-600">Base URL: http://localhost:8080</p>
+              <p className="text-sm text-gray-600">Base URL: https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net//p>
               <p className="text-sm text-gray-600">Status: {error ? "❌ Error" : "✅ Ready"}</p>
             </div>
           </div>
@@ -173,19 +173,19 @@ export default function AdminTestPage() {
           <h2 className="text-lg font-semibold text-gray-700 mb-4">API Endpoints</h2>
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="space-y-2 text-sm">
-              <div><strong>Admin Login:</strong> POST http://localhost:8080/api/v1/admin/login</div>
-              <div><strong>Get Users:</strong> GET http://localhost:8080/api/admin/users</div>
-              <div><strong>Get Drivers:</strong> GET http://localhost:8080/api/admin/drivers</div>
-              <div><strong>Get Pricing:</strong> GET http://localhost:8080/api/v1/admin/pricing</div>
-              <div><strong>Get Zones:</strong> GET http://localhost:8080/api/admin/zones</div>
-              <div><strong>Fleet Locations:</strong> GET http://localhost:8080/api/admin/fleet/locations</div>
+              <div><strong>Admin Login:</strong> POST https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/v1/admin/login</div>
+              <div><strong>Get Users:</strong> GET https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/admin/users</div>
+              <div><strong>Get Drivers:</strong> GET https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/admin/drivers</div>
+              <div><strong>Get Pricing:</strong> GET https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/v1/admin/pricing</div>
+              <div><strong>Get Zones:</strong> GET https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/admin/zones</div>
+              <div><strong>Fleet Locations:</strong> GET https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/admin/fleet/locations</div>
             </div>
           </div>
         </div>
 
         <div className="text-sm text-gray-600">
           <p><strong>Note:</strong> This test page helps verify that the admin panel can connect to your backend API.</p>
-          <p>Make sure your backend is running on http://localhost:8080 before running tests.</p>
+          <p>Make sure your backend is running on https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net before running tests.</p>
         </div>
       </div>
     </div>

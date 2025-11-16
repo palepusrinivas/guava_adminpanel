@@ -1,9 +1,10 @@
 import axios from "axios";
+import { config } from "./config";
 
 // Create axios instance for admin requests
-// Using empty baseURL since we're using Next.js rewrites to proxy to the backend
+// Use configured API base URL for both server and client
 const adminAxios = axios.create({
-  baseURL: typeof window !== "undefined" ? "" : "http://localhost:8080",
+  baseURL: config.API_BASE_URL,
 });
 
 // Request interceptor to add Bearer token
