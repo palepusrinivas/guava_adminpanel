@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { adminLoginUrl } from "../apiRoutes";
+import adminAxios from "../axiosConfig";
+import { config } from "../config";
 
 // Error Response Interface
 interface ErrorResponse {
@@ -44,6 +46,26 @@ const initialState: AdminAuthState = {
 
 // Admin Login Async Thunk
 const extractErrorMessage = (error: unknown): string => {
+  if (axios.isAxiosError(error)) {
+    const status = error.response?.status;
+    const errorData = error.response?.data;
+    
+    // Map common HTTP statuses to friendly messages
+    if (status === 500) return "Server error (500) - Backend encountered an error";
+    if (status === 404) return "Endpoint not found (404)";
+    if (status === 401) return "Invalid credentials";
+    if (status === 403) return "Permission denied (403)";
+    if (status === 501) return "This feature is not available (501)";
+    
+    // Try to extract message from response
+    if (errorData && typeof errorData === 'object' && 'message' in errorData) {
+      return (errorData as ErrorResponse).message;
+    }
+    if (typeof errorData === 'string') {
+      return errorData;
+    }
+    return error.message || "An unexpected error occurred";
+  }
   if (typeof error === 'string') return error;
   if (error && typeof error === 'object') {
     if ('message' in error) return (error as ErrorResponse).message;
@@ -58,14 +80,22 @@ export const adminLogin = createAsyncThunk(
   "admin/login",
   async (credentials: { username: string; password: string }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(adminLoginUrl, credentials);
+      console.log("[adminSlice] Attempting login to:", config.ENDPOINTS.ADMIN.LOGIN);
+      console.log("[adminSlice] Credentials:", { username: credentials.username, password: "***" });
+      const response = await adminAxios.post(config.ENDPOINTS.ADMIN.LOGIN, credentials);
       try {
         console.log("[adminSlice] login response:", response.data);
       } catch (e) {}
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        return rejectWithValue(extractErrorMessage(error.response?.data) || "Login failed");
+        console.error("[adminSlice] Login error details:", {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          config: { url: error.config?.url, method: error.config?.method }
+        });
+        return rejectWithValue(extractErrorMessage(error) || "Login failed");
       }
       return rejectWithValue("An unknown error occurred");
     }

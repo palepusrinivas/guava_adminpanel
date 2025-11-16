@@ -58,19 +58,22 @@ const HeatMap: React.FC<HeatMapProps> = ({
   const heatmapData = useMemo(() => {
     if (!isLoaded || !data || data.length === 0) return [];
     
-    return data.map((point) => {
-      const location = new google.maps.LatLng(point.lat, point.lng);
-      
-      // If weight is provided, create weighted location
-      if (point.weight !== undefined) {
+    // Check if any point has weight to determine the format
+    const hasWeights = data.some(point => point.weight !== undefined);
+    
+    if (hasWeights) {
+      // All points should be weighted
+      return data.map((point) => {
+        const location = new google.maps.LatLng(point.lat, point.lng);
         return {
           location,
-          weight: point.weight,
+          weight: point.weight || 1,
         };
-      }
-      
-      return location;
-    });
+      });
+    } else {
+      // All points are simple LatLng
+      return data.map((point) => new google.maps.LatLng(point.lat, point.lng));
+    }
   }, [data, isLoaded]);
 
   const heatmapOptions = useMemo(

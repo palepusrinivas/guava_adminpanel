@@ -47,45 +47,45 @@ const fareValidationSchema: Yup.ObjectSchema<TripFarePayload> = Yup.object({
     .min(0, "Per km rate must be non-negative"),
 
   timeRatePerMinOverride: Yup.number()
-    .transform((v) => (isNaN(v) ? undefined : v))
+    .transform((v) => (isNaN(v) || v === null || v === undefined ? undefined : v))
     .min(0, "Time rate must be non-negative")
-    .nullable(),
+    .optional(),
 
   waitingFeePerMin: Yup.number()
-    .transform((v) => (isNaN(v) ? undefined : v))
+    .transform((v) => (isNaN(v) || v === null || v === undefined ? undefined : v))
     .min(0, "Waiting fee must be non-negative")
-    .nullable(),
+    .optional(),
 
   cancellationFeePercent: Yup.number()
-    .transform((v) => (isNaN(v) ? undefined : v))
+    .transform((v) => (isNaN(v) || v === null || v === undefined ? undefined : v))
     .min(0, "Cancellation fee must be non-negative")
     .max(100, "Cancellation fee cannot exceed 100%")
-    .nullable(),
+    .optional(),
 
   minCancellationFee: Yup.number()
-    .transform((v) => (isNaN(v) ? undefined : v))
+    .transform((v) => (isNaN(v) || v === null || v === undefined ? undefined : v))
     .min(0, "Minimum cancellation fee must be non-negative")
-    .nullable(),
+    .optional(),
 
   idleFeePerMin: Yup.number()
-    .transform((v) => (isNaN(v) ? undefined : v))
+    .transform((v) => (isNaN(v) || v === null || v === undefined ? undefined : v))
     .min(0, "Idle fee must be non-negative")
-    .nullable(),
+    .optional(),
 
   tripDelayFeePerMin: Yup.number()
-    .transform((v) => (isNaN(v) ? undefined : v))
+    .transform((v) => (isNaN(v) || v === null || v === undefined ? undefined : v))
     .min(0, "Trip delay fee must be non-negative")
-    .nullable(),
+    .optional(),
 
   penaltyFeeForCancel: Yup.number()
-    .transform((v) => (isNaN(v) ? undefined : v))
+    .transform((v) => (isNaN(v) || v === null || v === undefined ? undefined : v))
     .min(0, "Penalty fee must be non-negative")
-    .nullable(),
+    .optional(),
 
   feeAddToNext: Yup.number()
-    .transform((v) => (isNaN(v) ? undefined : v))
+    .transform((v) => (isNaN(v) || v === null || v === undefined ? undefined : v))
     .min(0, "Additional fee must be non-negative")
-    .nullable(),
+    .optional(),
 }).test(
   "category-identifier",
   "One of Category ID, Type, or Name must be provided",

@@ -59,18 +59,30 @@ export default function AdminDashboard() {
   const { stats, recentActivities, leaderboard, transactions, trips } =
     dashboardData || {};
 
+  const token = useAppSelector((state) => state.admin.token);
+
   useEffect(() => {
-    dispatch(getDashboardStats());
-    dispatch(getRecentActivities({ limit: 5 }));
-    dispatch(getLeaderboardData({ timeframe: 'week' }));
-  }, [dispatch]);
+    // Only fetch data if we have a token
+    if (token) {
+      dispatch(getDashboardStats());
+      dispatch(getRecentActivities({ limit: 5 }));
+      dispatch(getLeaderboardData({ timeframe: 'week' }));
+    }
+  }, [dispatch, token]);
 
   const renderError = (error: string, title: string) => (
-    <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-      <h2 className="text-lg font-medium text-red-800 mb-2">{title}</h2>
-      <p className="text-sm text-red-700">
-        {error === "Failed to fetch dashboard stats" ||
-        error === "Failed to fetch recent activities"
+    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+      <h2 className="text-lg font-medium text-yellow-800 mb-2">{title}</h2>
+      <p className="text-sm text-yellow-700">
+        {error === "Server error (500)" || 
+         error === "This feature is not available on the server (501)" ||
+         error.includes("500") ||
+         error.includes("501") ||
+         error.includes("404")
+          ? "This feature requires backend API implementation. The dashboard will display data once the backend endpoints are ready."
+          : error === "Failed to fetch dashboard stats" ||
+            error === "Failed to calculate dashboard stats" ||
+            error === "Failed to fetch recent activities"
           ? "This feature is currently unavailable. Please try again later."
           : error}
       </p>

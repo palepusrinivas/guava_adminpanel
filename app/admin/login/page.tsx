@@ -11,6 +11,11 @@ export default function AdminLoginPage() {
   const { admin, token, isLoading, error } = useAppSelector((state) => state.admin);
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     // Check if admin is already logged in
@@ -48,6 +53,18 @@ export default function AdminLoginPage() {
       [e.target.name]: e.target.value
     });
   };
+
+  // Don't render during SSR to avoid hydration mismatches from browser extensions
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-pulse">
+          <div className="h-8 w-32 bg-gray-200 rounded mb-4"></div>
+          <div className="h-4 w-48 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     // suppressHydrationWarning at page root to avoid React warning when extensions mutate DOM

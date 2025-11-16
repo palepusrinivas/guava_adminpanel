@@ -40,18 +40,253 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
     router.push("/admin/login");
   };
 
-  const navigation = [
-    { name: "Dashboard", href: "/admin/dashboard", icon: "📊" },
-    { name: "Heat Map", href: "/admin/heat-map", icon: "🗺️" },
-    { name: "Fleet View", href: "/admin/fleet-map", icon: "🚗" },
-    { name: "Users", href: "/admin/users", icon: "👥" },
-    { name: "Drivers", href: "/admin/drivers", icon: "🚙" },
-    { name: "Pricing", href: "/admin/pricing", icon: "💰" },
-    { name: "Zones", href: "/admin/zones", icon: "🌍" },
-    { name: "Fleet", href: "/admin/fleet", icon: "🚛" },
-    { name: "Analytics", href: "/admin/analytics", icon: "📈" },
-    { name: "Wallet", href: "/admin/wallet", icon: "💳" },
+  const navigationSections = [
+    {
+      title: "DASHBOARD",
+      items: [
+        { name: "Dashboard", href: "/admin/dashboard", icon: "📊" },
+        { name: "Heat Map", href: "/admin/heat-map", icon: "🗺️" },
+        { name: "Fleet View", href: "/admin/fleet-map", icon: "🚗" },
+      ],
+    },
+    ...(admin.role === "SUPER_ADMIN"
+      ? [{
+          title: "SUPER ADMIN",
+          items: [
+            {
+              name: "Admins",
+              href: "/admin/superadmin/admins",
+              icon: "🧑‍💼",
+            },
+            {
+              name: "API Keys",
+              href: "/admin/superadmin/keys",
+              icon: "🔑",
+            },
+          ],
+        }]
+      : []),
+    {
+      title: "ZONE MANAGEMENT",
+      items: [
+        { name: "Zones", href: "/admin/zones", icon: "🌍" },
+      ],
+    },
+    {
+      title: "TRIP MANAGEMENT",
+      items: [
+        { name: "Trips", href: "/admin/trips", icon: "🚕" },
+      ],
+    },
+    {
+      title: "SCHOOL TRANSPORT",
+      items: [
+        { name: "Overview", href: "/admin/school", icon: "🏫" },
+        { name: "Institutions", href: "/admin/school/institutions", icon: "🏢" },
+        { name: "All Branches", href: "/admin/school/branches", icon: "🏬" },
+        { name: "Students Upload", href: "/admin/school/students/upload", icon: "📄" },
+      ],
+    },
+    {
+      title: "PROMOTION MANAGEMENT",
+      items: [
+        { name: "Banner Setup", href: "/admin/banner-setup", icon: "🎯" },
+        {
+          name: "Coupon Setup",
+          icon: "🏷️",
+          children: [
+            { name: "Coupon List", href: "/admin/coupons" },
+            { name: "Add New Coupon", href: "/admin/coupons/new" },
+          ],
+        },
+        {
+          name: "Discount Setup",
+          icon: "💸",
+          children: [
+            { name: "Discount List", href: "/admin/discounts" },
+            { name: "Add New Discount", href: "/admin/discounts/new" },
+          ],
+        },
+      ],
+    },
+    {
+      title: "USER MANAGEMENT",
+      items: [
+        { name: "Users", href: "/admin/users", icon: "👥" },
+        { name: "Drivers", href: "/admin/drivers", icon: "🚙" },
+        {
+          name: "Driver Level Setup",
+          icon: "🧭",
+          children: [
+            { name: "Driver Levels", href: "/admin/driver-levels" },
+            { name: "Add Driver Level", href: "/admin/driver-levels/new" },
+          ],
+        },
+        {
+          name: "Driver Setup",
+          icon: "🚖",
+          children: [
+            { name: "Driver List", href: "/admin/driver-setup" },
+            { name: "Add New Driver", href: "/admin/driver-setup/new" },
+            { name: "Driver Identity Request List", href: "/admin/driver-setup/identity-requests" },
+            { name: "Driver Access Rules", href: "/admin/driver-access" },
+          ],
+        },
+        {
+          name: "Customer Level Setup",
+          icon: "🧑‍💼",
+          children: [
+            { name: "Customer Levels", href: "/admin/customer-levels" },
+            { name: "Add Customer Level", href: "/admin/customer-levels/new" },
+          ],
+        },
+        {
+          name: "Customer Setup",
+          icon: "👤",
+          children: [
+            { name: "Customer List", href: "/admin/customer" },
+            { name: "Add New Customer", href: "/admin/customer/create" },
+          ],
+        },
+        { name: "Customer Wallet", href: "/admin/customer/wallet", icon: "💳" },
+        {
+          name: "Withdraw",
+          icon: "💳",
+          children: [
+            { name: "Method List", href: "/admin/withdraw/methods" },
+            { name: "Add Method", href: "/admin/withdraw/methods/new" },
+            { name: "Withdraw Requests", href: "/admin/withdraw/requests" },
+          ],
+        },
+        {
+          name: "Employee Setup",
+          icon: "👥",
+          children: [
+            { name: "Attribute Setup", href: "/admin/employee/role" },
+            { name: "Employee List", href: "/admin/employee" },
+            { name: "Add New Employee", href: "/admin/employee/create" },
+          ],
+        },
+      ],
+    },
+    {
+      title: "PARCEL MANAGEMENT",
+      items: [
+        {
+          name: "Parcel attributes",
+          icon: "📦",
+          children: [
+            { name: "Parcel categories", href: "/admin/parcel/attribute/category" },
+            { name: "Parcel weights", href: "/admin/parcel/attribute/weight" },
+          ],
+        },
+      ],
+    },
+    {
+      title: "VEHICLES MANAGEMENT",
+      items: [
+        {
+          name: "Vehicle Attribute Setup",
+          icon: "🚗",
+          children: [
+            { name: "Vehicle Attribute Setup", href: "/admin/vehicle/attribute-setup" },
+            { name: "Vehicle List", href: "/admin/vehicle" },
+            { name: "New Vehicle Request List", href: "/admin/vehicle/request/list" },
+            { name: "Update Vehicle Request List", href: "/admin/vehicle/update/list" },
+            { name: "Add New Vehicle", href: "/admin/vehicle/create" },
+          ],
+        },
+      ],
+    },
+    {
+      title: "FARE MANAGEMENT",
+      items: [
+        { name: "Trip Fare Setup", href: "/admin/fare/trip", icon: "💎" },
+        { name: "Parcel Delivery Fare Setup", href: "/admin/fare/parcel", icon: "📦" },
+      ],
+    },
+    {
+      title: "TRANSACTIONS & REPORTS",
+      items: [
+        { name: "Transactions", href: "/admin/transaction", icon: "📄" },
+        { name: "Reports", href: "/admin/report/earning", icon: "📊" },
+      ],
+    },
+    {
+      title: "HELP & SUPPORT",
+      items: [
+        { name: "Chatting", href: "/admin/chatting", icon: "💬" },
+      ],
+    },
+    {
+      title: "BUSINESS MANAGEMENT",
+      items: [
+        {
+          name: "Business Setup",
+          icon: "💼",
+          children: [
+            { name: "Business Info", href: "/admin/business/setup/info" },
+            { name: "Driver", href: "/admin/business/setup/driver" },
+            { name: "Customer", href: "/admin/business/setup/customer" },
+            { name: "Fare & Penalty Settings", href: "/admin/business/setup/trip-fare/penalty" },
+            { name: "Trips", href: "/admin/business/setup/trip-fare/trips" },
+            { name: "Settings", href: "/admin/business/setup/info/settings" },
+            { name: "Parcel", href: "/admin/business/setup/parcel" },
+            { name: "Refund", href: "/admin/business/setup/refund" },
+            { name: "Safety & Precautions", href: "/admin/business/setup/safety" },
+            { name: "Referral earning", href: "/admin/business/setup/referral" },
+            { name: "Chatting setup", href: "/admin/business/setup/chatting" },
+          ],
+        },
+        {
+          name: "Pages & Media",
+          icon: "📄",
+          children: [
+            { name: "Business Pages", href: "/admin/business/pages-media/business-page" },
+            { name: "Landing Page Setup", href: "/admin/business/pages-media/landing-page" },
+            { name: "Social Media Links", href: "/admin/business/pages-media/social-media" },
+          ],
+        },
+        {
+          name: "Configurations",
+          icon: "⚙️",
+          children: [
+            { name: "Notification", href: "/admin/business/configuration/notification/regular-trip" },
+            { name: "3rd Party", href: "/admin/business/configuration/third-party" },
+          ],
+        },
+      ],
+    },
+    {
+      title: "OTHER",
+      items: [
+        { name: "Pricing", href: "/admin/pricing", icon: "💰" },
+        { name: "Fleet", href: "/admin/fleet", icon: "🚛" },
+        { name: "Analytics", href: "/admin/analytics", icon: "📈" },
+        { name: "Wallet", href: "/admin/wallet", icon: "💳" },
+      ],
+    },
   ];
+
+  // Flatten for breadcrumb and title lookup (includes nested children)
+  const navigation = navigationSections.flatMap(section => section.items.flatMap((it: any) => it.children ? it.children : [it]));
+
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    "Coupon Setup": true,
+    "Discount Setup": true,
+    "Driver Level Setup": true,
+    "Driver Setup": true,
+    "Customer Level Setup": true,
+    "Customer Setup": true,
+    "Withdraw": true,
+    "Employee Setup": true,
+    "Parcel attributes": true,
+    "Vehicle Attribute Setup": true,
+    "Business Setup": true,
+    "Pages & Media": true,
+    "Configurations": true,
+  });
+  const toggleGroup = (name: string) => setOpenGroups((s) => ({ ...s, [name]: !s[name] }));
 
   // Don't render anything until after hydration
   if (!mounted || !token || !admin) {
@@ -87,24 +322,55 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
             <div className="flex-shrink-0 flex items-center px-4">
               <h1 className="text-xl font-bold text-gray-900">Admin Portal</h1>
             </div>
-            <nav className="mt-5 px-2 space-y-1">
-              {navigation.map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`${
-                      isActive
-                        ? "bg-blue-100 text-blue-900"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    } group flex items-center px-2 py-2 text-base font-medium rounded-md`}
-                  >
-                    <span className="mr-3">{item.icon}</span>
-                    {item.name}
-                  </Link>
-                );
-              })}
+            <nav className="mt-5 px-2 space-y-4">
+              {navigationSections.map((section) => (
+                <div key={section.title}>
+                  <h3 className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                    {section.title}
+                  </h3>
+                  <div className="space-y-1">
+                    {section.items.map((item: any) => {
+                      if (item.children) {
+                        const isOpen = openGroups[item.name];
+                        return (
+                          <div key={item.name}>
+                            <button
+                              onClick={() => toggleGroup(item.name)}
+                              className="w-full flex items-center justify-between px-2 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md"
+                            >
+                              <span className="flex items-center"><span className="mr-3">{item.icon}</span>{item.name}</span>
+                              <span className="text-gray-400">{isOpen ? "▾" : "▸"}</span>
+                            </button>
+                            {isOpen && (
+                              <div className="ml-6 space-y-1">
+                                {item.children.map((child: any) => {
+                                  const isActive = pathname === child.href;
+                                  return (
+                                    <Link
+                                      key={child.name}
+                                      href={child.href}
+                                      className={`${isActive ? "bg-teal-100 text-teal-900" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"} block px-2 py-2 text-sm rounded-md`}
+                                    >
+                                      {child.name}
+                                    </Link>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+                      const isActive = pathname === item.href;
+                      return (
+                        <Link key={item.name} href={item.href} className={`${isActive ? "bg-teal-100 text-teal-900" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"} group flex items-center px-2 py-2 text-base font-medium rounded-md`}>
+                          <span className="mr-3">{item.icon}</span>
+                          {item.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </nav>
           </div>
         </div>
@@ -118,24 +384,55 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
               <div className="flex items-center flex-shrink-0 px-4">
                 <h1 className="text-xl font-bold text-gray-900">Admin Portal</h1>
               </div>
-              <nav className="mt-5 flex-1 px-2 space-y-1">
-                {navigation.map((item) => {
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className={`${
-                        isActive
-                          ? "bg-blue-100 text-blue-900"
-                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                      } group flex items-center px-2 py-2 text-sm font-medium rounded-md`}
-                    >
-                      <span className="mr-3">{item.icon}</span>
-                      {item.name}
-                    </Link>
-                  );
-                })}
+              <nav className="mt-5 flex-1 px-2 space-y-4">
+                {navigationSections.map((section) => (
+                  <div key={section.title}>
+                    <h3 className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                      {section.title}
+                    </h3>
+                    <div className="space-y-1">
+                      {section.items.map((item: any) => {
+                        if (item.children) {
+                          const isOpen = openGroups[item.name];
+                          return (
+                            <div key={item.name}>
+                              <button
+                                onClick={() => toggleGroup(item.name)}
+                                className="w-full flex items-center justify-between px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md"
+                              >
+                                <span className="flex items-center"><span className="mr-3">{item.icon}</span>{item.name}</span>
+                                <span className="text-gray-400">{isOpen ? "▾" : "▸"}</span>
+                              </button>
+                              {isOpen && (
+                                <div className="ml-6 space-y-1">
+                                  {item.children.map((child: any) => {
+                                    const isActive = pathname === child.href;
+                                    return (
+                                      <Link
+                                        key={child.name}
+                                        href={child.href}
+                                        className={`${isActive ? "bg-teal-100 text-teal-900" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"} block px-2 py-2 text-sm rounded-md`}
+                                      >
+                                        {child.name}
+                                      </Link>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+                        const isActive = pathname === item.href;
+                        return (
+                          <Link key={item.name} href={item.href} className={`${isActive ? "bg-teal-100 text-teal-900" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"} group flex items-center px-2 py-2 text-sm font-medium rounded-md`}>
+                            <span className="mr-3">{item.icon}</span>
+                            {item.name}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </nav>
             </div>
             <div className="flex-shrink-0 flex border-t border-gray-200 p-4">

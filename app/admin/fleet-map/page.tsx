@@ -61,52 +61,8 @@ export default function FleetMapPage() {
     },
   }));
 
-  // Fallback to mock data if API returns empty
-  const mockDrivers: Driver[] = [
-    {
-      id: "1",
-      name: "Kadimi Anathalakshmi",
-      phone: "+91-9876543210",
-      vehicleNo: "N/A",
-      model: "N/A",
-      status: "available",
-      isNew: true,
-      position: { lat: 16.9902, lng: 82.2475 },
-    },
-    {
-      id: "2",
-      name: "Konki Naresh",
-      phone: "+91-9876543211",
-      vehicleNo: "N/A",
-      model: "N/A",
-      status: "available",
-      isNew: true,
-      position: { lat: 17.0000, lng: 82.2500 },
-    },
-    {
-      id: "3",
-      name: "Varshini Inje",
-      phone: "+91-9876543212",
-      vehicleNo: "29298338",
-      model: "Maxima Electric (6-Seater)",
-      status: "on-trip",
-      isNew: false,
-      position: { lat: 16.9850, lng: 82.2400 },
-    },
-    {
-      id: "4",
-      name: "Ramesh Kumar",
-      phone: "+91-9876543213",
-      vehicleNo: "AP09XY1234",
-      model: "Honda Activa",
-      status: "idle",
-      isNew: false,
-      position: { lat: 17.0050, lng: 82.2600 },
-    },
-  ];
-
-  // Use API data if available, otherwise use mock data
-  const allDrivers = apiDrivers.length > 0 ? apiDrivers : mockDrivers;
+  // Use only API data (no mock/fallback)
+  const allDrivers = apiDrivers;
 
   // Filter drivers based on active tab
   const filteredDrivers = allDrivers.filter((driver) => {
@@ -186,7 +142,7 @@ export default function FleetMapPage() {
         )}
         {fleetError && !fleetLoading && (
           <div className="mt-2 text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded-md">
-            ⚠️ {fleetError} - Showing demo data
+            ⚠️ {fleetError}
           </div>
         )}
       </div>
@@ -334,8 +290,15 @@ export default function FleetMapPage() {
                           title={`${cluster.count} driver(s)`}
                           onClick={() => {
                             // If it's a single driver, show details
-                            if (cluster.count === 1 && cluster.drivers.length === 1) {
-                              setSelectedDriver(cluster.drivers[0]);
+                            if (cluster.count === 1) {
+                              const singleDriver = filteredDrivers.find(
+                                d => d.position && 
+                                Math.abs(d.position.lat - cluster.position.lat) < 0.001 &&
+                                Math.abs(d.position.lng - cluster.position.lng) < 0.001
+                              );
+                              if (singleDriver) {
+                                setSelectedDriver(singleDriver);
+                              }
                             }
                           }}
                         />
