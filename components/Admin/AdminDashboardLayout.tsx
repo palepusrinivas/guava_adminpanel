@@ -81,9 +81,14 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
     {
       title: "SCHOOL TRANSPORT",
       items: [
+        { name: "Dashboard", href: "/admin/school/dashboard", icon: "📊" },
         { name: "Overview", href: "/admin/school", icon: "🏫" },
         { name: "Institutions", href: "/admin/school/institutions", icon: "🏢" },
         { name: "All Branches", href: "/admin/school/branches", icon: "🏬" },
+        { name: "Buses", href: "/admin/school/buses", icon: "🚌" },
+        { name: "Parent Requests", href: "/admin/school/parent-requests", icon: "📋" },
+        { name: "Live Tracking", href: "/admin/school/tracking", icon: "📍" },
+        { name: "Alerts", href: "/admin/school/alerts", icon: "🔔" },
         { name: "Students Upload", href: "/admin/school/students/upload", icon: "📄" },
       ],
     },

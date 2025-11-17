@@ -8,7 +8,12 @@ export default function SchoolOverviewPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-xl font-semibold">School Transport</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-xl font-semibold">School Transport Overview</h1>
+        <Link href="/admin/school/dashboard" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+          View Dashboard
+        </Link>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="border rounded p-4 space-y-3">
           <h2 className="font-medium">Institutions</h2>
@@ -41,6 +46,23 @@ export default function SchoolOverviewPage() {
         <h2 className="font-medium">Students</h2>
         <p className="text-sm text-gray-600">Bulk upload students via CSV.</p>
         <Link href="/admin/school/students/upload" className="inline-block px-4 py-2 bg-blue-600 text-white rounded">Upload Students CSV</Link>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Link href="/admin/school/parent-requests" className="border rounded p-4 hover:shadow-md transition">
+          <div className="text-2xl mb-2">📋</div>
+          <h3 className="font-medium">Parent Requests</h3>
+          <p className="text-sm text-gray-600">Manage parent registration requests</p>
+        </Link>
+        <Link href="/admin/school/tracking" className="border rounded p-4 hover:shadow-md transition">
+          <div className="text-2xl mb-2">📍</div>
+          <h3 className="font-medium">Live Tracking</h3>
+          <p className="text-sm text-gray-600">Monitor bus locations in real-time</p>
+        </Link>
+        <Link href="/admin/school/alerts" className="border rounded p-4 hover:shadow-md transition">
+          <div className="text-2xl mb-2">🔔</div>
+          <h3 className="font-medium">Alerts</h3>
+          <p className="text-sm text-gray-600">View alert logs and notifications</p>
+        </Link>
       </div>
     </div>
   );
