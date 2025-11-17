@@ -88,7 +88,7 @@ export default function BusesPage() {
   };
 
   return (
-    <AdminDashboardLayout>
+    
       <div className="p-6 space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Buses Management</h1>
@@ -230,7 +230,7 @@ export default function BusesPage() {
           </div>
         )}
       </div>
-    </AdminDashboardLayout>
+    
   );
 }
 
