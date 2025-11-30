@@ -127,7 +127,7 @@ Use a tool like **Postman** or **curl** to test:
 
 ```bash
 # Test GET endpoint
-curl -X GET http://localhost:8080/api/admin/banners \
+curl -X GET https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/admin/banners \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
 
 # Expected: Empty array [] or list of banners

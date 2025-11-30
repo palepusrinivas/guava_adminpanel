@@ -203,7 +203,7 @@ Visual Display (Colored overlay)
 # .env.local
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key_here
 NEXT_PUBLIC_ENABLE_ANALYTICS=true
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+NEXT_PUBLIC_API_BASE_URL=https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net
 ```
 
 ### Google Maps Requirements:

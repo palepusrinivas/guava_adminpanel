@@ -227,7 +227,7 @@ The heatmap displays:
 ```bash
 # Replace YOUR_TOKEN with actual admin token
 curl -X GET \
-  "http://localhost:8080/api/admin/analytics/heatmap?from=2024-10-01T00:00:00&to=2024-10-30T23:59:59" \
+  "https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/admin/analytics/heatmap?from=2024-10-01T00:00:00&to=2024-10-30T23:59:59" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json"
 ```

@@ -231,7 +231,7 @@ const mockHeatmapData = [
 Use curl or Postman to test the backend endpoint:
 
 ```bash
-curl -X GET "http://localhost:8080/api/admin/analytics/heatmap?from=2024-10-23T00:00:00&to=2024-10-30T23:59:59" \
+curl -X GET "https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/admin/analytics/heatmap?from=2024-10-23T00:00:00&to=2024-10-30T23:59:59" \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
 ```
 

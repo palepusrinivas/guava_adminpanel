@@ -7,7 +7,7 @@ Successfully configured the admin UI to connect to the backend API on port 8081.
 
 ### 1. Updated API Base URL Configuration
 **File:** `utils/config.ts`
-- Changed default API_BASE_URL from `http://localhost:8080` to `http://localhost:8081`
+- Changed default API_BASE_URL from `https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net` to `http://localhost:8081`
 - This affects all API calls that use the `config` object
 
 ### 2. Updated Next.js API Proxy Configuration

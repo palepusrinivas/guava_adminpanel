@@ -1,11 +1,11 @@
 # Admin Panel Setup Guide
 
-This guide will help you set up and test the admin panel with your backend API running on `http://localhost:8080`.
+This guide will help you set up and test the admin panel with your backend API running on `https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net`.
 
 ## 🚀 Quick Start
 
 ### 1. Prerequisites
-- Backend API running on `http://localhost:8080`
+- Backend API running on `https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net`
 - Admin user credentials (username/password)
 - Node.js and npm installed
 
@@ -25,7 +25,7 @@ This guide will help you set up and test the admin panel with your backend API r
 Create a `.env.local` file in your project root:
 
 ```env
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+NEXT_PUBLIC_API_BASE_URL=https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net
 NEXT_PUBLIC_APP_NAME=RideFast
 NEXT_PUBLIC_APP_DESCRIPTION=A Ride Sharing Application
 ```
@@ -118,7 +118,7 @@ Visit `http://localhost:3000/admin/test` to run automated tests:
 #### 1. Login Issues
 **Problem**: Cannot login to admin panel
 **Solutions**:
-- Verify backend is running on `http://localhost:8080`
+- Verify backend is running on `https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net`
 - Check admin credentials are correct
 - Ensure `/api/v1/admin/login` endpoint is working
 - Check browser console for errors

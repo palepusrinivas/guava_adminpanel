@@ -2,6 +2,7 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/utils/store/store";
+import LandingPage from "@/components/LandingPage/LandingPage";
 
 export default function Home() {
   const router = useRouter();
@@ -18,17 +19,23 @@ export default function Home() {
     }
     
     // Check for regular user authentication
-    if (!token || token === "" || role === null) {
-      router.replace("/login");
-      return;
-    } else if (role === "NORMAL_USER") {
-      router.replace("/profile");
-      return;
-    } else if (role === "DRIVER") {
-      router.replace("/driver/dashboard");
-      return;
+    if (token && token !== "" && role !== null) {
+      if (role === "NORMAL_USER") {
+        router.replace("/profile");
+        return;
+      } else if (role === "DRIVER") {
+        router.replace("/driver/dashboard");
+        return;
+      }
     }
+    // If not authenticated, show landing page (no redirect)
   }, [token, role, adminToken, adminRole, router]);
   
+  // Show landing page for unauthenticated users
+  if (!token && !adminToken) {
+    return <LandingPage />;
+  }
+  
+  // Show loading state while checking auth
   return null;
 }

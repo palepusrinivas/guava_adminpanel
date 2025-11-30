@@ -48,7 +48,7 @@ GET /api/admin/fleet/locations
 
 ### Full URL (Local):
 ```
-http://localhost:8080/api/admin/fleet/locations
+https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/admin/fleet/locations
 ```
 
 ### Authentication:
@@ -139,7 +139,7 @@ TOKEN="your_admin_token_here"
 
 # Call fleet locations API
 curl -X GET \
-  "http://localhost:8080/api/admin/fleet/locations" \
+  "https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/admin/fleet/locations" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json"
 ```
@@ -153,7 +153,7 @@ $headers = @{
     "Content-Type" = "application/json"
 }
 
-Invoke-RestMethod -Uri "http://localhost:8080/api/admin/fleet/locations" `
+Invoke-RestMethod -Uri "https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/admin/fleet/locations" `
   -Method GET `
   -Headers $headers
 ```
@@ -162,7 +162,7 @@ Invoke-RestMethod -Uri "http://localhost:8080/api/admin/fleet/locations" `
 
 ```
 Method: GET
-URL: http://localhost:8080/api/admin/fleet/locations
+URL: https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/admin/fleet/locations
 Headers:
   - Authorization: Bearer YOUR_ADMIN_TOKEN
   - Content-Type: application/json
@@ -248,7 +248,7 @@ public class DriverService {
 3. useEffect triggers dispatch(getFleetLocations())
    ↓
 4. Redux action makes HTTP GET request
-   → URL: http://localhost:8080/api/admin/fleet/locations
+   → URL: https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/admin/fleet/locations
    → Headers: Authorization: Bearer <token>
    ↓
 5. Backend processes request
@@ -351,7 +351,7 @@ console.error("Failed to fetch fleet locations:", error);
 **Solution:**
 ```bash
 # Verify backend is running
-curl http://localhost:8080/api/admin/fleet/locations
+curl https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/admin/fleet/locations
 
 # Check if endpoint is registered
 # Look in backend logs or API documentation
@@ -492,7 +492,7 @@ dispatch(getFleetLocations({ page: 1, size: 50 }));
 ### Test Backend API:
 ```bash
 # Replace YOUR_TOKEN with actual admin token
-curl -X GET "http://localhost:8080/api/admin/fleet/locations" \
+curl -X GET "https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/admin/fleet/locations" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json"
 ```

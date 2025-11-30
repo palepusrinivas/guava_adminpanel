@@ -261,7 +261,7 @@ app/admin/
 
 ### Environment Variables
 ```env
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+NEXT_PUBLIC_API_BASE_URL=https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net
 NEXT_PUBLIC_ADMIN_ENABLED=true
 ```
 
