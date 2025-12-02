@@ -130,3 +130,7 @@ export const adminNotificationDriverRegistrationUrl = getApiUrl(config.ENDPOINTS
 export const adminNotificationOtherUrl = getApiUrl(config.ENDPOINTS.ADMIN.NOTIFICATION_OTHER);
 export const adminFirebaseConfigurationUrl = getApiUrl(config.ENDPOINTS.ADMIN.FIREBASE_CONFIGURATION);
 export const adminThirdPartyConfigurationUrl = getApiUrl(config.ENDPOINTS.ADMIN.THIRD_PARTY_CONFIGURATION);
+
+// School Subscription Routes
+export const schoolSubscriptionPlansUrl = getApiUrl("/api/v1/school/subscription/plans");
+export const schoolSubscriptionPlanByIdUrl = (id: string | number) => getApiUrl(`/api/v1/school/subscription/plans/${id}`);

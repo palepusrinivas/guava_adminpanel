@@ -10,9 +10,11 @@ const adminAxios = axios.create({
 // Request interceptor to add Bearer token
 adminAxios.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("adminToken");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("adminToken");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -29,9 +31,12 @@ adminAxios.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Token expired or invalid, clear storage and redirect to login
-      localStorage.removeItem("adminToken");
-      localStorage.removeItem("adminRole");
-      window.location.href = "/admin/login";
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("adminToken");
+        localStorage.removeItem("adminRole");
+        localStorage.removeItem("adminUsername");
+        window.location.href = "/admin/login";
+      }
     }
     return Promise.reject(error);
   }

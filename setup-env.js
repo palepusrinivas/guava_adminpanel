@@ -9,7 +9,7 @@ NEXT_PUBLIC_API_BASE_URL=https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewe
 NEXT_PUBLIC_LOCATIONIQ_API_KEY=pk.1dca78a113a7c45533e83e6c9f2196ae
 
 # App Configuration
-NEXT_PUBLIC_APP_NAME=RideFast
+NEXT_PUBLIC_APP_NAME=Gauva
 NEXT_PUBLIC_APP_DESCRIPTION=A Ride Sharing Application similar to that of Rapido or Ola where a customer can book their ride conveniently
 `;
 

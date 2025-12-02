@@ -43,12 +43,12 @@ function NavBar() {
               <ul className="hidden md:flex md:items-center space-x-8">
                 <li className="text-slate-200 hover:text-white transition-colors duration-300">
                   <Link href="/" className="hover:text-blue-400">
-                    RideFast Electric
+                    Gauva Electric
                   </Link>
                 </li>
                 <li className="text-slate-200 hover:text-white transition-colors duration-300">
                   <Link href="/" className="hover:text-blue-400">
-                    RideFast Factory
+                    Gauva Factory
                   </Link>
                 </li>
                 <li className="text-slate-200 hover:text-white transition-colors duration-300">
@@ -65,7 +65,7 @@ function NavBar() {
               className="hidden sm:block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
               onClick={handleBookRide}
             >
-              Book a RideFast Cab
+              Book a Gauva Cab
             </Button>
             <Button
               variant="outlined"
@@ -86,32 +86,32 @@ function NavBar() {
             </button>
           </div>
         </div>
-        
+
         {menuActive && (
           <div className="sm:hidden bg-gray-900 flex flex-col justify-center items-center absolute w-full left-0 z-50 space-y-6 py-8 shadow-2xl border-t border-gray-700">
             <div className="w-full px-6">
               <ul className="text-slate-200 space-y-4">
                 <li>
-                  <Link 
-                    href="/" 
+                  <Link
+                    href="/"
                     className="block py-2 hover:text-blue-400 transition-colors duration-300"
                     onClick={() => setMenuActive(false)}
                   >
-                    RideFast Electric
+                    Gauva Electric
                   </Link>
                 </li>
                 <li>
-                  <Link 
-                    href="/" 
+                  <Link
+                    href="/"
                     className="block py-2 hover:text-blue-400 transition-colors duration-300"
                     onClick={() => setMenuActive(false)}
                   >
-                    RideFast Factory
+                    Gauva Factory
                   </Link>
                 </li>
                 <li>
-                  <Link 
-                    href="/company" 
+                  <Link
+                    href="/company"
                     className="block py-2 hover:text-blue-400 transition-colors duration-300"
                     onClick={() => setMenuActive(false)}
                   >
@@ -126,7 +126,7 @@ function NavBar() {
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg"
                 onClick={handleBookRide}
               >
-                Book a RideFast Cab
+                Book a Gauva Cab
               </Button>
               <Button
                 variant="outlined"

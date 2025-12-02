@@ -28,23 +28,22 @@ function Banner() {
         <p className="text-white text-lg mb-8 w-[25rem] opacity-90">
           Book a ride in seconds, arrive in minutes. Experience the future of urban mobility.
         </p>
-        
+
         <div className="py-3 bg-white w-[25rem] flex space-x-2 justify-around rounded-lg shadow-lg">
           {["Daily", "Rental", "OutStations"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`cursor-pointer px-4 py-2 rounded-md transition-all duration-300 ${
-                activeTab === tab 
-                  ? "bg-blue-600 text-white font-semibold" 
+              className={`cursor-pointer px-4 py-2 rounded-md transition-all duration-300 ${activeTab === tab
+                  ? "bg-blue-600 text-white font-semibold"
                   : "hover:bg-gray-100"
-              }`}
+                }`}
             >
               {tab}
             </button>
           ))}
         </div>
-        
+
         <div className="bg-slate-100 pt-5 w-[25rem] md:w-auto rounded-lg shadow-xl">
           <div className="flex flex-col md:flex-row items-center justify-around space-y-2 md:space-y-0">
             <div className="flex bg-white items-center border border-slate-300 py-3 px-8 sm:px-14 rounded-lg shadow-sm hover:shadow-md transition-shadow">
@@ -69,7 +68,7 @@ function Banner() {
           <div className="mt-5 bg-white rounded-lg overflow-hidden">
             <Image
               src="https://s3-ap-southeast-1.amazonaws.com/ola-prod-website/banner-green-desktop.png"
-              alt="RideFast Banner"
+              alt="Gauva Banner"
               className="w-full"
               sizes="100vw"
               height={0}

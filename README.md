@@ -1,4 +1,4 @@
-# RideFast - Ride Sharing Application
+# Gauva - Ride Sharing Application
 
 A modern ride-sharing application built with Next.js, TypeScript, and Redux Toolkit, similar to Rapido or Ola. This application allows customers to book rides conveniently and drivers to manage their rides.
 
@@ -47,7 +47,7 @@ Create a `.env.local` file in the root directory:
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net
 NEXT_PUBLIC_LOCATIONIQ_API_KEY=your_locationiq_api_key
-NEXT_PUBLIC_APP_NAME=RideFast
+NEXT_PUBLIC_APP_NAME=Gauva
 NEXT_PUBLIC_APP_DESCRIPTION=A Ride Sharing Application similar to that of Rapido or Ola where a customer can book their ride conveniently
 ```
 

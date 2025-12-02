@@ -19,16 +19,15 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white">
       {/* Navigation Bar */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled ? "bg-white shadow-md" : "bg-transparent"
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "bg-white shadow-md" : "bg-transparent"
+          }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-black">
-                RideFast
+              <Link href="/" className="text-2xl font-bold " style={{ color: "#7B0D96" }}>
+                Gauva
               </Link>
             </div>
 
@@ -93,7 +92,7 @@ export default function LandingPage() {
             <div className="space-y-8">
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight">
                 Go anywhere with
-                <span className="block text-blue-600">RideFast</span>
+                <span className="block text-[#7B0D96]">Gauva</span>
               </h1>
               <p className="text-xl text-gray-600 max-w-lg">
                 Request a ride, hop in, and go. Experience the convenience of on-demand
@@ -108,7 +107,7 @@ export default function LandingPage() {
                 </button>
                 <button
                   onClick={() => router.push("/login")}
-                  className="bg-white text-black px-8 py-4 rounded-lg font-semibold text-lg border-2 border-gray-300 hover:border-gray-400 transition-colors"
+                  className="bg-white text-[#7B0D96] px-8 py-4 rounded-lg font-semibold text-lg border-2 border-gray-300 hover:border-gray-400 transition-colors"
                 >
                   Sign in to drive
                 </button>
@@ -137,6 +136,137 @@ export default function LandingPage() {
                     </div>
                     <p className="text-gray-700 font-semibold text-lg">Book a ride in seconds</p>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Suggestions Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-12">
+            Suggestions
+          </h2>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Ride */}
+            <div className="bg-gray-50 rounded-xl p-6 hover:shadow-lg transition-shadow cursor-pointer group">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Ride</h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    Go anywhere with Gauva. Request a ride, hop in, and go.
+                  </p>
+                  <button className="text-sm font-medium text-gray-900 hover:underline">
+                    Details
+                  </button>
+                </div>
+                <div className="ml-4">
+                  <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Reserve */}
+            <div className="bg-gray-50 rounded-xl p-6 hover:shadow-lg transition-shadow cursor-pointer group">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Reserve</h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    Reserve your ride in advance so you can relax on the day of your trip.
+                  </p>
+                  <button className="text-sm font-medium text-gray-900 hover:underline">
+                    Details
+                  </button>
+                </div>
+                <div className="ml-4">
+                  <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Intercity */}
+            <div className="bg-gray-50 rounded-xl p-6 hover:shadow-lg transition-shadow cursor-pointer group">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Intercity</h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    Get convenient, affordable outstation cabs anytime at your doorstep.
+                  </p>
+                  <button className="text-sm font-medium text-gray-900 hover:underline">
+                    Details
+                  </button>
+                </div>
+                <div className="ml-4">
+                  <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Courier */}
+            <div className="bg-gray-50 rounded-xl p-6 hover:shadow-lg transition-shadow cursor-pointer group">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Courier</h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    Gauva makes same-day item delivery easier than ever.
+                  </p>
+                  <button className="text-sm font-medium text-gray-900 hover:underline">
+                    Details
+                  </button>
+                </div>
+                <div className="ml-4">
+                  <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Rentals */}
+            <div className="bg-gray-50 rounded-xl p-6 hover:shadow-lg transition-shadow cursor-pointer group">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Rentals</h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    Request a trip for a block of time and make multiple stops.
+                  </p>
+                  <button className="text-sm font-medium text-gray-900 hover:underline">
+                    Details
+                  </button>
+                </div>
+                <div className="ml-4">
+                  <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Bike */}
+            <div className="bg-gray-50 rounded-xl p-6 hover:shadow-lg transition-shadow cursor-pointer group">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Bike</h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    Get affordable motorbike rides in minutes at your doorstep.
+                  </p>
+                  <button className="text-sm font-medium text-gray-900 hover:underline">
+                    Details
+                  </button>
+                </div>
+                <div className="ml-4">
+                  <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
                 </div>
               </div>
             </div>
@@ -240,7 +370,7 @@ export default function LandingPage() {
                 Drive when you want, make what you need
               </h2>
               <p className="text-xl text-gray-600 mb-8">
-                Make money on your schedule. As a RideFast driver, you're your own boss. Get
+                Make money on your schedule. As a Gauva driver, you're your own boss. Get
                 paid weekly for the trips you complete.
               </p>
               <ul className="space-y-4 mb-8">
@@ -295,7 +425,7 @@ export default function LandingPage() {
               </ul>
               <button
                 onClick={() => router.push("/driver/register")}
-                className="bg-black text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-800 transition-colors"
+                className="bg-black text-[#F7DB08] px-8 py-4 rounded-lg font-semibold text-lg hover:bg-[#7B0D96] transition-colors"
               >
                 Sign up to drive
               </button>
@@ -395,7 +525,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to get started?</h2>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Join thousands of riders and drivers who trust RideFast for their transportation
+            Join thousands of riders and drivers who trust Gauva for their transportation
             needs.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -420,7 +550,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-white text-xl font-bold mb-4">RideFast</h3>
+              <h3 className="text-white text-xl font-bold mb-4">Gauva</h3>
               <p className="text-gray-400">
                 Your trusted partner for safe and convenient transportation.
               </p>
@@ -477,7 +607,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; {new Date().getFullYear()} RideFast. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Gauva. All rights reserved.</p>
           </div>
         </div>
       </footer>

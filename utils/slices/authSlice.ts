@@ -59,10 +59,8 @@ const initialState: AuthState = {
   driver: null,
   error: null,
   isLoading: false,
-  role:
-    typeof localStorage !== "undefined" ? localStorage.getItem("role") : null,
-  token:
-    typeof localStorage !== "undefined" ? localStorage.getItem("token") : null,
+  role: null,
+  token: null,
 };
 const authSlice = createSlice({
   name: "auth",
@@ -73,7 +71,23 @@ const authSlice = createSlice({
       state.role = null;
       state.error = null;
       state.token = null;
-      localStorage.clear();
+      if (typeof window !== "undefined") {
+        localStorage.clear();
+      }
+    },
+    hydrateAuth: (state) => {
+      if (typeof window !== "undefined") {
+        try {
+          const token = localStorage.getItem("token");
+          const role = localStorage.getItem("role");
+          if (token && role) {
+            state.token = token;
+            state.role = role;
+          }
+        } catch (error) {
+          console.error("Failed to hydrate auth:", error);
+        }
+      }
     },
   },
   extraReducers(builder) {
@@ -115,8 +129,10 @@ const authSlice = createSlice({
         state.error = null;
         state.token = action.payload.accessToken;
         state.role = action.payload.type;
-        localStorage.setItem("token", action.payload.accessToken);
-        localStorage.setItem("role", action.payload.type);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("token", action.payload.accessToken);
+          localStorage.setItem("role", action.payload.type);
+        }
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -154,5 +170,5 @@ const authSlice = createSlice({
       });
   },
 });
-export const { logout } = authSlice.actions;
+export const { logout, hydrateAuth } = authSlice.actions;
 export default authSlice.reducer;

@@ -51,20 +51,20 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
     },
     ...(admin && admin.role === "SUPER_ADMIN"
       ? [{
-          title: "SUPER ADMIN",
-          items: [
-            {
-              name: "Admins",
-              href: "/admin/superadmin/admins",
-              icon: "🧑‍💼",
-            },
-            {
-              name: "API Keys",
-              href: "/admin/superadmin/keys",
-              icon: "🔑",
-            },
-          ],
-        }]
+        title: "SUPER ADMIN",
+        items: [
+          {
+            name: "Admins",
+            href: "/admin/superadmin/admins",
+            icon: "🧑‍💼",
+          },
+          {
+            name: "API Keys",
+            href: "/admin/superadmin/keys",
+            icon: "🔑",
+          },
+        ],
+      }]
       : []),
     {
       title: "ZONE MANAGEMENT",
@@ -90,6 +90,7 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
         { name: "Live Tracking", href: "/admin/school/tracking", icon: "📍" },
         { name: "Alerts", href: "/admin/school/alerts", icon: "🔔" },
         { name: "Students Upload", href: "/admin/school/students/upload", icon: "📄" },
+        { name: "Subscription Plans", href: "/admin/school/subscription", icon: "💳" },
       ],
     },
     {
@@ -303,17 +304,16 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
     <div className="min-h-screen flex bg-gray-50">
       {/* Mobile sidebar */}
       <div className={`fixed inset-0 z-50 lg:hidden transition-opacity duration-300 ease-in-out ${sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-        <div 
-          className="fixed inset-0 bg-gray-600 bg-opacity-75 backdrop-blur-sm transition-opacity" 
-          onClick={() => setSidebarOpen(false)} 
+        <div
+          className="fixed inset-0 bg-gray-600 bg-opacity-75 backdrop-blur-sm transition-opacity"
+          onClick={() => setSidebarOpen(false)}
         />
-        <div className={`relative flex-1 flex flex-col max-w-xs w-full bg-white transform transition-transform duration-300 ease-in-out ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}>
+        <div className={`relative flex-1 flex flex-col max-w-xs w-full bg-white transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}>
           <div className="absolute top-0 right-0 -mr-12 pt-4">
             <button
               type="button"
-                aria-label="Close sidebar"
+              aria-label="Close sidebar"
               className="ml-1 flex items-center justify-center h-10 w-10 rounded-full bg-gray-800 bg-opacity-50 hover:bg-opacity-75 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
               onClick={() => setSidebarOpen(false)}
             >
@@ -459,8 +459,8 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
         </div>
       </div>
 
-  {/* Main content */}
-  <div className="flex flex-col flex-1 lg:pl-64">
+      {/* Main content */}
+      <div className="flex flex-col flex-1 lg:pl-64">
         {/* Top navigation */}
         <div className="sticky top-0 z-20 bg-white shadow-sm">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
@@ -476,7 +476,7 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
-              
+
               <div className="ml-4 lg:ml-0">
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
                   {navigation.find(item => item.href === pathname)?.name || "Admin Dashboard"}

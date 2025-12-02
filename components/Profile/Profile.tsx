@@ -65,7 +65,7 @@ function Profile() {
         <p className="">{auth?.user?.mobile}</p>
       </div>
       <div className="rounded-sm border mt-5">
-        {ride.map((item:any) => (
+        {ride.map((item: any) => (
           <RideCar ride={item} key={item?.id} />
         ))}
         <div className="flex flex-col items-center">
@@ -78,7 +78,7 @@ function Profile() {
         <div className="flex items-center p-3 border-b">
           <AccountBalanceWallet className="text-green-600" />
           <div className="ml-4 flex justify-between w-full">
-            <p className="text-gray-900">RideFast Money</p>
+            <p className="text-gray-900">Gauva Money</p>
             <p className="text-gray-600">Coming soon...</p>
           </div>
         </div>
@@ -92,7 +92,7 @@ function Profile() {
         <div className="flex items-center p-3 border-b">
           <Wifi className="text-green-600" />
           <div className="ml-4 flex justify-between w-full">
-            <p className="text-gray-900">RideFast Wifi Credentials</p>
+            <p className="text-gray-900">Gauva Wifi Credentials</p>
             <p className="text-gray-600">Coming soon...</p>
           </div>
         </div>
