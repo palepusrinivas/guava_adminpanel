@@ -131,6 +131,16 @@ export const adminNotificationOtherUrl = getApiUrl(config.ENDPOINTS.ADMIN.NOTIFI
 export const adminFirebaseConfigurationUrl = getApiUrl(config.ENDPOINTS.ADMIN.FIREBASE_CONFIGURATION);
 export const adminThirdPartyConfigurationUrl = getApiUrl(config.ENDPOINTS.ADMIN.THIRD_PARTY_CONFIGURATION);
 
-// School Subscription Routes
+// Wallet endpoints
+export const walletBalanceUrl = (ownerType: string, ownerId: string) =>
+  getApiUrl(`/api/wallet/${ownerType}/${ownerId}`);
+export const walletTransactionsUrl = (ownerType: string, ownerId: string) =>
+  getApiUrl(`/api/wallet/${ownerType}/${ownerId}/transactions`);
+export const walletWithdrawUrl = (ownerType: string, ownerId: string) =>
+  getApiUrl(`/api/wallet/${ownerType}/${ownerId}/withdraw`);
+export const walletTopUpUrl = getApiUrl("/api/payments/wallet/topup");
+export const walletVerifyUrl = (transactionId: string) => getApiUrl(`/api/payments/wallet/verify/${transactionId}`);
+
+// School subscription endpoints
 export const schoolSubscriptionPlansUrl = getApiUrl("/api/v1/school/subscription/plans");
-export const schoolSubscriptionPlanByIdUrl = (id: string | number) => getApiUrl(`/api/v1/school/subscription/plans/${id}`);
+export const schoolSubscriptionPlanByIdUrl = (id: number) => getApiUrl(`/api/v1/school/subscription/plans/${id}`);
