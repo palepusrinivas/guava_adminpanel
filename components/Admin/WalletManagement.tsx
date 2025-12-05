@@ -337,25 +337,33 @@ const WalletManagement = () => {
 
               <Autocomplete
                 fullWidth
+                freeSolo
                 options={creditFormik.values.ownerType === "USER" ? users : drivers}
                 getOptionLabel={(option) => {
                   if (typeof option === 'string') return option;
-                  return `${option.fullName || option.name} (${option.email || option.mobile || option.id})`;
+                  return `${option.fullName || option.name || 'Unknown'} (${option.email || option.mobile || option.id})`;
                 }}
                 value={
                   (creditFormik.values.ownerType === "USER" ? users : drivers).find(
                     (u) => u.id.toString() === creditFormik.values.ownerId
-                  ) || null
+                  ) || creditFormik.values.ownerId || null
                 }
                 onChange={(_, newValue) => {
-                  creditFormik.setFieldValue("ownerId", newValue ? newValue.id.toString() : "");
+                  if (typeof newValue === 'string') {
+                    creditFormik.setFieldValue("ownerId", newValue);
+                  } else {
+                    creditFormik.setFieldValue("ownerId", newValue ? newValue.id.toString() : "");
+                  }
+                }}
+                onInputChange={(_, newInputValue) => {
+                  creditFormik.setFieldValue("ownerId", newInputValue);
                 }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label={`Select ${creditFormik.values.ownerType === "USER" ? "User" : "Driver"}`}
+                    label={`Select ${creditFormik.values.ownerType === "USER" ? "User" : "Driver"} or Enter ID`}
                     error={creditFormik.touched.ownerId && Boolean(creditFormik.errors.ownerId)}
-                    helperText={creditFormik.touched.ownerId && creditFormik.errors.ownerId}
+                    helperText={creditFormik.touched.ownerId ? creditFormik.errors.ownerId : `${users.length} users loaded`}
                     size="small"
                   />
                 )}
@@ -682,25 +690,33 @@ const WalletManagement = () => {
 
               <Autocomplete
                 fullWidth
+                freeSolo
                 options={balanceFormik.values.ownerType === "USER" ? users : drivers}
                 getOptionLabel={(option) => {
                   if (typeof option === 'string') return option;
-                  return `${option.fullName || option.name} (${option.email || option.mobile || option.id})`;
+                  return `${option.fullName || option.name || 'Unknown'} (${option.email || option.mobile || option.id})`;
                 }}
                 value={
                   (balanceFormik.values.ownerType === "USER" ? users : drivers).find(
                     (u) => u.id.toString() === balanceFormik.values.ownerId
-                  ) || null
+                  ) || balanceFormik.values.ownerId || null
                 }
                 onChange={(_, newValue) => {
-                  balanceFormik.setFieldValue("ownerId", newValue ? newValue.id.toString() : "");
+                  if (typeof newValue === 'string') {
+                    balanceFormik.setFieldValue("ownerId", newValue);
+                  } else {
+                    balanceFormik.setFieldValue("ownerId", newValue ? newValue.id.toString() : "");
+                  }
+                }}
+                onInputChange={(_, newInputValue) => {
+                  balanceFormik.setFieldValue("ownerId", newInputValue);
                 }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label={`Select ${balanceFormik.values.ownerType === "USER" ? "User" : "Driver"}`}
+                    label={`Select ${balanceFormik.values.ownerType === "USER" ? "User" : "Driver"} or Enter ID`}
                     error={balanceFormik.touched.ownerId && Boolean(balanceFormik.errors.ownerId)}
-                    helperText={balanceFormik.touched.ownerId && balanceFormik.errors.ownerId}
+                    helperText={balanceFormik.touched.ownerId ? balanceFormik.errors.ownerId : `${users.length} users loaded`}
                     size="small"
                   />
                 )}
@@ -758,27 +774,35 @@ const WalletManagement = () => {
 
                 <Autocomplete
                   fullWidth
+                  freeSolo
                   options={transactionsFormik.values.ownerType === "USER" ? users : drivers}
                   getOptionLabel={(option) => {
                     if (typeof option === 'string') return option;
-                    return `${option.fullName || option.name} (${option.email || option.mobile || option.id})`;
+                    return `${option.fullName || option.name || 'Unknown'} (${option.email || option.mobile || option.id})`;
                   }}
                   value={
                     (transactionsFormik.values.ownerType === "USER" ? users : drivers).find(
                       (u) => u.id.toString() === transactionsFormik.values.ownerId
-                    ) || null
+                    ) || transactionsFormik.values.ownerId || null
                   }
                   onChange={(_, newValue) => {
-                    transactionsFormik.setFieldValue("ownerId", newValue ? newValue.id.toString() : "");
+                    if (typeof newValue === 'string') {
+                      transactionsFormik.setFieldValue("ownerId", newValue);
+                    } else {
+                      transactionsFormik.setFieldValue("ownerId", newValue ? newValue.id.toString() : "");
+                    }
+                  }}
+                  onInputChange={(_, newInputValue) => {
+                    transactionsFormik.setFieldValue("ownerId", newInputValue);
                   }}
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label={`Select ${transactionsFormik.values.ownerType === "USER" ? "User" : "Driver"}`}
+                      label={`Select ${transactionsFormik.values.ownerType === "USER" ? "User" : "Driver"} or Enter ID`}
                       error={
                         transactionsFormik.touched.ownerId && Boolean(transactionsFormik.errors.ownerId)
                       }
-                      helperText={transactionsFormik.touched.ownerId && transactionsFormik.errors.ownerId}
+                      helperText={transactionsFormik.touched.ownerId ? transactionsFormik.errors.ownerId : `${users.length} users loaded`}
                       size="small"
                     />
                   )}
@@ -895,25 +919,33 @@ const WalletManagement = () => {
 
               <Autocomplete
                 fullWidth
+                freeSolo
                 options={topUpFormik.values.ownerType === "USER" ? users : drivers}
                 getOptionLabel={(option) => {
                   if (typeof option === 'string') return option;
-                  return `${option.fullName || option.name} (${option.email || option.mobile || option.id})`;
+                  return `${option.fullName || option.name || 'Unknown'} (${option.email || option.mobile || option.id})`;
                 }}
                 value={
                   (topUpFormik.values.ownerType === "USER" ? users : drivers).find(
                     (u) => u.id.toString() === topUpFormik.values.ownerId
-                  ) || null
+                  ) || topUpFormik.values.ownerId || null
                 }
                 onChange={(_, newValue) => {
-                  topUpFormik.setFieldValue("ownerId", newValue ? newValue.id.toString() : "");
+                  if (typeof newValue === 'string') {
+                    topUpFormik.setFieldValue("ownerId", newValue);
+                  } else {
+                    topUpFormik.setFieldValue("ownerId", newValue ? newValue.id.toString() : "");
+                  }
+                }}
+                onInputChange={(_, newInputValue) => {
+                  topUpFormik.setFieldValue("ownerId", newInputValue);
                 }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label={`Select ${topUpFormik.values.ownerType === "USER" ? "User" : "Driver"}`}
+                    label={`Select ${topUpFormik.values.ownerType === "USER" ? "User" : "Driver"} or Enter ID`}
                     error={topUpFormik.touched.ownerId && Boolean(topUpFormik.errors.ownerId)}
-                    helperText={topUpFormik.touched.ownerId && topUpFormik.errors.ownerId}
+                    helperText={topUpFormik.touched.ownerId ? topUpFormik.errors.ownerId : `${users.length} users loaded`}
                     size="small"
                   />
                 )}
