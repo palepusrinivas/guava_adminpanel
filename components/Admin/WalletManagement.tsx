@@ -95,10 +95,18 @@ const WalletManagement = () => {
   const [debitReason, setDebitReason] = useState("");
   const [debitNotes, setDebitNotes] = useState("");
 
+  const [refreshKey, setRefreshKey] = useState(0);
+
   useEffect(() => {
-    dispatch(getUsers({}));
-    dispatch(getDrivers({}));
-  }, [dispatch]);
+    // Fetch more users/drivers by increasing page size
+    dispatch(getUsers({ page: 0, size: 500 }));
+    dispatch(getDrivers({ page: 0, size: 500 }));
+  }, [dispatch, refreshKey]);
+
+  const handleRefreshUsers = () => {
+    setRefreshKey((prev) => prev + 1);
+    toast.success("Refreshing users and drivers list...");
+  };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -265,13 +273,23 @@ const WalletManagement = () => {
   return (
     <Box>
       {/* Header */}
-      <div className="mb-6">
-        <Typography variant="h5" className="font-semibold text-gray-800">
-          Wallet Management
-        </Typography>
-        <Typography variant="body2" className="text-gray-500 mt-1">
-          Manage user and driver wallets, credit funds, and view transactions
-        </Typography>
+      <div className="mb-6 flex justify-between items-start">
+        <div>
+          <Typography variant="h5" className="font-semibold text-gray-800">
+            Wallet Management
+          </Typography>
+          <Typography variant="body2" className="text-gray-500 mt-1">
+            Manage user and driver wallets, credit funds, and view transactions
+          </Typography>
+        </div>
+        <Button
+          variant="outlined"
+          onClick={handleRefreshUsers}
+          size="small"
+          sx={{ textTransform: "none" }}
+        >
+          🔄 Refresh Users
+        </Button>
       </div>
 
       {/* Tabs */}
