@@ -9,14 +9,24 @@ const adminAxios = axios.create({
 
 // Request interceptor to add Bearer token
 adminAxios.interceptors.request.use(
-  (config) => {
+  (requestConfig) => {
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("adminToken");
+      
+      // Debug logging
+      console.log("[adminAxios] Request to:", requestConfig.url);
+      console.log("[adminAxios] Token exists:", !!token);
+      
       if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+        requestConfig.headers.Authorization = `Bearer ${token}`;
+        console.log("[adminAxios] Authorization header set");
+      } else {
+        console.warn("[adminAxios] No token found in localStorage!");
       }
+    } else {
+      console.log("[adminAxios] Running on server, no localStorage access");
     }
-    return config;
+    return requestConfig;
   },
   (error) => {
     return Promise.reject(error);
