@@ -96,6 +96,7 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
         { name: "Routes", href: "/admin/intercity/routes", icon: "🛤️" },
         { name: "Trips", href: "/admin/intercity/trips", icon: "🚌" },
         { name: "Bookings", href: "/admin/intercity/bookings", icon: "📋" },
+        { name: "Cashback", href: "/admin/cashback", icon: "💰" },
       ],
     },
     {

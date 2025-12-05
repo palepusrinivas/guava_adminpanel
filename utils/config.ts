@@ -2,7 +2,8 @@
 export const config = {
   // API Configuration
   API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net",
- //API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080",
+  // Uncomment below for local development:
+  //API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080",
   LOCATIONIQ_API_KEY: process.env.NEXT_PUBLIC_LOCATIONIQ_API_KEY || "pk.1dca78a113a7c45533e83e6c9f2196ae",
   GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyA4l8wJ5bYRj_iPcaWF1TTuPt5KVDGMFpo", // Temporary hardcoded key
 
@@ -185,6 +186,15 @@ export const config = {
       API_KEYS_INIT_DEFAULTS: "/api/admin/api-keys/init-defaults",
       API_KEYS_TEST_RAZORPAY: "/api/admin/api-keys/test/razorpay",
       API_KEYS_TEST_GOOGLE: "/api/admin/api-keys/test/google-maps",
+      // Cashback Management
+      CASHBACK_SETTINGS: "/api/admin/cashback/settings",
+      CASHBACK_TOGGLE: "/api/admin/cashback/settings/toggle",
+      CASHBACK_FESTIVAL: "/api/admin/cashback/settings/festival",
+      CASHBACK_DASHBOARD: "/api/admin/cashback/dashboard",
+      CASHBACK_ENTRIES: "/api/admin/cashback/entries",
+      CASHBACK_USER_ENTRIES: "/api/admin/cashback/entries/user/:userId",
+      CASHBACK_EXPIRE_ENTRY: "/api/admin/cashback/entries/:id/expire",
+      CASHBACK_PROCESS_EXPIRED: "/api/admin/cashback/process-expired",
     },
   },
 };
