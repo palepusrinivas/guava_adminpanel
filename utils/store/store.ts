@@ -9,6 +9,7 @@ import zoneReducer from "@/utils/slices/zoneSlice";
 import fleetReducer from "@/utils/slices/fleetSlice";
 import tripManagementReducer from "@/utils/slices/tripManagementSlice";
 import bannerReducer from "@/utils/slices/bannerSlice";
+import serviceConfigReducer from "@/utils/slices/serviceConfigSlice";
 import { useDispatch, useSelector } from "react-redux";
 import couponReducer from "@/utils/slices/couponSlice";
 import discountReducer from "@/utils/slices/discountSlice";
@@ -40,6 +41,7 @@ const store = configureStore({
     fleet: fleetReducer,
     tripManagement: tripManagementReducer,
     banner: bannerReducer,
+    serviceConfig: serviceConfigReducer,
     coupon: couponReducer,
     discount: discountReducer,
     driverLevel: driverLevelReducer,

@@ -26,7 +26,7 @@ Create a `.env.local` file in your project root:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net
-NEXT_PUBLIC_APP_NAME=RideFast
+NEXT_PUBLIC_APP_NAME=Gauva
 NEXT_PUBLIC_APP_DESCRIPTION=A Ride Sharing Application
 ```
 
@@ -223,8 +223,8 @@ Visit `http://localhost:3000/admin/test` to run automated tests:
 ```env
 # Production
 NEXT_PUBLIC_API_BASE_URL=https://your-api-domain.com
-NEXT_PUBLIC_APP_NAME=RideFast Admin
-NEXT_PUBLIC_APP_DESCRIPTION=Admin Panel for RideFast
+NEXT_PUBLIC_APP_NAME=Gauva Admin
+NEXT_PUBLIC_APP_DESCRIPTION=Admin Panel for Gauva
 ```
 
 ## 📞 Support

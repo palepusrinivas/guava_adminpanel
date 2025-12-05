@@ -27,7 +27,11 @@ const bannerValidationSchema = yup.object({
 
 function BannerSetup() {
   const dispatch = useAppDispatch();
-  const { banners, isLoading, error, filter } = useAppSelector((state) => state.banner);
+  const { banners: rawBanners, isLoading, error, filter } = useAppSelector((state) => state.banner);
+  
+  // Ensure banners is always an array
+  const banners = Array.isArray(rawBanners) ? rawBanners : [];
+  
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);

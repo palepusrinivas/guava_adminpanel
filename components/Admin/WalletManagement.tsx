@@ -85,9 +85,14 @@ const balanceValidationSchema = yup.object({
 
 const WalletManagement = () => {
   const dispatch = useAppDispatch();
-  const { balance, transactions, isLoading, error, creditSuccess, debitSuccess, topUpLink, users, drivers, workflowStep } = useAppSelector(
+  const { balance, transactions, isLoading, error, creditSuccess, debitSuccess, topUpLink, users: rawUsers, drivers: rawDrivers, workflowStep } = useAppSelector(
     (state) => state.wallet
   );
+  
+  // Ensure users and drivers are always arrays
+  const users = Array.isArray(rawUsers) ? rawUsers : [];
+  const drivers = Array.isArray(rawDrivers) ? rawDrivers : [];
+  
   const [tabValue, setTabValue] = useState(0);
   const [debitStep, setDebitStep] = useState(0);
   const [selectedEntity, setSelectedEntity] = useState<any>(null);
@@ -280,6 +285,9 @@ const WalletManagement = () => {
           </Typography>
           <Typography variant="body2" className="text-gray-500 mt-1">
             Manage user and driver wallets, credit funds, and view transactions
+          </Typography>
+          <Typography variant="caption" className="text-gray-400">
+            Loaded: {users.length} users, {drivers.length} drivers
           </Typography>
         </div>
         <Button

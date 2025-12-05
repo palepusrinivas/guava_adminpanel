@@ -54,18 +54,28 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
         title: "SUPER ADMIN",
         items: [
           {
-            name: "Admins",
+            name: "Admin Users",
             href: "/admin/superadmin/admins",
             icon: "🧑‍💼",
-          },
-          {
-            name: "API Keys",
-            href: "/admin/superadmin/keys",
-            icon: "🔑",
           },
         ],
       }]
       : []),
+    {
+      title: "SYSTEM SETTINGS",
+      items: [
+        { name: "General Settings", href: "/admin/settings", icon: "⚙️" },
+        { name: "API Keys", href: "/admin/settings/api-keys", icon: "🔑" },
+        { name: "Wallet Management", href: "/admin/wallet", icon: "💰" },
+        { name: "Banner Setup", href: "/admin/banner-setup", icon: "🖼️" },
+      ],
+    },
+    {
+      title: "SERVICE MANAGEMENT",
+      items: [
+        { name: "Ride Services", href: "/admin/services", icon: "🚗" },
+      ],
+    },
     {
       title: "ZONE MANAGEMENT",
       items: [

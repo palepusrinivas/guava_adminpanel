@@ -1,6 +1,6 @@
 # Admin Panel Documentation
 
-This document provides comprehensive information about the admin panel implementation for the RideFast application.
+This document provides comprehensive information about the admin panel implementation for the Gauva application.
 
 ## Overview
 
@@ -306,4 +306,4 @@ For technical support or questions about the admin panel:
 
 ---
 
-This admin panel provides a comprehensive solution for managing the RideFast platform, with robust security, excellent user experience, and scalable architecture.
+This admin panel provides a comprehensive solution for managing the Gauva platform, with robust security, excellent user experience, and scalable architecture.

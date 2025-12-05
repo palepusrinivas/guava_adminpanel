@@ -1,7 +1,7 @@
 # Zone Management Implementation
 
 ## Overview
-This document describes the complete implementation of the Zone Management feature for the RideFast Admin Panel. This feature allows administrators to create, view, edit, and delete service zones with polygon coverage areas.
+This document describes the complete implementation of the Zone Management feature for the Gauva Admin Panel. This feature allows administrators to create, view, edit, and delete service zones with polygon coverage areas.
 
 ## Features Implemented
 

@@ -302,11 +302,13 @@ const walletSlice = createSlice({
             })
             // Get Users
             .addCase(getUsers.fulfilled, (state, action) => {
-                state.users = action.payload.content || action.payload || [];
+                const data = action.payload?.content || action.payload;
+                state.users = Array.isArray(data) ? data : [];
             })
             // Get Drivers
             .addCase(getDrivers.fulfilled, (state, action) => {
-                state.drivers = action.payload.content || action.payload || [];
+                const data = action.payload?.content || action.payload;
+                state.drivers = Array.isArray(data) ? data : [];
             });
     },
 });

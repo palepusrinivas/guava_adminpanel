@@ -61,7 +61,9 @@ const bannerSlice = createSlice({
       })
       .addCase(getBanners.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.banners = action.payload;
+        // Handle both paginated response and array response
+        const data = action.payload?.content || action.payload;
+        state.banners = Array.isArray(data) ? data : [];
         state.error = null;
       })
       .addCase(getBanners.rejected, (state, action) => {
