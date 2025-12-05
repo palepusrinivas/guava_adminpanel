@@ -79,6 +79,16 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
       ],
     },
     {
+      title: "INTERCITY TRANSPORT",
+      items: [
+        { name: "Dashboard", href: "/admin/intercity", icon: "🛣️" },
+        { name: "Vehicle Setup", href: "/admin/intercity/vehicles", icon: "🚗" },
+        { name: "Routes", href: "/admin/intercity/routes", icon: "🛤️" },
+        { name: "Trips", href: "/admin/intercity/trips", icon: "🚌" },
+        { name: "Bookings", href: "/admin/intercity/bookings", icon: "📋" },
+      ],
+    },
+    {
       title: "SCHOOL TRANSPORT",
       items: [
         { name: "Dashboard", href: "/admin/school/dashboard", icon: "📊" },

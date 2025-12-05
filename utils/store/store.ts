@@ -27,6 +27,7 @@ import pagesMediaReducer from "@/utils/slices/pagesMediaSlice";
 import notificationReducer from "@/utils/slices/notificationSlice";
 import schoolReducer from "@/utils/slices/schoolSlice";
 import walletReducer from "@/utils/slices/walletSlice";
+import intercityReducer from "@/utils/slices/intercitySlice";
 const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -56,6 +57,7 @@ const store = configureStore({
     notification: notificationReducer,
     school: schoolReducer,
     wallet: walletReducer,
+    intercity: intercityReducer,
   },
 });
 

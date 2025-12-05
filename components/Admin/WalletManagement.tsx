@@ -22,6 +22,12 @@ import {
   Alert,
   Chip,
   Autocomplete,
+  Stepper,
+  Step,
+  StepLabel,
+  Card,
+  CardContent,
+  Divider,
 } from "@mui/material";
 import { useEffect } from "react";
 import { useFormik } from "formik";
@@ -30,10 +36,14 @@ import { useAppDispatch, useAppSelector } from "@/utils/store/store";
 import {
   creditUserWallet,
   creditDriverWallet,
+  debitUserWallet,
+  debitDriverWallet,
   getWalletBalance,
   getWalletTransactions,
   initiateWalletTopUp,
   clearCreditSuccess,
+  clearDebitSuccess,
+  setWorkflowStep,
   resetWalletState,
   getUsers,
   getDrivers,
@@ -75,10 +85,15 @@ const balanceValidationSchema = yup.object({
 
 const WalletManagement = () => {
   const dispatch = useAppDispatch();
-  const { balance, transactions, isLoading, error, creditSuccess, topUpLink, users, drivers } = useAppSelector(
+  const { balance, transactions, isLoading, error, creditSuccess, debitSuccess, topUpLink, users, drivers, workflowStep } = useAppSelector(
     (state) => state.wallet
   );
   const [tabValue, setTabValue] = useState(0);
+  const [debitStep, setDebitStep] = useState(0);
+  const [selectedEntity, setSelectedEntity] = useState<any>(null);
+  const [debitAmount, setDebitAmount] = useState<number>(0);
+  const [debitReason, setDebitReason] = useState("");
+  const [debitNotes, setDebitNotes] = useState("");
 
   useEffect(() => {
     dispatch(getUsers({}));
@@ -159,16 +174,19 @@ const WalletManagement = () => {
     initialValues: {
       amount: 0,
       ownerType: "USER",
+      ownerId: "",
     },
     validationSchema: yup.object({
       amount: yup.number().required("Amount is required").min(10, "Minimum amount is ₹10").max(50000, "Maximum amount is ₹50,000"),
       ownerType: yup.string().required("Owner type is required"),
+      ownerId: yup.string().required("Owner ID is required"),
     }),
     onSubmit: async (values) => {
       const result = await dispatch(
         initiateWalletTopUp({
           amount: values.amount,
-          ownerType: values.ownerType as "USER" | "DRIVER"
+          ownerType: values.ownerType as "USER" | "DRIVER",
+          ownerId: values.ownerId
         })
       );
       if (initiateWalletTopUp.fulfilled.match(result)) {
@@ -178,6 +196,71 @@ const WalletManagement = () => {
       }
     },
   });
+
+  // Debit Workflow Handlers
+  const handleDebitEntitySelect = async (entity: any, ownerType: string) => {
+    setSelectedEntity({ ...entity, ownerType });
+    setDebitStep(1);
+    // Fetch current balance
+    await dispatch(getWalletBalance({ ownerType, ownerId: entity.id.toString() }));
+  };
+
+  const handleDebitAmountSubmit = () => {
+    if (!debitAmount || debitAmount <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+    if (balance !== null && debitAmount > balance) {
+      toast.error(`Insufficient balance! Current balance: ₹${balance}`);
+      return;
+    }
+    setDebitStep(2);
+  };
+
+  const handleDebitReasonSubmit = () => {
+    if (!debitReason.trim()) {
+      toast.error("Please provide a reason for debit");
+      return;
+    }
+    setDebitStep(3);
+  };
+
+  const handleDebitConfirm = async () => {
+    const data = {
+      amount: debitAmount,
+      reason: debitReason,
+      notes: debitNotes || undefined,
+    };
+
+    let result;
+    if (selectedEntity.ownerType === "USER") {
+      result = await dispatch(debitUserWallet({ userId: selectedEntity.id.toString(), data }));
+    } else {
+      result = await dispatch(debitDriverWallet({ driverId: selectedEntity.id.toString(), data }));
+    }
+
+    if (debitUserWallet.fulfilled.match(result) || debitDriverWallet.fulfilled.match(result)) {
+      toast.success(`Successfully debited ₹${debitAmount} from ${selectedEntity.ownerType.toLowerCase()} wallet`);
+      setDebitStep(4);
+      setTimeout(() => {
+        dispatch(clearDebitSuccess());
+        handleDebitReset();
+      }, 3000);
+    } else {
+      toast.error(error || "Failed to debit wallet");
+    }
+  };
+
+  const handleDebitReset = () => {
+    setDebitStep(0);
+    setSelectedEntity(null);
+    setDebitAmount(0);
+    setDebitReason("");
+    setDebitNotes("");
+    dispatch(resetWalletState());
+  };
+
+  const debitSteps = ["Select Entity", "Enter Amount", "Add Reason", "Confirm", "Complete"];
 
   return (
     <Box>
@@ -211,6 +294,7 @@ const WalletManagement = () => {
           }}
         >
           <Tab label="Credit Wallet" />
+          <Tab label="Debit Wallet" />
           <Tab label="View Balance" />
           <Tab label="Transactions" />
           <Tab label="Razorpay Top-up" />
@@ -306,8 +390,263 @@ const WalletManagement = () => {
           </form>
         </TabPanel>
 
-        {/* Tab 2: View Balance */}
+        {/* Tab 2: Debit Wallet - Multi-Step Workflow */}
         <TabPanel value={tabValue} index={1}>
+          <Box className="max-w-4xl">
+            {/* Stepper */}
+            <Stepper activeStep={debitStep} sx={{ mb: 4 }}>
+              {debitSteps.map((label) => (
+                <Step key={label}>
+                  <StepLabel>{label}</StepLabel>
+                </Step>
+              ))}
+            </Stepper>
+
+            {/* Step 0: Select Entity */}
+            {debitStep === 0 && (
+              <Box>
+                <Typography variant="h6" className="mb-4 font-semibold">
+                  Select User or Driver
+                </Typography>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardContent>
+                      <Typography variant="subtitle1" className="font-semibold mb-3">
+                        Users
+                      </Typography>
+                      <Autocomplete
+                        options={users}
+                        getOptionLabel={(option) => `${option.fullName} (${option.email || option.id})`}
+                        onChange={(_, value) => value && handleDebitEntitySelect(value, "USER")}
+                        renderInput={(params) => <TextField {...params} label="Select User" size="small" />}
+                      />
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="subtitle1" className="font-semibold mb-3">
+                        Drivers
+                      </Typography>
+                      <Autocomplete
+                        options={drivers}
+                        getOptionLabel={(option) => `${option.name} (${option.mobile || option.id})`}
+                        onChange={(_, value) => value && handleDebitEntitySelect(value, "DRIVER")}
+                        renderInput={(params) => <TextField {...params} label="Select Driver" size="small" />}
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
+              </Box>
+            )}
+
+            {/* Step 1: Enter Amount */}
+            {debitStep === 1 && selectedEntity && (
+              <Box>
+                <Card className="mb-4">
+                  <CardContent>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Selected {selectedEntity.ownerType}
+                    </Typography>
+                    <Typography variant="h6" className="font-semibold">
+                      {selectedEntity.fullName || selectedEntity.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {selectedEntity.email || selectedEntity.mobile}
+                    </Typography>
+                    <Divider sx={{ my: 2 }} />
+                    <Box className="flex items-center justify-between">
+                      <Typography variant="body2" color="text.secondary">
+                        Current Balance
+                      </Typography>
+                      <Typography variant="h5" className="font-bold" color="primary">
+                        ₹{balance !== null ? balance.toLocaleString() : "Loading..."}
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+
+                <Typography variant="h6" className="mb-3 font-semibold">
+                  Enter Debit Amount
+                </Typography>
+                <TextField
+                  fullWidth
+                  label="Amount (₹)"
+                  type="number"
+                  value={debitAmount || ""}
+                  onChange={(e) => setDebitAmount(Number(e.target.value))}
+                  size="medium"
+                  sx={{ mb: 3 }}
+                  helperText={balance !== null && debitAmount > balance ? "⚠️ Amount exceeds current balance" : ""}
+                  error={balance !== null && debitAmount > balance}
+                />
+
+                <Box className="flex gap-2">
+                  <Button onClick={handleDebitReset} variant="outlined">
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleDebitAmountSubmit}
+                    variant="contained"
+                    disabled={!debitAmount || debitAmount <= 0}
+                    sx={{
+                      backgroundColor: "#120E43",
+                      "&:hover": { backgroundColor: "#0d0a30" },
+                    }}
+                  >
+                    Next
+                  </Button>
+                </Box>
+              </Box>
+            )}
+
+            {/* Step 2: Add Reason */}
+            {debitStep === 2 && (
+              <Box>
+                <Typography variant="h6" className="mb-3 font-semibold">
+                  Reason for Debit
+                </Typography>
+                <TextField
+                  fullWidth
+                  label="Reason (Required)"
+                  value={debitReason}
+                  onChange={(e) => setDebitReason(e.target.value)}
+                  multiline
+                  rows={3}
+                  sx={{ mb: 2 }}
+                  placeholder="e.g., Penalty for policy violation, Refund adjustment, etc."
+                />
+                <TextField
+                  fullWidth
+                  label="Additional Notes (Optional)"
+                  value={debitNotes}
+                  onChange={(e) => setDebitNotes(e.target.value)}
+                  multiline
+                  rows={2}
+                  sx={{ mb: 3 }}
+                />
+
+                <Box className="flex gap-2">
+                  <Button onClick={() => setDebitStep(1)} variant="outlined">
+                    Back
+                  </Button>
+                  <Button
+                    onClick={handleDebitReasonSubmit}
+                    variant="contained"
+                    disabled={!debitReason.trim()}
+                    sx={{
+                      backgroundColor: "#120E43",
+                      "&:hover": { backgroundColor: "#0d0a30" },
+                    }}
+                  >
+                    Next
+                  </Button>
+                </Box>
+              </Box>
+            )}
+
+            {/* Step 3: Confirmation */}
+            {debitStep === 3 && selectedEntity && (
+              <Box>
+                <Typography variant="h6" className="mb-3 font-semibold">
+                  Confirm Debit
+                </Typography>
+                <Card>
+                  <CardContent>
+                    <Box className="space-y-3">
+                      <Box className="flex justify-between">
+                        <Typography color="text.secondary">Entity Type:</Typography>
+                        <Chip label={selectedEntity.ownerType} size="small" color="primary" />
+                      </Box>
+                      <Box className="flex justify-between">
+                        <Typography color="text.secondary">Name:</Typography>
+                        <Typography className="font-semibold">
+                          {selectedEntity.fullName || selectedEntity.name}
+                        </Typography>
+                      </Box>
+                      <Box className="flex justify-between">
+                        <Typography color="text.secondary">Current Balance:</Typography>
+                        <Typography className="font-semibold">₹{balance?.toLocaleString()}</Typography>
+                      </Box>
+                      <Divider />
+                      <Box className="flex justify-between">
+                        <Typography color="text.secondary">Debit Amount:</Typography>
+                        <Typography className="font-bold text-xl" color="error">
+                          - ₹{debitAmount.toLocaleString()}
+                        </Typography>
+                      </Box>
+                      <Box className="flex justify-between">
+                        <Typography color="text.secondary">New Balance:</Typography>
+                        <Typography className="font-bold" color="success.main">
+                          ₹{((balance || 0) - debitAmount).toLocaleString()}
+                        </Typography>
+                      </Box>
+                      <Divider />
+                      <Box>
+                        <Typography color="text.secondary" className="mb-1">
+                          Reason:
+                        </Typography>
+                        <Typography>{debitReason}</Typography>
+                      </Box>
+                      {debitNotes && (
+                        <Box>
+                          <Typography color="text.secondary" className="mb-1">
+                            Notes:
+                          </Typography>
+                          <Typography>{debitNotes}</Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  </CardContent>
+                </Card>
+
+                <Alert severity="warning" sx={{ mt: 3, mb: 3 }}>
+                  This action will debit ₹{debitAmount.toLocaleString()} from the wallet. Please confirm to proceed.
+                </Alert>
+
+                <Box className="flex gap-2">
+                  <Button onClick={() => setDebitStep(2)} variant="outlined">
+                    Back
+                  </Button>
+                  <Button
+                    onClick={handleDebitConfirm}
+                    variant="contained"
+                    disabled={isLoading}
+                    sx={{
+                      backgroundColor: "#d32f2f",
+                      "&:hover": { backgroundColor: "#b71c1c" },
+                    }}
+                    startIcon={isLoading ? <CircularProgress size={20} sx={{ color: "white" }} /> : null}
+                  >
+                    Confirm Debit
+                  </Button>
+                </Box>
+              </Box>
+            )}
+
+            {/* Step 4: Success */}
+            {debitStep === 4 && (
+              <Box className="text-center py-8">
+                <Alert severity="success" sx={{ mb: 3 }}>
+                  Wallet debited successfully!
+                </Alert>
+                <Typography variant="h5" className="mb-2 font-bold" color="success.main">
+                  ₹{debitAmount.toLocaleString()}
+                </Typography>
+                <Typography color="text.secondary" className="mb-4">
+                  has been debited from {selectedEntity?.fullName || selectedEntity?.name}'s wallet
+                </Typography>
+                <Button onClick={handleDebitReset} variant="contained" sx={{ backgroundColor: "#120E43" }}>
+                  Start New Debit
+                </Button>
+              </Box>
+            )}
+
+            {error && debitStep < 4 && <Alert severity="error" sx={{ mt: 3 }}>{error}</Alert>}
+          </Box>
+        </TabPanel>
+
+        {/* Tab 3: View Balance */}
+        <TabPanel value={tabValue} index={2}>
           <form onSubmit={balanceFormik.handleSubmit}>
             <div className="space-y-4 max-w-2xl">
               <FormControl fullWidth size="small">
@@ -381,8 +720,8 @@ const WalletManagement = () => {
           </form>
         </TabPanel>
 
-        {/* Tab 3: Transactions */}
-        <TabPanel value={tabValue} index={2}>
+        {/* Tab 4: Transactions */}
+        <TabPanel value={tabValue} index={3}>
           <form onSubmit={transactionsFormik.handleSubmit}>
             <div className="space-y-4">
               <div className="flex gap-4 max-w-2xl">
@@ -515,8 +854,8 @@ const WalletManagement = () => {
           </form>
         </TabPanel>
 
-        {/* Tab 3: Razorpay Top-up */}
-        <TabPanel value={tabValue} index={3}>
+        {/* Tab 5: Razorpay Top-up */}
+        <TabPanel value={tabValue} index={4}>
           <form onSubmit={topUpFormik.handleSubmit}>
             <div className="space-y-4 max-w-2xl">
               <Typography variant="body2" className="text-gray-600 mb-4">
@@ -535,6 +874,32 @@ const WalletManagement = () => {
                   <MenuItem value="DRIVER">Driver</MenuItem>
                 </Select>
               </FormControl>
+
+              <Autocomplete
+                fullWidth
+                options={topUpFormik.values.ownerType === "USER" ? users : drivers}
+                getOptionLabel={(option) => {
+                  if (typeof option === 'string') return option;
+                  return `${option.fullName || option.name} (${option.email || option.mobile || option.id})`;
+                }}
+                value={
+                  (topUpFormik.values.ownerType === "USER" ? users : drivers).find(
+                    (u) => u.id.toString() === topUpFormik.values.ownerId
+                  ) || null
+                }
+                onChange={(_, newValue) => {
+                  topUpFormik.setFieldValue("ownerId", newValue ? newValue.id.toString() : "");
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={`Select ${topUpFormik.values.ownerType === "USER" ? "User" : "Driver"}`}
+                    error={topUpFormik.touched.ownerId && Boolean(topUpFormik.errors.ownerId)}
+                    helperText={topUpFormik.touched.ownerId && topUpFormik.errors.ownerId}
+                    size="small"
+                  />
+                )}
+              />
 
               <TextField
                 fullWidth

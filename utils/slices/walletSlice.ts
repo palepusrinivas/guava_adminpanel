@@ -3,6 +3,8 @@ import adminAxios from "../axiosConfig";
 import {
     adminWalletCreditUserUrl,
     adminWalletCreditDriverUrl,
+    adminWalletDebitUserUrl,
+    adminWalletDebitDriverUrl,
     walletBalanceUrl,
     walletTransactionsUrl,
     walletTopUpUrl,
@@ -15,9 +17,16 @@ export interface CreditRequest {
     notes: string;
 }
 
+export interface DebitRequest {
+    amount: number;
+    reason: string;
+    notes?: string;
+}
+
 export interface TopUpRequest {
     amount: number;
     ownerType: "USER" | "DRIVER";
+    ownerId: string;
 }
 
 export interface TopUpResponse {
@@ -59,9 +68,11 @@ interface WalletState {
     isLoading: boolean;
     error: string | null;
     creditSuccess: boolean;
+    debitSuccess: boolean;
     topUpLink: string | null;
     users: any[];
     drivers: any[];
+    workflowStep: number;
 }
 
 const initialState: WalletState = {
@@ -70,9 +81,11 @@ const initialState: WalletState = {
     isLoading: false,
     error: null,
     creditSuccess: false,
+    debitSuccess: false,
     topUpLink: null,
     users: [],
     drivers: [],
+    workflowStep: 0,
 };
 
 // Async Thunks
@@ -96,6 +109,30 @@ export const creditDriverWallet = createAsyncThunk(
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || "Failed to credit driver wallet");
+        }
+    }
+);
+
+export const debitUserWallet = createAsyncThunk(
+    "wallet/debitUser",
+    async ({ userId, data }: { userId: string; data: DebitRequest }, { rejectWithValue }) => {
+        try {
+            const response = await adminAxios.post(adminWalletDebitUserUrl(userId), data);
+            return response.data;
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.message || "Failed to debit user wallet");
+        }
+    }
+);
+
+export const debitDriverWallet = createAsyncThunk(
+    "wallet/debitDriver",
+    async ({ driverId, data }: { driverId: string; data: DebitRequest }, { rejectWithValue }) => {
+        try {
+            const response = await adminAxios.post(adminWalletDebitDriverUrl(driverId), data);
+            return response.data;
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.message || "Failed to debit driver wallet");
         }
     }
 );
@@ -149,12 +186,20 @@ const walletSlice = createSlice({
         clearCreditSuccess: (state) => {
             state.creditSuccess = false;
         },
+        clearDebitSuccess: (state) => {
+            state.debitSuccess = false;
+        },
+        setWorkflowStep: (state, action) => {
+            state.workflowStep = action.payload;
+        },
         resetWalletState: (state) => {
             state.balance = null;
             state.transactions = [];
             state.error = null;
             state.creditSuccess = false;
+            state.debitSuccess = false;
             state.topUpLink = null;
+            state.workflowStep = 0;
         },
     },
     extraReducers: (builder) => {
@@ -184,6 +229,34 @@ const walletSlice = createSlice({
                 state.creditSuccess = true;
             })
             .addCase(creditDriverWallet.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload as string;
+            })
+            // Debit User Wallet
+            .addCase(debitUserWallet.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+                state.debitSuccess = false;
+            })
+            .addCase(debitUserWallet.fulfilled, (state) => {
+                state.isLoading = false;
+                state.debitSuccess = true;
+            })
+            .addCase(debitUserWallet.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload as string;
+            })
+            // Debit Driver Wallet
+            .addCase(debitDriverWallet.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+                state.debitSuccess = false;
+            })
+            .addCase(debitDriverWallet.fulfilled, (state) => {
+                state.isLoading = false;
+                state.debitSuccess = true;
+            })
+            .addCase(debitDriverWallet.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload as string;
             })
@@ -238,6 +311,6 @@ const walletSlice = createSlice({
     },
 });
 
-export const { clearWalletError, clearCreditSuccess, resetWalletState } = walletSlice.actions;
+export const { clearWalletError, clearCreditSuccess, clearDebitSuccess, setWorkflowStep, resetWalletState } = walletSlice.actions;
 export { getUsers, getDrivers };
 export default walletSlice.reducer;

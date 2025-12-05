@@ -134,11 +134,15 @@ export const adminThirdPartyConfigurationUrl = getApiUrl(config.ENDPOINTS.ADMIN.
 // Wallet endpoints
 export const walletBalanceUrl = (ownerType: string, ownerId: string) =>
   getApiUrl(`/api/wallet/${ownerType}/${ownerId}`);
+export const adminWalletDebitUserUrl = (userId: string) =>
+  getApiUrl(`/api/admin/wallet/debit/user/${userId}`);
+export const adminWalletDebitDriverUrl = (driverId: string) =>
+  getApiUrl(`/api/admin/wallet/debit/driver/${driverId}`);
 export const walletTransactionsUrl = (ownerType: string, ownerId: string) =>
   getApiUrl(`/api/wallet/${ownerType}/${ownerId}/transactions`);
 export const walletWithdrawUrl = (ownerType: string, ownerId: string) =>
   getApiUrl(`/api/wallet/${ownerType}/${ownerId}/withdraw`);
-export const walletTopUpUrl = getApiUrl("/api/payments/wallet/topup");
+export const walletTopUpUrl = getApiUrl("/api/admin/wallet/topup");
 export const walletVerifyUrl = (transactionId: string) => getApiUrl(`/api/payments/wallet/verify/${transactionId}`);
 
 // School subscription endpoints
