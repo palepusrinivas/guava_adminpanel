@@ -5,6 +5,8 @@ const nextConfig = {
       { hostname: "s3-ap-southeast-1.amazonaws.com" },
       { hostname: "olawebcdn.com" },
       { hostname: "cdn.pixabay.com" },
+      { hostname: "firebasestorage.googleapis.com" },
+      { hostname: "storage.googleapis.com" },
     ],
   },
   // proxy for api requests
