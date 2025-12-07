@@ -64,7 +64,7 @@ export const getServices = createAsyncThunk(
 
 export const getServicesList = createAsyncThunk(
   "serviceConfig/getServicesList",
-  async (active?: boolean, { rejectWithValue }) => {
+  async (active: boolean | undefined = undefined, { rejectWithValue }) => {
     try {
       const response = await adminAxios.get(`${adminServicesUrl}/list`, { params: { active } });
       return response.data;

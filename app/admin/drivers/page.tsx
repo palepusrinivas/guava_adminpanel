@@ -28,36 +28,63 @@ export default function AdminDriversPage() {
     setLoading(true);
     setErrorMsg(null);
     try {
-      const response = await dispatch(getDrivers({ page: currentPage + 1, size: pageSize }));
+      // Backend expects 0-based page numbers
+      const response = await dispatch(getDrivers({ page: currentPage, size: pageSize }));
       if (getDrivers.fulfilled.match(response)) {
         const payload = response.payload;
         
+        console.log("Driver API Response:", payload); // Debug log
+        
         let list = [];
-        if (Array.isArray(payload)) {
-          list = payload;
-        } else if (Array.isArray(payload?.content)) {
-          list = payload.content;
-        } else if (typeof payload === 'object' && payload !== null) {
-          list = payload?.data || payload?.drivers || [];
+        let total = 0;
+        
+        // Handle Spring Data Page response
+        if (payload && typeof payload === 'object') {
+          // Check for Spring Page structure
+          if (Array.isArray(payload.content)) {
+            list = payload.content;
+            total = payload.totalElements || payload.total || 0;
+          } else if (Array.isArray(payload)) {
+            // Direct array response
+            list = payload;
+            total = payload.length;
+          } else if (payload.data && Array.isArray(payload.data)) {
+            list = payload.data;
+            total = payload.total || payload.count || payload.data.length;
+          } else if (payload.drivers && Array.isArray(payload.drivers)) {
+            list = payload.drivers;
+            total = payload.total || payload.count || payload.drivers.length;
+          }
         }
         
+        console.log("Parsed drivers list:", list); // Debug log
+        
+        // Map driver data - handle different field names
         const cleanedDrivers = list.map((driver: any) => ({
-          id: driver.id,
-          name: driver.name,
-          email: driver.email,
-          mobile: driver.mobile,
-          rating: driver.rating,
-          latitude: driver.latitude,
-          longitude: driver.longitude
-        }));
+          id: driver.id?.toString() || driver.driverId?.toString() || "",
+          name: driver.name || driver.fullName || driver.firstName + " " + (driver.lastName || "") || driver.email || "Unknown",
+          email: driver.email || "",
+          mobile: driver.mobile || driver.phone || "",
+          rating: driver.rating || 0,
+          latitude: driver.latitude || 0,
+          longitude: driver.longitude || 0
+        })).filter((d: any) => d.id); // Filter out drivers without ID
+        
+        console.log("Cleaned drivers:", cleanedDrivers); // Debug log
         
         setDrivers(cleanedDrivers);
-        setTotalElements(payload?.totalElements || payload?.total || payload?.count || list.length);
+        setTotalElements(total || cleanedDrivers.length);
       } else {
-        setErrorMsg((response as any).payload || "Failed to fetch drivers");
+        const errorPayload = (response as any).payload;
+        const errorMsg = typeof errorPayload === 'string' 
+          ? errorPayload 
+          : errorPayload?.message || errorPayload?.error || "Failed to fetch drivers";
+        console.error("Failed to fetch drivers:", errorPayload);
+        setErrorMsg(errorMsg);
         setDrivers([]);
       }
     } catch (error: any) {
+      console.error("Error fetching drivers:", error);
       setErrorMsg(error?.message || "Failed to fetch drivers");
       setDrivers([]);
     } finally {

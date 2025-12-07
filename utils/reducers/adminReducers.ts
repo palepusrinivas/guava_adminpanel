@@ -1612,7 +1612,25 @@ export const createVehicleCategory = createAsyncThunk(
   "admin/createVehicleCategory",
   async (categoryData: any, { rejectWithValue }) => {
     try {
-      const response = await adminAxios.post(adminVehicleCategoriesUrl, categoryData);
+      // Always send as FormData for multipart/form-data
+      const formData = new FormData();
+      formData.append("name", categoryData.name);
+      formData.append("description", categoryData.description);
+      formData.append("type", categoryData.type);
+      
+      // Handle image: if it's a File, append it; if it's a URL string, append as image param
+      if (categoryData.image instanceof File) {
+        formData.append("image", categoryData.image);
+      } else if (typeof categoryData.image === "string" && categoryData.image && !categoryData.image.startsWith("blob:")) {
+        // If it's a URL (not a blob URL), send as image parameter
+        formData.append("image", categoryData.image);
+      }
+      
+      const response = await adminAxios.post(adminVehicleCategoriesUrl, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(extractErrorMessage(error));

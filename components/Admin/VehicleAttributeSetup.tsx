@@ -96,22 +96,58 @@ export default function VehicleAttributeSetup() {
     },
   });
 
+  const [categoryImage, setCategoryImage] = useState<File | null>(null);
+  const [categoryImagePreview, setCategoryImagePreview] = useState<string | null>(null);
+
+  // Vehicle category type options for dropdown
+  const VEHICLE_CATEGORY_TYPES = [
+    { value: "AUTO", label: "Auto (Three Wheeler)" },
+    { value: "CAR", label: "Car (Four Wheeler)" },
+    { value: "BIKE", label: "Bike (Two Wheeler)" },
+    { value: "THREE_WHEELER", label: "Three Wheeler" },
+    { value: "FOUR_WHEELER", label: "Four Wheeler" },
+    { value: "TWO_WHEELER", label: "Two Wheeler" },
+    { value: "PREMIUM", label: "Premium" },
+    { value: "LUXURY", label: "Luxury" },
+    { value: "ECONOMY", label: "Economy" },
+  ];
+
   // Category Form
   const categoryFormik = useFormik({
     initialValues: {
-      categoryName: "",
+      name: "",
+      description: "",
+      type: "",
+      image: "",
     },
     validationSchema: yup.object({
-      categoryName: yup.string().required("Category name is required"),
+      name: yup.string().required("Category name is required"),
+      description: yup.string().required("Description is required"),
+      type: yup.string().required("Category type is required"),
+      image: yup.string().when([], {
+        is: () => !categoryImage,
+        then: (schema) => schema.required("Category image is required"),
+        otherwise: (schema) => schema,
+      }),
     }),
     onSubmit: async (values) => {
       try {
         setSubmitError(null);
         setSubmitSuccess(null);
-        const result = await dispatch(createVehicleCategory(values));
+        const categoryData = {
+          name: values.name,
+          description: values.description,
+          type: values.type,
+          // Send the File object directly if available
+          image: categoryImage || null,
+          isActive: true,
+        };
+        const result = await dispatch(createVehicleCategory(categoryData));
         if ((result as any).meta.requestStatus === "fulfilled") {
           setSubmitSuccess("Category created successfully!");
           categoryFormik.resetForm();
+          setCategoryImage(null);
+          setCategoryImagePreview(null);
           dispatch(getVehicleCategories());
         } else {
           throw new Error((result as any).payload || "Failed to create category");
@@ -121,6 +157,22 @@ export default function VehicleAttributeSetup() {
       }
     },
   });
+
+  const handleCategoryImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setSubmitError("Image size must be less than 5 MB");
+        return;
+      }
+      setCategoryImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCategoryImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -457,42 +509,192 @@ export default function VehicleAttributeSetup() {
 
       {/* Category Tab */}
       {activeTab === "category" && (
-        <div className="bg-white rounded-xl shadow p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">ADD NEW CATEGORY</h2>
-          {submitSuccess && (
-            <div className="mb-4 p-3 rounded bg-green-50 border border-green-200 text-green-800 text-sm">
-              {submitSuccess}
-            </div>
-          )}
-          {submitError && (
-            <div className="mb-4 p-3 rounded bg-red-50 border border-red-200 text-red-800 text-sm">{submitError}</div>
-          )}
-          <form onSubmit={categoryFormik.handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Category Name</label>
-              <input
-                name="categoryName"
-                value={categoryFormik.values.categoryName}
-                onChange={categoryFormik.handleChange}
-                onBlur={categoryFormik.handleBlur}
-                placeholder="Ex: Category name"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none"
-              />
-              {categoryFormik.touched.categoryName && categoryFormik.errors.categoryName && (
-                <p className="text-sm text-red-600 mt-1">{categoryFormik.errors.categoryName}</p>
+        <>
+          {/* Add New Category Section */}
+          <div className="bg-white rounded-xl shadow">
+            <div className="p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-6">ADD NEW CATEGORY</h2>
+              {submitSuccess && (
+                <div className="mb-4 p-3 rounded bg-green-50 border border-green-200 text-green-800 text-sm">
+                  {submitSuccess}
+                </div>
               )}
+              {submitError && (
+                <div className="mb-4 p-3 rounded bg-red-50 border border-red-200 text-red-800 text-sm">{submitError}</div>
+              )}
+              <form onSubmit={categoryFormik.handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Category Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        name="name"
+                        value={categoryFormik.values.name}
+                        onChange={categoryFormik.handleChange}
+                        onBlur={categoryFormik.handleBlur}
+                        placeholder="Ex: MEGA, SEDAN, AUTO"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none"
+                      />
+                      {categoryFormik.touched.name && categoryFormik.errors.name && (
+                        <p className="text-sm text-red-600 mt-1">{categoryFormik.errors.name}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Category Type <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        name="type"
+                        value={categoryFormik.values.type}
+                        onChange={categoryFormik.handleChange}
+                        onBlur={categoryFormik.handleBlur}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-teal-500 outline-none"
+                      >
+                        <option value="">Select Category Type</option>
+                        {VEHICLE_CATEGORY_TYPES.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      {categoryFormik.touched.type && categoryFormik.errors.type && (
+                        <p className="text-sm text-red-600 mt-1">{categoryFormik.errors.type}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Description <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        name="description"
+                        value={categoryFormik.values.description}
+                        onChange={categoryFormik.handleChange}
+                        onBlur={categoryFormik.handleBlur}
+                        rows={4}
+                        placeholder="Ex: Description of the vehicle category"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none"
+                      />
+                      {categoryFormik.touched.description && categoryFormik.errors.description && (
+                        <p className="text-sm text-red-600 mt-1">{categoryFormik.errors.description}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Category Image <span className="text-red-500">*</span>
+                    </label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-teal-500 transition-colors">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCategoryImageChange}
+                        className="hidden"
+                        id="categoryImage"
+                      />
+                      <label htmlFor="categoryImage" className="cursor-pointer">
+                        {categoryImagePreview ? (
+                          <div className="space-y-2">
+                            <img
+                              src={categoryImagePreview}
+                              alt="Preview"
+                              className="w-32 h-32 mx-auto rounded object-cover"
+                            />
+                            <p className="text-sm text-gray-600">Click to change image</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <svg
+                              className="w-12 h-12 mx-auto text-blue-500"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                              />
+                            </svg>
+                            <p className="text-sm text-blue-600 font-medium">Click to upload Or drag and drop</p>
+                          </div>
+                        )}
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">5MB image note</p>
+                    {categoryFormik.touched.image && categoryFormik.errors.image && (
+                      <p className="text-sm text-red-600 mt-1">{categoryFormik.errors.image}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="px-6 py-2 rounded-lg bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50"
+                  >
+                    {isLoading ? "Submitting..." : "Submit"}
+                  </button>
+                </div>
+              </form>
             </div>
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="px-6 py-2 rounded-lg bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50"
-              >
-                {isLoading ? "Submitting..." : "Submit"}
-              </button>
+          </div>
+
+          {/* Category List Section */}
+          <div className="bg-white rounded-xl shadow">
+            <div className="bg-teal-500 rounded-t-xl p-4">
+              <h2 className="text-xl font-bold text-white">Category List</h2>
             </div>
-          </form>
-        </div>
+            <div className="p-6">
+              <div className="text-sm text-gray-500 mb-4">Total Categories: {categories.length}</div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-600">
+                    <tr>
+                      <th className="px-4 py-3 text-left">SL</th>
+                      <th className="px-4 py-3 text-left">Category Name</th>
+                      <th className="px-4 py-3 text-left">Type</th>
+                      <th className="px-4 py-3 text-left">Status</th>
+                      <th className="px-4 py-3 text-left">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {(isLoading ? [] : categories).map((category, idx) => (
+                      <tr key={category.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3">{idx + 1}</td>
+                        <td className="px-4 py-3 font-medium">{category.categoryName || (category as any).name}</td>
+                        <td className="px-4 py-3">{(category as any).type || "-"}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`px-2 py-1 rounded text-xs ${
+                              category.active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {category.active ? "Active" : "Inactive"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <button className="px-3 py-1 text-xs rounded bg-teal-600 text-white hover:bg-teal-700">
+                            Edit
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {!isLoading && categories.length === 0 && (
+                      <tr>
+                        <td className="px-4 py-6 text-center text-gray-500" colSpan={5}>
+                          No categories found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

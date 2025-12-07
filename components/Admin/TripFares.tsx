@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import * as Yup from "yup";
 import { useFormik } from "formik";
 import { toast } from "react-hot-toast";
@@ -8,8 +8,11 @@ import {
   getTripFares,
   createTripFare,
   deleteTripFare,
+  getOperationZones,
+  getVehicleCategories,
 } from "@/utils/reducers/adminReducers";
 import type { TripFare, TripFarePayload } from "@/types/pricing";
+import { Autocomplete, TextField } from "@mui/material";
 
 // ✅ Validation schema
 const fareValidationSchema: Yup.ObjectSchema<TripFarePayload> = Yup.object({
@@ -98,10 +101,14 @@ const fareValidationSchema: Yup.ObjectSchema<TripFarePayload> = Yup.object({
 function TripFares() {
   const dispatch = useAppDispatch();
   const { admin } = useAppSelector((s) => s.admin);
+  const { operationZones } = useAppSelector((s) => s.tripFare);
+  const { categories: vehicleCategories } = useAppSelector((s) => s.vehicle);
   const [fares, setFares] = useState<TripFare[]>([]);
   const [page, setPage] = useState(0);
   const [size] = useState(10);
   const [loading, setLoading] = useState(false);
+  const [zonesLoading, setZonesLoading] = useState(false);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
 
   const fetchFares = async () => {
     setLoading(true);
@@ -129,6 +136,75 @@ function TripFares() {
     fetchFares();
   }, [page]);
 
+  // Fetch zones on mount
+  useEffect(() => {
+    const fetchZones = async () => {
+      setZonesLoading(true);
+      try {
+        await dispatch(getOperationZones()).unwrap();
+      } catch (error) {
+        console.error("Failed to fetch zones:", error);
+      } finally {
+        setZonesLoading(false);
+      }
+    };
+    fetchZones();
+  }, [dispatch]);
+
+  // Fetch vehicle categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setCategoriesLoading(true);
+      try {
+        await dispatch(getVehicleCategories()).unwrap();
+      } catch (error: any) {
+        // Silently handle error - categories dropdown will just be empty
+        console.warn("Failed to fetch vehicle categories:", error?.message || error);
+        // Don't show toast error as this is not critical for the form to work
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+    fetchCategories();
+  }, [dispatch]);
+
+  // Prepare zones for Autocomplete
+  const zoneOptions = useMemo(() => {
+    if (!operationZones || operationZones.length === 0) return [];
+    
+    return operationZones.map((zone: any) => {
+      const zoneId = zone.id?.toString() || "";
+      const zoneName = zone.name || `Zone ${zone.id}`;
+      // Check if ID is numeric (old Zone model) or UUID (new ZoneV2 model)
+      const isNumericId = zoneId && !isNaN(Number(zoneId)) && !zoneId.includes('-');
+      
+      return {
+        id: zoneId,
+        name: zoneName,
+        label: `${zoneName}${isNumericId ? ' (Use name)' : ''}`,
+        isNumericId, // Flag to indicate if this is a numeric ID
+      };
+    });
+  }, [operationZones]);
+
+  // Prepare vehicle categories for Autocomplete
+  const categoryOptions = useMemo(() => {
+    if (!vehicleCategories || vehicleCategories.length === 0) return [];
+    
+    return vehicleCategories.map((category: any) => {
+      // Category can have name, type, or categoryName field
+      const categoryName = category.name || category.type || category.categoryName || `Category ${category.id}`;
+      const categoryType = category.type || category.name || category.categoryName || "";
+      
+      return {
+        id: category.id?.toString() || "",
+        name: categoryName,
+        type: categoryType,
+        label: categoryType ? `${categoryType} (${categoryName})` : categoryName,
+      };
+    });
+  }, [vehicleCategories]);
+
   const formik = useFormik<TripFarePayload>({
     initialValues: {
       zoneName: "",
@@ -150,7 +226,28 @@ function TripFares() {
     validationSchema: fareValidationSchema,
     onSubmit: async (values, { resetForm }) => {
       try {
-        const response = await dispatch(createTripFare(values));
+        // Clean the payload: remove numeric zoneId (old Zone model uses numeric IDs)
+        // TripFare uses ZoneV2 which requires UUID strings or zoneName
+        const payload: TripFarePayload = { ...values };
+        
+        // If zoneId is numeric (not a UUID), remove it and rely on zoneName
+        if (payload.zoneId) {
+          const zoneIdStr = payload.zoneId.toString();
+          // UUID format: 36 characters with hyphens (e.g., "550e8400-e29b-41d4-a716-446655440000")
+          const isUuid = zoneIdStr.length === 36 && zoneIdStr.includes('-');
+          if (!isUuid) {
+            // Numeric ID from old Zone model - remove it, use zoneName instead
+            delete payload.zoneId;
+          }
+        }
+        
+        // Ensure zoneName is set if zoneId was removed
+        if (!payload.zoneId && !payload.zoneName) {
+          toast.error("Zone name is required");
+          return;
+        }
+        
+        const response = await dispatch(createTripFare(payload));
         if (createTripFare.fulfilled.match(response)) {
           toast.success("Trip fare created");
           resetForm();
@@ -207,16 +304,51 @@ function TripFares() {
           <form onSubmit={formik.handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Zone Name
                 </label>
-                <input
-                  name="zoneName"
-                  value={formik.values.zoneName}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., Hyderabad-Central"
+                <Autocomplete
+                  options={zoneOptions}
+                  getOptionLabel={(option) => 
+                    typeof option === 'string' ? option : option.label || option.name || ""
+                  }
+                  value={
+                    zoneOptions.find(
+                      (z) => z.id === formik.values.zoneId || z.name === formik.values.zoneName
+                    ) || null
+                  }
+                  onChange={(_, newValue) => {
+                    if (newValue && typeof newValue === 'object') {
+                      // Always set zoneName (works for both old and new zone models)
+                      formik.setFieldValue("zoneName", newValue.name || "");
+                      
+                      // Only set zoneId if it's a UUID (36 chars with hyphens)
+                      // Old Zone model uses numeric IDs which won't work with ZoneV2
+                      const zoneIdStr = newValue.id?.toString() || "";
+                      const isUuid = zoneIdStr.length === 36 && zoneIdStr.includes('-');
+                      
+                      if (isUuid) {
+                        formik.setFieldValue("zoneId", zoneIdStr);
+                      } else {
+                        // Clear zoneId for numeric IDs - backend will use zoneName instead
+                        formik.setFieldValue("zoneId", "");
+                      }
+                    } else {
+                      formik.setFieldValue("zoneName", "");
+                      formik.setFieldValue("zoneId", "");
+                    }
+                  }}
+                  onBlur={() => formik.setFieldTouched("zoneName", true)}
+                  loading={zonesLoading}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      placeholder="Select zone..."
+                      size="small"
+                      error={formik.touched.zoneName && Boolean(formik.errors.zoneName)}
+                      helperText={formik.touched.zoneName && formik.errors.zoneName}
+                    />
+                  )}
                 />
                 {formik.touched.zoneName && formik.errors.zoneName && (
                   <p className="mt-1 text-sm text-red-600">
@@ -226,16 +358,41 @@ function TripFares() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Category Type
                 </label>
-                <input
-                  name="categoryType"
-                  value={formik.values.categoryType}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., MEGA"
+                <Autocomplete
+                  options={categoryOptions}
+                  getOptionLabel={(option) => 
+                    typeof option === 'string' ? option : option.label || option.type || option.name || ""
+                  }
+                  value={
+                    categoryOptions.find(
+                      (c) => c.type === formik.values.categoryType || 
+                            c.name === formik.values.categoryType ||
+                            c.id === formik.values.vehicleCategoryId
+                    ) || null
+                  }
+                  onChange={(_, newValue) => {
+                    if (newValue && typeof newValue === 'object') {
+                      formik.setFieldValue("categoryType", newValue.type || newValue.name);
+                      formik.setFieldValue("vehicleCategoryId", newValue.id);
+                      formik.setFieldValue("categoryName", newValue.name);
+                    } else {
+                      formik.setFieldValue("categoryType", "");
+                      formik.setFieldValue("vehicleCategoryId", "");
+                      formik.setFieldValue("categoryName", "");
+                    }
+                  }}
+                  onBlur={() => formik.setFieldTouched("categoryType", true)}
+                  loading={categoriesLoading}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      placeholder="Select category..."
+                      size="small"
+                    />
+                  )}
                 />
               </div>
 

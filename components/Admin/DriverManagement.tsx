@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useFormik } from "formik";
 import * as yup from "yup";
 import { useAppSelector } from "@/utils/store/store";
@@ -62,9 +63,14 @@ function DriverManagement({
   loading,
   error,
 }: DriverManagementProps) {
+  const router = useRouter();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState<any>(null);
+
+  const handleViewDriver = (driverId: string) => {
+    router.push(`/admin/drivers/${driverId}`);
+  };
 
   const createFormik = useFormik({
     initialValues: {
@@ -179,52 +185,75 @@ function DriverManagement({
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                {/* Sample data - replace with actual data from Redux store */}
-                {drivers.map((driver) => (
-                  <tr key={driver.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 flex-shrink-0">
-                          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                            <span className="text-sm font-medium text-gray-700">
-                              {driver.name.split(" ").map(n => n[0]).join("")}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{driver.name}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{driver.email}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{driver.mobile}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <span className="text-yellow-400">★</span>
-                        <span className="ml-1 text-sm text-gray-900">{driver.rating}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {driver.latitude.toFixed(4)}, {driver.longitude.toFixed(4)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEditDriver(driver)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteDriver(driver.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Delete
-                        </button>
+                {drivers.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center">
+                        <svg className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <h3 className="mt-2 text-sm font-medium text-gray-900">No drivers found</h3>
+                        <p className="mt-1 text-sm text-gray-500">
+                          {error ? "Error loading drivers. Please try again." : "Get started by creating a new driver."}
+                        </p>
                       </div>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  drivers.map((driver) => (
+                    <tr key={driver.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="h-10 w-10 flex-shrink-0">
+                            <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                              <span className="text-sm font-medium text-gray-700">
+                                {driver.name ? driver.name.split(" ").map(n => n?.[0] || "").join("") : "?"}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">{driver.name || "N/A"}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{driver.email || "-"}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{driver.mobile || "-"}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <span className="text-yellow-400">★</span>
+                          <span className="ml-1 text-sm text-gray-900">{driver.rating ?? 0}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {driver.latitude != null && driver.longitude != null 
+                          ? `${driver.latitude.toFixed(4)}, ${driver.longitude.toFixed(4)}`
+                          : "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleViewDriver(driver.id)}
+                            className="text-green-600 hover:text-green-900"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() => handleEditDriver(driver)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteDriver(driver.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

@@ -78,7 +78,15 @@ const tripFareSlice = createSlice({
       })
       .addCase(getOperationZones.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.operationZones = action.payload || [];
+        // Handle both array and paginated response
+        const payload = action.payload || {};
+        if (Array.isArray(payload)) {
+          state.operationZones = payload;
+        } else if (payload.content && Array.isArray(payload.content)) {
+          state.operationZones = payload.content;
+        } else {
+          state.operationZones = [];
+        }
       })
       .addCase(getOperationZones.rejected, (state, action) => {
         state.isLoading = false;

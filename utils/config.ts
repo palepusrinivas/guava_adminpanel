@@ -2,9 +2,9 @@
 export const config = {
   // API Configuration
   // Production (Netlify): Use Azure backend
-  //API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net",
+  API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net",
   // Uncomment below for local development:
-   API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080",
+   //API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080",
   LOCATIONIQ_API_KEY: process.env.NEXT_PUBLIC_LOCATIONIQ_API_KEY || "pk.1dca78a113a7c45533e83e6c9f2196ae",
   GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyA4l8wJ5bYRj_iPcaWF1TTuPt5KVDGMFpo", // Temporary hardcoded key
 
@@ -45,6 +45,17 @@ export const config = {
       USER_PROFILE: "/api/v1/user/profile",
       DRIVER_PROFILE: "/api/v1/driver/profile",
     },
+    DRIVER: {
+      PROFILE: "/api/v1/driver/profile",
+      TRIP_HISTORY: "/api/v1/ride/driver/history",
+      TRIP_HISTORY_ALT: "/api/history/driver/rides",
+      SET_ONLINE_STATUS: "/api/v1/driver/status/online",
+      CURRENT_RIDE: "/api/v1/driver/:driverId/current_ride",
+      STARTED_RIDES: "/api/v1/driver/rides/started",
+      ALLOCATED_RIDES: "/api/v1/driver/rides/allocated",
+      COMPLETED_RIDES: "/api/v1/driver/rides/completed",
+      CHANGE_PASSWORD: "/api/v1/driver/change-password",
+    },
     RIDE: {
       REQUEST: "/api/v1/ride/request",
       START: "/api/v1/ride/:id/start",
@@ -70,11 +81,20 @@ export const config = {
       USER_BY_ID: "/api/admin/users/:id",
       DRIVERS: "/api/admin/drivers",
       DRIVER_BY_ID: "/api/admin/drivers/:id",
-      DRIVER_KYC: "/api/admin/kyc/drivers/:id",
+      DRIVER_KYC_LEGACY: "/api/admin/kyc/drivers/:id",
       DRIVER_KYC_FILE: "/api/admin/kyc/drivers/:id/files/:name",
       DRIVER_KYC_DOWNLOAD: "/api/admin/kyc/drivers/:id/files/:name/download",
+      DRIVER_DETAILS: "/api/admin/drivers/:id/details",
+      DRIVER_KYC: "/api/admin/drivers/:id/kyc",
+      DRIVER_KYC_APPROVE: "/api/admin/drivers/:id/kyc/approve",
+      DRIVER_KYC_REJECT: "/api/admin/drivers/:id/kyc/reject",
+      DRIVERS_PENDING_KYC: "/api/admin/drivers/pending-kyc",
       WALLET_CREDIT_USER: "/api/admin/wallet/credit/user/:id",
       WALLET_CREDIT_DRIVER: "/api/admin/wallet/credit/driver/:id",
+      WALLET_TOPUP: "/api/admin/wallet/topup",
+      RAZORPAY_TRANSACTIONS: "/api/admin/wallet/razorpay-transactions",
+      RAZORPAY_TRANSACTION_BY_ID: "/api/admin/wallet/razorpay-transactions/:id",
+      RAZORPAY_TRANSACTION_STATS: "/api/admin/wallet/razorpay-transactions/stats",
       ZONES: "/api/admin/zones",
       ZONE_BY_ID: "/api/admin/zones/:id",
       FLEET_LOCATIONS: "/api/admin/fleet/locations",
@@ -208,5 +228,16 @@ export const getApiUrl = (endpoint: string): string => {
 // Helper function to get LocationIQ API URL
 export const getLocationIqUrl = (query: string, limit: number = 5): string => {
   return `https://us1.locationiq.com/v1/autocomplete.php?limit=${limit}&key=${config.LOCATIONIQ_API_KEY}&q=${query}`;
+};
+
+// Helper function to get admin token from localStorage
+// Tries both "adminToken" (admin panel) and "token" (user/driver) for compatibility
+export const getAuthToken = (): string | null => {
+  if (typeof window === "undefined") return null;
+  // Admin panel uses "adminToken"
+  const adminToken = localStorage.getItem("adminToken");
+  if (adminToken) return adminToken;
+  // Fallback to "token" for user/driver apps
+  return localStorage.getItem("token");
 };
 

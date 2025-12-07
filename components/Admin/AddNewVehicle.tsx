@@ -5,6 +5,7 @@ import * as yup from "yup";
 import { useAppDispatch, useAppSelector } from "@/utils/store/store";
 import { createVehicle } from "@/utils/reducers/adminReducers";
 import { getVehicleBrands, getVehicleCategories } from "@/utils/reducers/adminReducers";
+import { clearVehicleError } from "@/utils/slices/vehicleSlice";
 import { useRouter } from "next/navigation";
 
 const vehicleSchema = yup.object({
@@ -26,10 +27,36 @@ export default function AddNewVehicle() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const [documents, setDocuments] = useState<File[]>([]);
+  const [dataFetchError, setDataFetchError] = useState<string | null>(null);
 
   useEffect(() => {
-    dispatch(getVehicleBrands()).catch(() => {});
-    dispatch(getVehicleCategories()).catch(() => {});
+    const fetchData = async () => {
+      setDataFetchError(null);
+      // Clear any previous errors
+      dispatch(clearVehicleError());
+      
+      try {
+        await dispatch(getVehicleBrands()).unwrap();
+      } catch (error: any) {
+        // Silently handle error - brands dropdown will just be empty
+        console.warn("Failed to fetch vehicle brands:", error?.message || error);
+        setDataFetchError("Failed to load vehicle brands. Please refresh the page.");
+        // Clear Redux error state
+        dispatch(clearVehicleError());
+      }
+      try {
+        await dispatch(getVehicleCategories()).unwrap();
+      } catch (error: any) {
+        // Silently handle error - categories dropdown will just be empty
+        console.warn("Failed to fetch vehicle categories:", error?.message || error);
+        if (!dataFetchError) {
+          setDataFetchError("Failed to load vehicle categories. Please refresh the page.");
+        }
+        // Clear Redux error state
+        dispatch(clearVehicleError());
+      }
+    };
+    fetchData();
   }, [dispatch]);
 
   const formik = useFormik({
@@ -99,9 +126,10 @@ export default function AddNewVehicle() {
       {submitError && (
         <div className="bg-red-50 border border-red-200 rounded p-4 text-red-800 text-sm">{submitError}</div>
       )}
-      {error && (
+      {/* Only show data fetching errors as a warning, not blocking */}
+      {dataFetchError && (
         <div className="bg-yellow-50 border border-yellow-200 rounded p-4 text-yellow-800 text-sm">
-          API Error: {error}
+          ⚠️ {dataFetchError} You can still fill the form manually.
         </div>
       )}
 
@@ -161,11 +189,16 @@ export default function AddNewVehicle() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-teal-500 outline-none"
               >
                 <option value="">Select Vehicle Category</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.categoryName}>
-                    {category.categoryName}
-                  </option>
-                ))}
+                {categories.map((category) => {
+                  // Handle both categoryName and name fields for compatibility
+                  const categoryName = (category as any).categoryName || (category as any).name || "Unknown";
+                  const categoryId = category.id || (category as any)._id;
+                  return (
+                    <option key={categoryId} value={categoryName}>
+                      {categoryName}
+                    </option>
+                  );
+                })}
               </select>
               {formik.touched.vehicleCategory && formik.errors.vehicleCategory && (
                 <p className="text-sm text-red-600 mt-1">{formik.errors.vehicleCategory}</p>

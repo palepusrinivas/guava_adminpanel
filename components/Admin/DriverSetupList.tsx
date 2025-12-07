@@ -1,27 +1,145 @@
 "use client";
-import React, { useEffect, useMemo } from "react";
-import { useAppDispatch, useAppSelector } from "@/utils/store/store";
+import React, { useEffect, useMemo, useState } from "react";
+import { useAppDispatch } from "@/utils/store/store";
 import { getDrivers } from "@/utils/reducers/adminReducers";
+import { useRouter } from "next/navigation";
+import { getApiUrl, getAuthToken } from "@/utils/config";
+
+interface Driver {
+  id: string | number;
+  name?: string;
+  username?: string;
+  email?: string;
+  mobile?: string;
+  phone?: string;
+  shortCode?: string;
+  rating?: number;
+  active?: boolean;
+  vehicle?: {
+    id: string | number;
+    licensePlate?: string;
+    vehicleCategory?: string;
+    model?: string;
+  };
+  kyc?: {
+    status: "PENDING" | "APPROVED" | "REJECTED";
+    aadhaarNumber?: string;
+    licenseNumber?: string;
+    rcNumber?: string;
+  };
+  totalTrips?: number;
+  totalEarnings?: number;
+  driverLevel?: string;
+}
 
 export default function DriverSetupList() {
   const dispatch = useAppDispatch();
-  const { drivers, isLoading, error } = useAppSelector((s: any) => s.adminDashboard || { drivers: [] });
-  // If adminDashboard slice is different, we still show clean placeholders
+  const router = useRouter();
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filterTab, setFilterTab] = useState<"All" | "Active" | "Inactive">("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    try { (dispatch as any)(getDrivers({})); } catch { /* keep UI clean */ }
-  }, [dispatch]);
+    fetchDrivers();
+  }, []);
 
-  const total = drivers?.length || 0;
-  const active = drivers?.filter((d: any) => d.active)?.length || 0;
+  const fetchDrivers = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await dispatch(getDrivers({ page: 0, size: 100 }));
+      if (getDrivers.fulfilled.match(response)) {
+        const payload: any = response.payload;
+        let list: any[] = [];
+        
+        if (Array.isArray(payload)) {
+          list = payload;
+        } else if (Array.isArray(payload?.content)) {
+          list = payload.content;
+        } else if (payload?.data) {
+          list = Array.isArray(payload.data) ? payload.data : [];
+        }
+
+        // Use the driver data as-is, it should already include vehicle and basic info
+        // If we need full KYC details, we can fetch them on-demand when viewing
+        const driversWithDetails = list.map((driver: any) => ({
+          id: driver.id,
+          name: driver.name || driver.username,
+          username: driver.username,
+          email: driver.email,
+          mobile: driver.mobile || driver.phone,
+          phone: driver.phone || driver.mobile,
+          shortCode: driver.shortCode,
+          rating: driver.rating,
+          active: driver.active !== false,
+          vehicle: driver.vehicle || (driver.vehicles && driver.vehicles[0]) || null,
+          kyc: driver.kyc || (driver.kycStatus ? { status: driver.kycStatus } : null),
+          totalTrips: driver.totalTrips || driver.totalRides || 0,
+          totalEarnings: driver.totalEarnings || 0,
+          driverLevel: driver.driverLevel || driver.level,
+        }));
+
+        setDrivers(driversWithDetails);
+      } else {
+        setError(typeof response.payload === "string" ? response.payload : "Failed to fetch drivers");
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch drivers");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filtered = useMemo(() => {
+    let result = drivers;
+    
+    // Filter by status
+    if (filterTab === "Active") {
+      result = result.filter((d) => d.active !== false);
+    } else if (filterTab === "Inactive") {
+      result = result.filter((d) => d.active === false);
+    }
+    
+    // Filter by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (d) =>
+          d.name?.toLowerCase().includes(query) ||
+          d.username?.toLowerCase().includes(query) ||
+          d.email?.toLowerCase().includes(query) ||
+          d.mobile?.toLowerCase().includes(query) ||
+          d.phone?.toLowerCase().includes(query) ||
+          d.shortCode?.toLowerCase().includes(query)
+      );
+    }
+    
+    return result;
+  }, [drivers, filterTab, searchQuery]);
+
+  const total = drivers.length;
+  const active = drivers.filter((d) => d.active !== false).length;
   const inactive = total - active;
-  const carDriver = 56; // placeholder visual metric
-  const motorbikeDriver = 91;
-
-  const filtered = useMemo(() => drivers || [], [drivers]);
+  const carDriver = drivers.filter((d) => d.vehicle?.vehicleCategory?.toLowerCase().includes("car") || d.vehicle?.vehicleCategory?.toLowerCase().includes("sedan")).length;
+  const motorbikeDriver = drivers.filter((d) => d.vehicle?.vehicleCategory?.toLowerCase().includes("bike") || d.vehicle?.vehicleCategory?.toLowerCase().includes("motor")).length;
 
   return (
     <div className="space-y-6">
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800 text-sm">{error}</p>
+          <button
+            onClick={fetchDrivers}
+            className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Analytics header */}
       <div className="rounded-xl p-6 shadow-sm" style={{ background: "linear-gradient(90deg,#19d3ac,#16b8a9)" }}>
         <h2 className="text-2xl font-extrabold text-white tracking-tight">Driver Analytical Data</h2>
@@ -52,8 +170,14 @@ export default function DriverSetupList() {
       <div>
         <h3 className="text-2xl font-extrabold text-gray-900">Driver List</h3>
         <div className="mt-3 inline-flex bg-teal-600/10 rounded-lg overflow-hidden ring-1 ring-teal-600/20">
-          {(["All", "Active", "Inactive"]).map((tab) => (
-            <button key={tab} className={`px-4 py-2 text-sm font-semibold transition ${tab === "All" ? "bg-teal-600 text-white" : "text-teal-700 hover:bg-teal-600/20"}`}>{tab}</button>
+          {(["All", "Active", "Inactive"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setFilterTab(tab)}
+              className={`px-4 py-2 text-sm font-semibold transition ${filterTab === tab ? "bg-teal-600 text-white" : "text-teal-700 hover:bg-teal-600/20"}`}
+            >
+              {tab}
+            </button>
           ))}
         </div>
       </div>
@@ -62,13 +186,18 @@ export default function DriverSetupList() {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div className="flex-1 flex items-center gap-2">
             <div className="relative w-full max-w-lg">
-              <input placeholder="Search here by name" className="w-full border border-gray-200 rounded-lg pl-11 pr-3 py-2 focus:ring-2 focus:ring-teal-500 shadow-sm hover:shadow-md transition" />
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search here by name"
+                className="w-full border border-gray-200 rounded-lg pl-11 pr-3 py-2 focus:ring-2 focus:ring-teal-500 shadow-sm hover:shadow-md transition"
+              />
               <svg className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" /></svg>
             </div>
             <button className="px-4 py-2 bg-teal-600 text-white rounded-lg shadow hover:bg-teal-700">Search</button>
           </div>
           <div className="flex items-center gap-2">
-            <button className="px-3 py-2 border rounded-lg hover:bg-gray-50 transition" title="Refresh">⟳</button>
+            <button onClick={fetchDrivers} className="px-3 py-2 border rounded-lg hover:bg-gray-50 transition" title="Refresh">⟳</button>
             <button className="px-3 py-2 border rounded-lg hover:bg-gray-50 transition" title="Settings">⚙</button>
             <button className="px-3 py-2 border rounded-lg hover:bg-gray-50 transition" title="Download">⬇</button>
             <a href="/admin/driver-setup/new" className="px-4 py-2 bg-teal-600 text-white rounded-lg shadow hover:bg-teal-700">+ Add Driver</a>
@@ -82,7 +211,8 @@ export default function DriverSetupList() {
                 <th className="px-4 py-2 text-left">SL</th>
                 <th className="px-4 py-2 text-left">Name</th>
                 <th className="px-4 py-2 text-left">Contact Info</th>
-                <th className="px-4 py-2 text-left">Profile Status</th>
+                <th className="px-4 py-2 text-left">Vehicle</th>
+                <th className="px-4 py-2 text-left">KYC Status</th>
                 <th className="px-4 py-2 text-left">Level</th>
                 <th className="px-4 py-2 text-left">Total Trip</th>
                 <th className="px-4 py-2 text-left">Earning</th>
@@ -93,37 +223,85 @@ export default function DriverSetupList() {
             <tbody className="divide-y">
               {isLoading && Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i} className="animate-pulse">
-                  {Array.from({ length: 9 }).map((__, j) => (<td key={j} className="px-4 py-3"><div className="h-4 w-24 bg-gray-100 rounded" /></td>))}
+                  {Array.from({ length: 10 }).map((__, j) => (<td key={j} className="px-4 py-3"><div className="h-4 w-24 bg-gray-100 rounded" /></td>))}
                 </tr>
               ))}
-              {!isLoading && filtered.map((d: any, idx: number) => (
-                <tr key={d.id || idx} className="hover:bg-gray-50 hover:shadow-sm transition rounded">
-                  <td className="px-4 py-3">{idx + 1}</td>
-                  <td className="px-4 py-3 flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-gray-100" />
-                    <div>
-                      <div className="font-medium text-gray-900">{d.name || d.username || "Driver Name"}</div>
-                      <div className="text-xs text-gray-500">{d.email || "user@example.com"}</div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="text-xs text-gray-700 leading-tight">
-                      <div>{d.phone || "+91XXXXXXXXXX"}</div>
-                      <div>{d.email || "user@example.com"}</div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">90%</td>
-                  <td className="px-4 py-3">Platinum</td>
-                  <td className="px-4 py-3">0</td>
-                  <td className="px-4 py-3">₹ 0</td>
-                  <td className="px-4 py-3"><span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">Active</span></td>
-                  <td className="px-4 py-3 space-x-2">
-                    <button className="px-2 py-1 text-xs rounded border hover:bg-gray-50">👁</button>
-                    <button className="px-2 py-1 text-xs rounded border hover:bg-gray-50">✏️</button>
-                    <button className="px-2 py-1 text-xs rounded border hover:bg-gray-50">🗑️</button>
-                  </td>
-                </tr>
-              ))}
+              {!isLoading && filtered.map((d: Driver, idx: number) => {
+                const kycStatus = d.kyc?.status || "PENDING";
+                const kycStatusColors = {
+                  APPROVED: "bg-green-100 text-green-700",
+                  PENDING: "bg-yellow-100 text-yellow-700",
+                  REJECTED: "bg-red-100 text-red-700",
+                };
+                
+                return (
+                  <tr key={d.id || idx} className="hover:bg-gray-50 hover:shadow-sm transition rounded">
+                    <td className="px-4 py-3">{idx + 1}</td>
+                    <td className="px-4 py-3 flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
+                        <span className="text-xs font-medium text-gray-700">
+                          {(d.name || d.username || "?").split(" ").map(n => n?.[0] || "").join("").substring(0, 2).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900">{d.name || d.username || "Driver Name"}</div>
+                        <div className="text-xs text-gray-500">{d.email || "N/A"}</div>
+                        {d.shortCode && (
+                          <div className="text-xs text-gray-400">Code: {d.shortCode}</div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-xs text-gray-700 leading-tight">
+                        <div>{d.mobile || d.phone || "N/A"}</div>
+                        <div>{d.email || "N/A"}</div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {d.vehicle ? (
+                        <div className="text-xs text-gray-700">
+                          <div className="font-medium">{d.vehicle.licensePlate || "N/A"}</div>
+                          <div className="text-gray-500">{d.vehicle.vehicleCategory || d.vehicle.model || "N/A"}</div>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-400">No vehicle</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-1 text-xs rounded-full ${kycStatusColors[kycStatus] || kycStatusColors.PENDING}`}>
+                        {kycStatus}
+                      </span>
+                      {d.kyc?.licenseNumber && (
+                        <div className="text-xs text-gray-500 mt-1">License: {d.kyc.licenseNumber}</div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">{d.driverLevel || "N/A"}</td>
+                    <td className="px-4 py-3">{d.totalTrips || 0}</td>
+                    <td className="px-4 py-3">₹{d.totalEarnings?.toFixed(2) || "0.00"}</td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-1 text-xs rounded-full ${d.active !== false ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>
+                        {d.active !== false ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 space-x-2">
+                      <button
+                        onClick={() => router.push(`/admin/drivers/${d.id}`)}
+                        className="px-2 py-1 text-xs rounded border hover:bg-gray-50"
+                        title="View Details"
+                      >
+                        👁
+                      </button>
+                      <button
+                        onClick={() => router.push(`/admin/drivers/${d.id}`)}
+                        className="px-2 py-1 text-xs rounded border hover:bg-gray-50"
+                        title="Edit"
+                      >
+                        ✏️
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
               {!isLoading && filtered.length === 0 && (
                 <tr>
                   <td className="px-4 py-10" colSpan={9}>

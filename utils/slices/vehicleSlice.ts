@@ -236,7 +236,15 @@ const vehicleSlice = createSlice({
       })
       .addCase(getVehicleCategories.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.categories = action.payload || [];
+        // Handle both array and paginated response
+        const payload = action.payload || {};
+        if (Array.isArray(payload)) {
+          state.categories = payload;
+        } else if (payload.content && Array.isArray(payload.content)) {
+          state.categories = payload.content;
+        } else {
+          state.categories = [];
+        }
       })
       .addCase(getVehicleCategories.rejected, (state, action) => {
         state.isLoading = false;

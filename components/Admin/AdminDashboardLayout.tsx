@@ -141,6 +141,7 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
       items: [
         { name: "Users", href: "/admin/users", icon: "👥" },
         { name: "Drivers", href: "/admin/drivers", icon: "🚙" },
+        { name: "Pending KYC", href: "/admin/drivers/pending-kyc", icon: "⏳" },
         {
           name: "Driver Level Setup",
           icon: "🧭",

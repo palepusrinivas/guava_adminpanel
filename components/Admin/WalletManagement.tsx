@@ -49,6 +49,7 @@ import {
   getDrivers,
 } from "@/utils/slices/walletSlice";
 import toast from "react-hot-toast";
+import { getApiUrl, getAuthToken } from "@/utils/config";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -280,12 +281,12 @@ const WalletManagement = () => {
       {/* Header */}
       <div className="mb-6 flex justify-between items-start">
         <div>
-          <Typography variant="h5" className="font-semibold text-gray-800">
-            Wallet Management
-          </Typography>
-          <Typography variant="body2" className="text-gray-500 mt-1">
-            Manage user and driver wallets, credit funds, and view transactions
-          </Typography>
+        <Typography variant="h5" className="font-semibold text-gray-800">
+          Wallet Management
+        </Typography>
+        <Typography variant="body2" className="text-gray-500 mt-1">
+          Manage user and driver wallets, credit funds, and view transactions
+        </Typography>
           <Typography variant="caption" className="text-gray-400">
             Loaded: {users.length} users, {drivers.length} drivers
           </Typography>
@@ -319,23 +320,27 @@ const WalletManagement = () => {
             },
           }}
         >
-          <Tab label="Credit Wallet" />
-          <Tab label="Debit Wallet" />
-          <Tab label="View Balance" />
-          <Tab label="Transactions" />
-          <Tab label="Razorpay Top-up" />
+          <Tab label="💰 Add Funds (Pay via Razorpay)" />
+          <Tab label="💸 Debit Wallet" />
+          <Tab label="📊 View Balance" />
+          <Tab label="📜 Transactions" />
+          <Tab label="💳 Razorpay Payments" />
         </Tabs>
 
-        {/* Tab 1: Credit Wallet */}
+        {/* Tab 1: Add Funds via Razorpay */}
         <TabPanel value={tabValue} index={0}>
-          <form onSubmit={creditFormik.handleSubmit}>
+          <form onSubmit={topUpFormik.handleSubmit}>
             <div className="space-y-4 max-w-2xl">
+              <Alert severity="info" sx={{ mb: 2 }}>
+                <strong>💳 Add Funds via Razorpay:</strong> This will generate a payment link. When you complete the payment, the amount will be debited from your bank account and credited to the selected user/driver wallet.
+              </Alert>
+
               <FormControl fullWidth size="small">
                 <InputLabel>Owner Type</InputLabel>
                 <Select
                   name="ownerType"
-                  value={creditFormik.values.ownerType}
-                  onChange={creditFormik.handleChange}
+                  value={topUpFormik.values.ownerType}
+                  onChange={topUpFormik.handleChange}
                   label="Owner Type"
                 >
                   <MenuItem value="USER">User</MenuItem>
@@ -346,32 +351,33 @@ const WalletManagement = () => {
               <Autocomplete
                 fullWidth
                 freeSolo
-                options={creditFormik.values.ownerType === "USER" ? users : drivers}
+                options={topUpFormik.values.ownerType === "USER" ? users : drivers}
                 getOptionLabel={(option) => {
                   if (typeof option === 'string') return option;
                   return `${option.fullName || option.name || 'Unknown'} (${option.email || option.mobile || option.id})`;
                 }}
                 value={
-                  (creditFormik.values.ownerType === "USER" ? users : drivers).find(
-                    (u) => u.id.toString() === creditFormik.values.ownerId
-                  ) || creditFormik.values.ownerId || null
+                  (topUpFormik.values.ownerType === "USER" ? users : drivers).find(
+                    (u) => u.id.toString() === topUpFormik.values.ownerId
+                  ) || topUpFormik.values.ownerId || null
                 }
                 onChange={(_, newValue) => {
-                  if (typeof newValue === 'string') {
-                    creditFormik.setFieldValue("ownerId", newValue);
+                  if (newValue === null) {
+                    topUpFormik.setFieldValue("ownerId", "");
+                  } else if (typeof newValue === 'string') {
+                    // Manual input - only accept if it looks like an ID (numeric)
+                    const cleanValue = newValue.replace(/\D/g, '');
+                    topUpFormik.setFieldValue("ownerId", cleanValue || newValue);
                   } else {
-                    creditFormik.setFieldValue("ownerId", newValue ? newValue.id.toString() : "");
+                    topUpFormik.setFieldValue("ownerId", newValue.id.toString());
                   }
-                }}
-                onInputChange={(_, newInputValue) => {
-                  creditFormik.setFieldValue("ownerId", newInputValue);
                 }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label={`Select ${creditFormik.values.ownerType === "USER" ? "User" : "Driver"} or Enter ID`}
-                    error={creditFormik.touched.ownerId && Boolean(creditFormik.errors.ownerId)}
-                    helperText={creditFormik.touched.ownerId ? creditFormik.errors.ownerId : `${users.length} users loaded`}
+                    label={`Select ${topUpFormik.values.ownerType === "USER" ? "User" : "Driver"} or Enter ID`}
+                    error={topUpFormik.touched.ownerId && Boolean(topUpFormik.errors.ownerId)}
+                    helperText={topUpFormik.touched.ownerId ? topUpFormik.errors.ownerId : "Select from list or enter ID"}
                     size="small"
                   />
                 )}
@@ -382,28 +388,13 @@ const WalletManagement = () => {
                 label="Amount (₹)"
                 name="amount"
                 type="number"
-                value={creditFormik.values.amount}
-                onChange={creditFormik.handleChange}
-                error={creditFormik.touched.amount && Boolean(creditFormik.errors.amount)}
-                helperText={creditFormik.touched.amount && creditFormik.errors.amount}
+                value={topUpFormik.values.amount}
+                onChange={topUpFormik.handleChange}
+                error={topUpFormik.touched.amount && Boolean(topUpFormik.errors.amount)}
+                helperText={topUpFormik.touched.amount && topUpFormik.errors.amount}
                 size="small"
+                inputProps={{ min: 10, max: 50000 }}
               />
-
-              <TextField
-                fullWidth
-                label="Notes"
-                name="notes"
-                multiline
-                rows={3}
-                value={creditFormik.values.notes}
-                onChange={creditFormik.handleChange}
-                error={creditFormik.touched.notes && Boolean(creditFormik.errors.notes)}
-                helperText={creditFormik.touched.notes && creditFormik.errors.notes}
-                size="small"
-              />
-
-              {error && <Alert severity="error">{error}</Alert>}
-              {creditSuccess && <Alert severity="success">Wallet credited successfully!</Alert>}
 
               <Button
                 type="submit"
@@ -418,8 +409,35 @@ const WalletManagement = () => {
                 }}
                 startIcon={isLoading ? <CircularProgress size={20} sx={{ color: "white" }} /> : null}
               >
-                Credit Wallet
+                💳 Pay & Add Funds
               </Button>
+
+              {error && <Alert severity="error" className="mt-4">{error}</Alert>}
+
+              {topUpLink && (
+                <Paper elevation={0} sx={{ border: "2px solid #22c55e", p: 3, mt: 3, bgcolor: "#f0fdf4" }}>
+                  <Typography variant="h6" className="text-green-800 mb-2">
+                    ✅ Payment Link Generated
+                  </Typography>
+                  <Typography variant="body2" className="text-green-700 mb-3">
+                    Click the button below to complete payment. Once paid, the wallet will be credited automatically.
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    href={topUpLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    size="large"
+                    sx={{ mb: 2 }}
+                  >
+                    💳 PAY NOW
+                  </Button>
+                  <Typography variant="caption" display="block" className="text-gray-500">
+                    Payment Link: {topUpLink}
+                  </Typography>
+                </Paper>
+              )}
             </div>
           </form>
         </TabPanel>
@@ -427,6 +445,10 @@ const WalletManagement = () => {
         {/* Tab 2: Debit Wallet - Multi-Step Workflow */}
         <TabPanel value={tabValue} index={1}>
           <Box className="max-w-4xl">
+            <Alert severity="warning" sx={{ mb: 3 }}>
+              <strong>💸 Debit Wallet:</strong> Remove funds from user/driver wallet. The debited amount will be settled to your Razorpay account balance.
+            </Alert>
+            
             {/* Stepper */}
             <Stepper activeStep={debitStep} sx={{ mb: 4 }}>
               {debitSteps.map((label) => (
@@ -713,7 +735,7 @@ const WalletManagement = () => {
                   if (typeof newValue === 'string') {
                     balanceFormik.setFieldValue("ownerId", newValue);
                   } else {
-                    balanceFormik.setFieldValue("ownerId", newValue ? newValue.id.toString() : "");
+                  balanceFormik.setFieldValue("ownerId", newValue ? newValue.id.toString() : "");
                   }
                 }}
                 onInputChange={(_, newInputValue) => {
@@ -797,7 +819,7 @@ const WalletManagement = () => {
                     if (typeof newValue === 'string') {
                       transactionsFormik.setFieldValue("ownerId", newValue);
                     } else {
-                      transactionsFormik.setFieldValue("ownerId", newValue ? newValue.id.toString() : "");
+                    transactionsFormik.setFieldValue("ownerId", newValue ? newValue.id.toString() : "");
                     }
                   }}
                   onInputChange={(_, newInputValue) => {
@@ -904,118 +926,288 @@ const WalletManagement = () => {
           </form>
         </TabPanel>
 
-        {/* Tab 5: Razorpay Top-up */}
+        {/* Tab 5: Razorpay Payments */}
         <TabPanel value={tabValue} index={4}>
-          <form onSubmit={topUpFormik.handleSubmit}>
-            <div className="space-y-4 max-w-2xl">
-              <Typography variant="body2" className="text-gray-600 mb-4">
-                Initiate a wallet top-up using Razorpay. This will generate a payment link.
-              </Typography>
-
-              <FormControl fullWidth size="small">
-                <InputLabel>Owner Type</InputLabel>
-                <Select
-                  name="ownerType"
-                  value={topUpFormik.values.ownerType}
-                  onChange={topUpFormik.handleChange}
-                  label="Owner Type"
-                >
-                  <MenuItem value="USER">User</MenuItem>
-                  <MenuItem value="DRIVER">Driver</MenuItem>
-                </Select>
-              </FormControl>
-
-              <Autocomplete
-                fullWidth
-                freeSolo
-                options={topUpFormik.values.ownerType === "USER" ? users : drivers}
-                getOptionLabel={(option) => {
-                  if (typeof option === 'string') return option;
-                  return `${option.fullName || option.name || 'Unknown'} (${option.email || option.mobile || option.id})`;
-                }}
-                value={
-                  (topUpFormik.values.ownerType === "USER" ? users : drivers).find(
-                    (u) => u.id.toString() === topUpFormik.values.ownerId
-                  ) || topUpFormik.values.ownerId || null
-                }
-                onChange={(_, newValue) => {
-                  if (typeof newValue === 'string') {
-                    topUpFormik.setFieldValue("ownerId", newValue);
-                  } else {
-                    topUpFormik.setFieldValue("ownerId", newValue ? newValue.id.toString() : "");
-                  }
-                }}
-                onInputChange={(_, newInputValue) => {
-                  topUpFormik.setFieldValue("ownerId", newInputValue);
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label={`Select ${topUpFormik.values.ownerType === "USER" ? "User" : "Driver"} or Enter ID`}
-                    error={topUpFormik.touched.ownerId && Boolean(topUpFormik.errors.ownerId)}
-                    helperText={topUpFormik.touched.ownerId ? topUpFormik.errors.ownerId : `${users.length} users loaded`}
-                    size="small"
-                  />
-                )}
-              />
-
-              <TextField
-                fullWidth
-                label="Amount (₹)"
-                name="amount"
-                type="number"
-                value={topUpFormik.values.amount}
-                onChange={topUpFormik.handleChange}
-                error={topUpFormik.touched.amount && Boolean(topUpFormik.errors.amount)}
-                helperText={topUpFormik.touched.amount && topUpFormik.errors.amount}
-                size="small"
-              />
-
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={isLoading}
-                sx={{
-                  backgroundColor: "#120E43",
-                  "&:hover": { backgroundColor: "#0d0a30" },
-                  textTransform: "none",
-                  borderRadius: "8px",
-                  px: 4,
-                }}
-                startIcon={isLoading ? <CircularProgress size={20} sx={{ color: "white" }} /> : null}
-              >
-                Generate Payment Link
-              </Button>
-
-              {error && <Alert severity="error" className="mt-4">{error}</Alert>}
-
-              {topUpLink && (
-                <Paper elevation={0} sx={{ border: "1px solid #e5e7eb", p: 3, mt: 3, bgcolor: "#f0fdf4" }}>
-                  <Typography variant="h6" className="text-green-800 mb-2">
-                    Payment Link Generated
-                  </Typography>
-                  <Typography variant="body2" className="text-green-700 mb-3">
-                    Click the button below to complete the payment.
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    color="success"
-                    href={topUpLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Pay Now
-                  </Button>
-                  <Typography variant="caption" display="block" className="text-gray-500 mt-2">
-                    Link: {topUpLink}
-                  </Typography>
-                </Paper>
-              )}
-            </div>
-          </form>
+          <RazorpayTransactionsPanel />
         </TabPanel>
+
       </Paper>
     </Box>
+  );
+};
+
+// Razorpay Transactions Panel Component
+const RazorpayTransactionsPanel = () => {
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [statusFilter, setStatusFilter] = useState<string>("");
+
+  const fetchTransactions = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        setError("Authentication required. Please login again.");
+        return;
+      }
+      
+      const params = new URLSearchParams({
+        page: page.toString(),
+        size: "20",
+      });
+      if (statusFilter) params.append("status", statusFilter);
+
+      const response = await fetch(
+        getApiUrl(`/api/admin/wallet/razorpay-transactions?${params}`),
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      
+      if (response.status === 401 || response.status === 403) {
+        setError("Authentication failed. Please login again.");
+        return;
+      }
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to fetch transactions");
+      }
+      
+      const data = await response.json();
+      setTransactions(data.content || []);
+      setTotalPages(data.totalPages || 0);
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch transactions");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        console.warn("No token available for stats fetch");
+        return;
+      }
+      
+      const response = await fetch(
+        getApiUrl(`/api/admin/wallet/razorpay-transactions/stats`),
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      } else if (response.status === 401 || response.status === 403) {
+        console.warn("Authentication failed for stats fetch");
+      }
+    } catch (err) {
+      console.error("Failed to fetch stats", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchTransactions();
+    fetchStats();
+  }, [page, statusFilter]);
+
+  const getStatusColor = (status: string) => {
+    switch (status?.toUpperCase()) {
+      case "SUCCESS":
+        return { bg: "#D1FAE5", color: "#065F46" };
+      case "PENDING":
+      case "INITIATED":
+        return { bg: "#FEF3C7", color: "#92400E" };
+      case "FAILED":
+        return { bg: "#FEE2E2", color: "#991B1B" };
+      default:
+        return { bg: "#E5E7EB", color: "#374151" };
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <Typography variant="h6" className="mb-4">
+        💳 Razorpay Payment Transactions
+      </Typography>
+
+      {/* Stats Cards */}
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card elevation={0} sx={{ border: "1px solid #e5e7eb" }}>
+            <CardContent>
+              <Typography variant="body2" color="textSecondary">Total Transactions</Typography>
+              <Typography variant="h4" fontWeight={700}>{stats.totalTransactions}</Typography>
+            </CardContent>
+          </Card>
+          <Card elevation={0} sx={{ border: "1px solid #22c55e" }}>
+            <CardContent>
+              <Typography variant="body2" color="textSecondary">Successful</Typography>
+              <Typography variant="h4" fontWeight={700} color="#22c55e">{stats.successCount}</Typography>
+            </CardContent>
+          </Card>
+          <Card elevation={0} sx={{ border: "1px solid #f59e0b" }}>
+            <CardContent>
+              <Typography variant="body2" color="textSecondary">Pending</Typography>
+              <Typography variant="h4" fontWeight={700} color="#f59e0b">{stats.pendingCount}</Typography>
+            </CardContent>
+          </Card>
+          <Card elevation={0} sx={{ border: "1px solid #ef4444" }}>
+            <CardContent>
+              <Typography variant="body2" color="textSecondary">Failed</Typography>
+              <Typography variant="h4" fontWeight={700} color="#ef4444">{stats.failedCount}</Typography>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {stats && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <strong>Total Successful Amount:</strong> ₹{stats.totalSuccessAmount?.toLocaleString() || 0}
+        </Alert>
+      )}
+
+      {/* Filters */}
+      <div className="flex gap-4 items-center mb-4">
+        <FormControl size="small" sx={{ minWidth: 150 }}>
+          <InputLabel>Status Filter</InputLabel>
+          <Select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(0);
+            }}
+            label="Status Filter"
+          >
+            <MenuItem value="">All</MenuItem>
+            <MenuItem value="SUCCESS">Success</MenuItem>
+            <MenuItem value="PENDING">Pending</MenuItem>
+            <MenuItem value="INITIATED">Initiated</MenuItem>
+            <MenuItem value="FAILED">Failed</MenuItem>
+          </Select>
+        </FormControl>
+              <Button
+          variant="outlined"
+          onClick={() => {
+            fetchTransactions();
+            fetchStats();
+          }}
+          disabled={loading}
+        >
+          {loading ? <CircularProgress size={20} /> : "Refresh"}
+              </Button>
+      </div>
+
+      {error && <Alert severity="error">{error}</Alert>}
+
+      {/* Transactions Table */}
+      <TableContainer component={Paper} elevation={0} sx={{ border: "1px solid #e5e7eb", borderRadius: "12px" }}>
+        <Table>
+          <TableHead>
+            <TableRow sx={{ backgroundColor: "#f9fafb" }}>
+              <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>User ID</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Type</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Amount</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Provider</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Payment ID</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                  <CircularProgress />
+                </TableCell>
+              </TableRow>
+            ) : transactions.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                  <Typography color="textSecondary">No transactions found</Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              transactions.map((tx) => {
+                const statusColors = getStatusColor(tx.status);
+                return (
+                  <TableRow key={tx.id} hover>
+                    <TableCell>#{tx.id}</TableCell>
+                    <TableCell>{tx.userId || tx.driverId || "-"}</TableCell>
+                    <TableCell>
+                      <Chip label={tx.type || "N/A"} size="small" />
+                    </TableCell>
+                    <TableCell>
+                      <Typography fontWeight={600} color="#10B981">
+                        ₹{tx.amount?.toLocaleString() || 0}
+                  </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={tx.status}
+                        size="small"
+                        sx={{
+                          backgroundColor: statusColors.bg,
+                          color: statusColors.color,
+                          fontWeight: 500,
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell>{tx.provider || "RAZORPAY"}</TableCell>
+                    <TableCell>
+                      <Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+                        {tx.providerPaymentId || tx.providerPaymentLinkId || "-"}
+                  </Typography>
+                    </TableCell>
+                    <TableCell>
+                      {tx.createdAt ? new Date(tx.createdAt).toLocaleString() : "-"}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2 mt-4">
+                  <Button
+                    variant="outlined"
+            disabled={page === 0}
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+          >
+            Previous
+                  </Button>
+          <Typography variant="body2" sx={{ display: "flex", alignItems: "center", px: 2 }}>
+            Page {page + 1} of {totalPages}
+                  </Typography>
+          <Button
+            variant="outlined"
+            disabled={page >= totalPages - 1}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next
+          </Button>
+        </div>
+              )}
+            </div>
   );
 };
 
