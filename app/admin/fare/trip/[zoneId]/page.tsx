@@ -32,7 +32,24 @@ interface TripFare {
 }
 
 const fareValidationSchema: Yup.ObjectSchema<TripFarePayload> = Yup.object({
-  zoneId: Yup.string().required("Zone ID is required"),
+  zoneId: Yup.string()
+    .transform((v) => v?.trim())
+    .test(
+      "zone-required",
+      "Either Zone Name or Zone ID must be provided",
+      function (value) {
+        return Boolean(value || this.parent.zoneName);
+      }
+    ),
+  zoneName: Yup.string()
+    .transform((v) => v?.trim())
+    .test(
+      "zone-required",
+      "Either Zone Name or Zone ID must be provided",
+      function (value) {
+        return Boolean(value || this.parent.zoneId);
+      }
+    ),
   vehicleCategoryId: Yup.string()
     .transform((v) => v?.trim())
     .test(
@@ -132,6 +149,13 @@ export default function ZoneFareSetupPage() {
     }
   }, [zoneId, dispatch]);
 
+  // Update formik zoneName when zoneName state changes
+  useEffect(() => {
+    if (zoneName) {
+      formik.setFieldValue("zoneName", zoneName);
+    }
+  }, [zoneName]);
+
   const fetchZoneFareSetup = async () => {
     setLoading(true);
     setError(null);
@@ -157,7 +181,8 @@ export default function ZoneFareSetupPage() {
       }
 
       const zone = await zoneResponse.json();
-      setZoneName(zone.name || `Zone ${zoneId}`);
+      const fetchedZoneName = zone.name || `Zone ${zoneId}`;
+      setZoneName(fetchedZoneName);
 
       // Fetch trip fares for this zone
       const response = await dispatch(getTripFares({ page: 0, size: 100 }));
@@ -199,7 +224,7 @@ export default function ZoneFareSetupPage() {
   const formik = useFormik<TripFarePayload>({
     initialValues: {
       zoneId: zoneId,
-      zoneName: "",
+      zoneName: zoneName || "", // Will be updated when zone is fetched
       vehicleCategoryId: "",
       categoryType: "",
       categoryName: "",
@@ -218,7 +243,36 @@ export default function ZoneFareSetupPage() {
     enableReinitialize: true,
     onSubmit: async (values, { resetForm }) => {
       try {
-        const response = await dispatch(createTripFare(values));
+        // Clean the payload: remove numeric zoneId (old Zone model uses numeric IDs)
+        // TripFare uses ZoneV2 which requires UUID strings or zoneName
+        const payload: TripFarePayload = { ...values };
+        
+        // If zoneId is numeric (not a UUID), remove it and rely on zoneName
+        if (payload.zoneId) {
+          const zoneIdStr = payload.zoneId.toString();
+          // UUID format: 36 characters with hyphens (e.g., "550e8400-e29b-41d4-a716-446655440000")
+          const isUuid = zoneIdStr.length === 36 && zoneIdStr.includes('-');
+          if (!isUuid) {
+            // Numeric ID from old Zone model - remove it, use zoneName instead
+            delete payload.zoneId;
+            // Ensure zoneName is set
+            if (!payload.zoneName && zoneName) {
+              payload.zoneName = zoneName;
+            }
+          }
+        }
+        
+        // Ensure zoneName is set if zoneId was removed or not provided
+        if (!payload.zoneId && !payload.zoneName) {
+          if (zoneName) {
+            payload.zoneName = zoneName;
+          } else {
+            toast.error("Zone name is required. Please refresh the page.");
+            return;
+          }
+        }
+        
+        const response = await dispatch(createTripFare(payload));
         if (createTripFare.fulfilled.match(response)) {
           toast.success(editingFare ? "Fare updated successfully" : "Trip fare created");
           resetForm();
@@ -241,9 +295,13 @@ export default function ZoneFareSetupPage() {
   const handleEdit = (fare: TripFare) => {
     setEditingFare(fare);
     setShowAddForm(true);
+    
+    // Determine zoneName from fare or state
+    const fareZoneName = fare.zone?.name || zoneName || "";
+    
     formik.setValues({
       zoneId: zoneId,
-      zoneName: "",
+      zoneName: fareZoneName,
       vehicleCategoryId: fare.vehicleCategory?.id || "",
       categoryType: fare.vehicleCategory?.type || "",
       categoryName: fare.vehicleCategory?.name || "",
