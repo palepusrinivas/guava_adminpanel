@@ -13,15 +13,23 @@ adminAxios.interceptors.request.use(
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("adminToken");
       
-      // Debug logging
-      console.log("[adminAxios] Request to:", requestConfig.url);
-      console.log("[adminAxios] Token exists:", !!token);
+      // Debug logging - only log for non-login requests
+      const isLoginRequest = requestConfig.url?.includes("/login");
+      if (!isLoginRequest) {
+        console.log("[adminAxios] 📤 Request to:", requestConfig.url);
+        console.log("[adminAxios] 🔑 Token exists:", !!token);
+        if (token) {
+          console.log("[adminAxios] 🔑 Token preview:", token.substring(0, 20) + "...");
+        }
+      }
       
       if (token) {
         requestConfig.headers.Authorization = `Bearer ${token}`;
-        console.log("[adminAxios] Authorization header set");
-      } else {
-        console.warn("[adminAxios] No token found in localStorage!");
+        if (!isLoginRequest) {
+          console.log("[adminAxios] ✅ Authorization header set");
+        }
+      } else if (!isLoginRequest) {
+        console.warn("[adminAxios] ⚠️ No token found in localStorage! User needs to login.");
       }
     } else {
       console.log("[adminAxios] Running on server, no localStorage access");

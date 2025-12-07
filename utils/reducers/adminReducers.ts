@@ -430,6 +430,12 @@ export const getZones = createAsyncThunk(
   "admin/getZones",
   async (_, { rejectWithValue }) => {
     try {
+      // Debug: Check token
+      if (typeof window !== "undefined") {
+        const token = localStorage.getItem("adminToken");
+        console.log("[getZones] Token exists:", !!token);
+      }
+      
       const response = await adminAxios.get(adminZonesUrl);
       return response.data;
     } catch (error) {
@@ -460,10 +466,27 @@ export const createZone = createAsyncThunk(
   "admin/createZone",
   async (zoneData: any, { rejectWithValue }) => {
     try {
+      // Debug: Check token before request
+      if (typeof window !== "undefined") {
+        const token = localStorage.getItem("adminToken");
+        console.log("[createZone] Token check before request:", !!token);
+        if (!token) {
+          console.error("[createZone] ❌ No token! User needs to login first.");
+          return rejectWithValue("Please login first. No authentication token found.");
+        }
+      }
+      
+      console.log("[createZone] Sending request to:", adminZonesUrl);
+      console.log("[createZone] Zone data:", zoneData);
+      
       const response = await adminAxios.post(adminZonesUrl, zoneData);
+      console.log("[createZone] ✅ Success:", response.data);
       return response.data;
     } catch (error) {
+      console.error("[createZone] ❌ Error:", error);
       if (axios.isAxiosError(error)) {
+        console.error("[createZone] Response status:", error.response?.status);
+        console.error("[createZone] Response data:", error.response?.data);
         return rejectWithValue(error.response?.data || "Failed to create zone");
       }
       return rejectWithValue("An unknown error occurred");

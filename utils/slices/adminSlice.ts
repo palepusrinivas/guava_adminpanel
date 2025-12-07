@@ -140,6 +140,8 @@ const adminSlice = createSlice({
         const payload = action.payload || {};
         const maybeUser = payload.user || payload.admin || payload.data || {};
 
+        console.log("[adminSlice] Login fulfilled - raw payload:", payload);
+
         const username =
           payload.username ||
           maybeUser.username ||
@@ -156,18 +158,26 @@ const adminSlice = createSlice({
           payload.data?.token ||
           null;
 
+        console.log("[adminSlice] Extracted values - username:", username, "role:", role, "token exists:", !!token);
+
         state.admin = username && role ? { username, role } : null;
         state.token = token;
         state.error = null;
 
-        try {
-          if (typeof window !== "undefined") {
-            if (token) localStorage.setItem("adminToken", token);
+        // Store in localStorage - CRITICAL for subsequent API calls
+        if (typeof window !== "undefined") {
+          try {
+            if (token) {
+              localStorage.setItem("adminToken", token);
+              console.log("[adminSlice] ✅ Token stored in localStorage");
+            } else {
+              console.error("[adminSlice] ❌ No token received from backend!");
+            }
             if (role) localStorage.setItem("adminRole", role);
             if (username) localStorage.setItem("adminUsername", username);
+          } catch (e) {
+            console.error("[adminSlice] ❌ Failed to store in localStorage:", e);
           }
-        } catch (e) {
-          // ignore storage failures
         }
       })
       .addCase(adminLogin.rejected, (state, action) => {
