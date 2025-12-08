@@ -15,6 +15,8 @@ import {
   getIntercityBookings,
   getIntercityBookingById,
   cancelIntercityBooking,
+  confirmIntercityBooking,
+  assignDriverToBooking,
   seedIntercityVehicles,
 } from "../reducers/intercityReducers";
 
@@ -34,6 +36,7 @@ export type IntercityTripStatus =
   | "CANCELLED";
 
 export type IntercityBookingStatus = 
+  | "HOLD"
   | "PENDING" 
   | "CONFIRMED" 
   | "COMPLETED" 
@@ -441,6 +444,48 @@ const intercitySlice = createSlice({
         state.error = null;
       })
       .addCase(cancelIntercityBooking.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      });
+
+    builder
+      .addCase(confirmIntercityBooking.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(confirmIntercityBooking.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const index = state.bookings.findIndex(b => b.id === action.payload.id);
+        if (index !== -1) {
+          state.bookings[index] = action.payload;
+        }
+        if (state.selectedBooking?.id === action.payload.id) {
+          state.selectedBooking = action.payload;
+        }
+        state.error = null;
+      })
+      .addCase(confirmIntercityBooking.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      });
+
+    builder
+      .addCase(assignDriverToBooking.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(assignDriverToBooking.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const index = state.bookings.findIndex(b => b.id === action.payload.id);
+        if (index !== -1) {
+          state.bookings[index] = action.payload;
+        }
+        if (state.selectedBooking?.id === action.payload.id) {
+          state.selectedBooking = action.payload;
+        }
+        state.error = null;
+      })
+      .addCase(assignDriverToBooking.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       });

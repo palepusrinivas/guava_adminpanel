@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/utils/store/store";
 import {
   getIntercityRoutes,
@@ -9,6 +9,8 @@ import {
 } from "@/utils/reducers/intercityReducers";
 import { toast } from "react-hot-toast";
 import type { IntercityRoute } from "@/utils/slices/intercitySlice";
+import { useLoadScript, Autocomplete } from "@react-google-maps/api";
+import { config } from "@/utils/config";
 
 const emptyRoute: Omit<IntercityRoute, "id"> = {
   routeCode: "",
@@ -33,6 +35,18 @@ export default function IntercityRoutesPage() {
   const [editingRoute, setEditingRoute] = useState<IntercityRoute | null>(null);
   const [formData, setFormData] = useState<Omit<IntercityRoute, "id">>(emptyRoute);
   const [searchQuery, setSearchQuery] = useState("");
+  const [durationHours, setDurationHours] = useState(0);
+  const [durationMinutes, setDurationMinutes] = useState(0);
+  
+  // Google Places Autocomplete refs
+  const originAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const destinationAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  
+  // Load Google Maps script
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: config.GOOGLE_MAPS_API_KEY,
+    libraries: ["places"],
+  });
 
   useEffect(() => {
     setMounted(true);
@@ -47,11 +61,50 @@ export default function IntercityRoutesPage() {
   const handleOpenCreate = () => {
     setEditingRoute(null);
     setFormData(emptyRoute);
+    setDurationHours(0);
+    setDurationMinutes(0);
     setShowModal(true);
+  };
+  
+  // Handle origin place selection
+  const onOriginPlaceChanged = () => {
+    if (originAutocompleteRef.current) {
+      const place = originAutocompleteRef.current.getPlace();
+      if (place.geometry?.location) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+        setFormData({
+          ...formData,
+          originName: place.formatted_address || place.name || "",
+          originLatitude: lat,
+          originLongitude: lng,
+        });
+      }
+    }
+  };
+  
+  // Handle destination place selection
+  const onDestinationPlaceChanged = () => {
+    if (destinationAutocompleteRef.current) {
+      const place = destinationAutocompleteRef.current.getPlace();
+      if (place.geometry?.location) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+        setFormData({
+          ...formData,
+          destinationName: place.formatted_address || place.name || "",
+          destinationLatitude: lat,
+          destinationLongitude: lng,
+        });
+      }
+    }
   };
 
   const handleOpenEdit = (route: IntercityRoute) => {
     setEditingRoute(route);
+    const totalMinutes = route.durationMinutes;
+    setDurationHours(Math.floor(totalMinutes / 60));
+    setDurationMinutes(totalMinutes % 60);
     setFormData({
       routeCode: route.routeCode,
       originName: route.originName,
@@ -72,9 +125,16 @@ export default function IntercityRoutesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Convert hours and minutes to total minutes
+      const totalMinutes = durationHours * 60 + durationMinutes;
+      const submitData = {
+        ...formData,
+        durationMinutes: totalMinutes,
+      };
+      
       if (editingRoute && editingRoute.id) {
         const result = await dispatch(
-          updateIntercityRoute({ routeId: editingRoute.id, routeData: formData })
+          updateIntercityRoute({ routeId: editingRoute.id, routeData: submitData })
         );
         if (updateIntercityRoute.fulfilled.match(result)) {
           toast.success("Route updated successfully!");
@@ -84,7 +144,7 @@ export default function IntercityRoutesPage() {
           toast.error("Failed to update route");
         }
       } else {
-        const result = await dispatch(createIntercityRoute(formData));
+        const result = await dispatch(createIntercityRoute(submitData));
         if (createIntercityRoute.fulfilled.match(result)) {
           toast.success("Route created successfully!");
           setShowModal(false);
@@ -336,14 +396,38 @@ export default function IntercityRoutesPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="md:col-span-3">
                     <label className="block text-sm font-medium text-gray-700">Origin Name</label>
-                    <input
-                      type="text"
-                      value={formData.originName}
-                      onChange={(e) => setFormData({ ...formData, originName: e.target.value })}
-                      placeholder="e.g., Hyderabad"
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-teal-500 focus:border-teal-500"
-                      required
-                    />
+                    {isLoaded ? (
+                      <Autocomplete
+                        onLoad={(autocomplete) => {
+                          originAutocompleteRef.current = autocomplete;
+                        }}
+                        onPlaceChanged={onOriginPlaceChanged}
+                        options={{
+                          types: ["(cities)"],
+                        }}
+                      >
+                        <input
+                          type="text"
+                          value={formData.originName}
+                          onChange={(e) => setFormData({ ...formData, originName: e.target.value })}
+                          placeholder="e.g., Hyderabad"
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-teal-500 focus:border-teal-500"
+                          required
+                        />
+                      </Autocomplete>
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.originName}
+                        onChange={(e) => setFormData({ ...formData, originName: e.target.value })}
+                        placeholder="e.g., Hyderabad"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-teal-500 focus:border-teal-500"
+                        required
+                      />
+                    )}
+                    {loadError && (
+                      <p className="mt-1 text-xs text-red-600">Failed to load Google Maps. Please check your API key.</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Latitude</label>
@@ -376,14 +460,38 @@ export default function IntercityRoutesPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="md:col-span-3">
                     <label className="block text-sm font-medium text-gray-700">Destination Name</label>
-                    <input
-                      type="text"
-                      value={formData.destinationName}
-                      onChange={(e) => setFormData({ ...formData, destinationName: e.target.value })}
-                      placeholder="e.g., Vijayawada"
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-teal-500 focus:border-teal-500"
-                      required
-                    />
+                    {isLoaded ? (
+                      <Autocomplete
+                        onLoad={(autocomplete) => {
+                          destinationAutocompleteRef.current = autocomplete;
+                        }}
+                        onPlaceChanged={onDestinationPlaceChanged}
+                        options={{
+                          types: ["(cities)"],
+                        }}
+                      >
+                        <input
+                          type="text"
+                          value={formData.destinationName}
+                          onChange={(e) => setFormData({ ...formData, destinationName: e.target.value })}
+                          placeholder="e.g., Vijayawada"
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-teal-500 focus:border-teal-500"
+                          required
+                        />
+                      </Autocomplete>
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.destinationName}
+                        onChange={(e) => setFormData({ ...formData, destinationName: e.target.value })}
+                        placeholder="e.g., Vijayawada"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-teal-500 focus:border-teal-500"
+                        required
+                      />
+                    )}
+                    {loadError && (
+                      <p className="mt-1 text-xs text-red-600">Failed to load Google Maps. Please check your API key.</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Latitude</label>
@@ -427,14 +535,32 @@ export default function IntercityRoutesPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Duration (minutes)</label>
+                    <label className="block text-sm font-medium text-gray-700">Duration (hours)</label>
                     <input
                       type="number"
-                      value={formData.durationMinutes}
-                      onChange={(e) => setFormData({ ...formData, durationMinutes: parseInt(e.target.value) || 0 })}
+                      value={durationHours}
+                      onChange={(e) => {
+                        const hours = parseInt(e.target.value) || 0;
+                        setDurationHours(hours);
+                      }}
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-teal-500 focus:border-teal-500"
                       required
                       min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Duration (minutes)</label>
+                    <input
+                      type="number"
+                      value={durationMinutes}
+                      onChange={(e) => {
+                        const mins = parseInt(e.target.value) || 0;
+                        setDurationMinutes(mins >= 60 ? 59 : mins);
+                      }}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-teal-500 focus:border-teal-500"
+                      required
+                      min="0"
+                      max="59"
                     />
                   </div>
                   <div>
@@ -449,6 +575,9 @@ export default function IntercityRoutesPage() {
                       min="0.01"
                     />
                   </div>
+                </div>
+                <div className="mt-2 text-xs text-gray-500">
+                  Total Duration: {durationHours}h {durationMinutes}m ({durationHours * 60 + durationMinutes} minutes)
                 </div>
               </div>
 

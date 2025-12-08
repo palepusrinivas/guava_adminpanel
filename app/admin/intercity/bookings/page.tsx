@@ -5,12 +5,16 @@ import {
   getIntercityBookings,
   getIntercityBookingById,
   cancelIntercityBooking,
+  confirmIntercityBooking,
+  assignDriverToBooking,
+  getAvailableDrivers,
 } from "@/utils/reducers/intercityReducers";
 import { toast } from "react-hot-toast";
 import type { IntercityBookingStatus, IntercityBooking } from "@/utils/slices/intercitySlice";
 
 const BOOKING_STATUSES: { value: IntercityBookingStatus | "ALL"; label: string; color: string }[] = [
   { value: "ALL", label: "All Bookings", color: "bg-gray-100 text-gray-700" },
+  { value: "HOLD", label: "Hold", color: "bg-orange-100 text-orange-700" },
   { value: "PENDING", label: "Pending", color: "bg-yellow-100 text-yellow-700" },
   { value: "CONFIRMED", label: "Confirmed", color: "bg-blue-100 text-blue-700" },
   { value: "COMPLETED", label: "Completed", color: "bg-green-100 text-green-700" },
@@ -28,8 +32,16 @@ export default function IntercityBookingsPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showAssignDriverModal, setShowAssignDriverModal] = useState(false);
   const [cancellingBookingId, setCancellingBookingId] = useState<number | null>(null);
+  const [confirmingBookingId, setConfirmingBookingId] = useState<number | null>(null);
+  const [assigningBookingId, setAssigningBookingId] = useState<number | null>(null);
   const [cancelReason, setCancelReason] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("ONLINE");
+  const [selectedDriverId, setSelectedDriverId] = useState<number | null>(null);
+  const [availableDrivers, setAvailableDrivers] = useState<any[]>([]);
+  const [loadingDrivers, setLoadingDrivers] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -76,12 +88,89 @@ export default function IntercityBookingsPage() {
       if (cancelIntercityBooking.fulfilled.match(result)) {
         toast.success("Booking cancelled successfully!");
         setShowCancelModal(false);
+        setCancellingBookingId(null);
         dispatch(getIntercityBookings({ page: currentPage, size: 10 }));
       } else {
         toast.error("Failed to cancel booking");
       }
     } catch {
       toast.error("An error occurred while cancelling booking");
+    }
+  };
+
+  const handleOpenConfirmModal = (bookingId: number) => {
+    setConfirmingBookingId(bookingId);
+    setPaymentMethod("ONLINE");
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmBooking = async () => {
+    if (!confirmingBookingId) return;
+
+    try {
+      const result = await dispatch(
+        confirmIntercityBooking({
+          bookingId: confirmingBookingId,
+          paymentMethod: paymentMethod,
+        })
+      );
+      if (confirmIntercityBooking.fulfilled.match(result)) {
+        toast.success("Booking confirmed successfully! Driver phone number is now visible.");
+        setShowConfirmModal(false);
+        setConfirmingBookingId(null);
+        dispatch(getIntercityBookings({ page: currentPage, size: 10 }));
+      } else {
+        toast.error("Failed to confirm booking");
+      }
+    } catch {
+      toast.error("An error occurred while confirming booking");
+    }
+  };
+
+  const handleOpenAssignDriverModal = async (bookingId: number) => {
+    setAssigningBookingId(bookingId);
+    setSelectedDriverId(null);
+    setShowAssignDriverModal(true);
+    setLoadingDrivers(true);
+    
+    try {
+      const result = await dispatch(getAvailableDrivers());
+      if (getAvailableDrivers.fulfilled.match(result)) {
+        setAvailableDrivers(result.payload as any[]);
+      } else {
+        toast.error("Failed to load drivers");
+      }
+    } catch {
+      toast.error("Failed to load drivers");
+    } finally {
+      setLoadingDrivers(false);
+    }
+  };
+
+  const handleAssignDriver = async () => {
+    if (!assigningBookingId || !selectedDriverId) {
+      toast.error("Please select a driver");
+      return;
+    }
+
+    try {
+      const result = await dispatch(
+        assignDriverToBooking({
+          bookingId: assigningBookingId,
+          driverId: selectedDriverId,
+        })
+      );
+      if (assignDriverToBooking.fulfilled.match(result)) {
+        toast.success("Driver assigned successfully!");
+        setShowAssignDriverModal(false);
+        setAssigningBookingId(null);
+        setSelectedDriverId(null);
+        dispatch(getIntercityBookings({ page: currentPage, size: 10 }));
+      } else {
+        toast.error("Failed to assign driver");
+      }
+    } catch {
+      toast.error("An error occurred while assigning driver");
     }
   };
 
@@ -260,20 +349,38 @@ export default function IntercityBookingsPage() {
                       {formatDateTime(booking.createdAt)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleViewDetails(booking.id)}
-                        className="text-teal-600 hover:text-teal-900 mr-3"
-                      >
-                        View
-                      </button>
-                      {(booking.status === "PENDING" || booking.status === "CONFIRMED") && (
+                      <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => handleOpenCancelModal(booking.id)}
-                          className="text-red-600 hover:text-red-900"
+                          onClick={() => handleViewDetails(booking.id)}
+                          className="text-teal-600 hover:text-teal-900"
                         >
-                          Cancel
+                          View
                         </button>
-                      )}
+                        {(booking.status === "HOLD" || booking.status === "PENDING") && (
+                          <>
+                            <button
+                              onClick={() => handleOpenConfirmModal(booking.id)}
+                              className="text-green-600 hover:text-green-900"
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => handleOpenAssignDriverModal(booking.id)}
+                              className="text-blue-600 hover:text-blue-900"
+                            >
+                              Assign Driver
+                            </button>
+                          </>
+                        )}
+                        {(booking.status === "PENDING" || booking.status === "CONFIRMED") && (
+                          <button
+                            onClick={() => handleOpenCancelModal(booking.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -434,6 +541,153 @@ export default function IntercityBookingsPage() {
                   className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Booking Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Confirm Booking</h3>
+              <button
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setConfirmingBookingId(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">
+                Confirm this booking? This will move it from HOLD to CONFIRMED status and unlock the driver phone number.
+              </p>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Payment Method
+                </label>
+                <select
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-teal-500 focus:border-teal-500"
+                >
+                  <option value="ONLINE">Online</option>
+                  <option value="UPI">UPI</option>
+                  <option value="WALLET">Wallet</option>
+                  <option value="CASH">Cash</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <button
+                  onClick={() => {
+                    setShowConfirmModal(false);
+                    setConfirmingBookingId(null);
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmBooking}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-green-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                >
+                  {isLoading ? "Confirming..." : "Confirm Booking"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Driver Modal */}
+      {showAssignDriverModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Assign Driver</h3>
+              <button
+                onClick={() => {
+                  setShowAssignDriverModal(false);
+                  setAssigningBookingId(null);
+                  setSelectedDriverId(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">
+                Select a driver to assign to this booking/trip.
+              </p>
+
+              {loadingDrivers ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto"></div>
+                  <p className="text-sm text-gray-500 mt-2">Loading drivers...</p>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Driver
+                  </label>
+                  <select
+                    value={selectedDriverId || ""}
+                    onChange={(e) => setSelectedDriverId(Number(e.target.value))}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-teal-500 focus:border-teal-500"
+                  >
+                    <option value="">-- Select Driver --</option>
+                    {availableDrivers.map((driver) => (
+                      <option key={driver.id} value={driver.id}>
+                        {driver.name} ({driver.mobile}) {driver.isOnline ? "🟢 Online" : "⚫ Offline"}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <button
+                  onClick={() => {
+                    setShowAssignDriverModal(false);
+                    setAssigningBookingId(null);
+                    setSelectedDriverId(null);
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAssignDriver}
+                  disabled={isLoading || !selectedDriverId || loadingDrivers}
+                  className="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {isLoading ? "Assigning..." : "Assign Driver"}
                 </button>
               </div>
             </div>

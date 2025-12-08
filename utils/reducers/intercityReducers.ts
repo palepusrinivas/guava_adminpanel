@@ -268,3 +268,45 @@ export const cancelIntercityBooking = createAsyncThunk(
   }
 );
 
+export const confirmIntercityBooking = createAsyncThunk(
+  "intercity/confirmBooking",
+  async ({ bookingId, paymentMethod }: { bookingId: number; paymentMethod?: string }, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.post(`${INTERCITY_BASE}/bookings/${bookingId}/confirm`, {
+        paymentMethod: paymentMethod || "ONLINE",
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const assignDriverToBooking = createAsyncThunk(
+  "intercity/assignDriver",
+  async ({ bookingId, driverId }: { bookingId: number; driverId: number }, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.post(`${INTERCITY_BASE}/bookings/${bookingId}/assign-driver`, {
+        driverId,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const getAvailableDrivers = createAsyncThunk(
+  "intercity/getAvailableDrivers",
+  async (search?: string, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.get(`${INTERCITY_BASE}/drivers/available`, {
+        params: search ? { search } : {},
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
