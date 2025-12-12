@@ -11,6 +11,7 @@ import { toast } from "react-hot-toast";
 import type { IntercityRoute } from "@/utils/slices/intercitySlice";
 import { useLoadScript, Autocomplete } from "@react-google-maps/api";
 import { config } from "@/utils/config";
+import axios from "axios";
 
 const emptyRoute: Omit<IntercityRoute, "id"> = {
   routeCode: "",
@@ -37,6 +38,7 @@ export default function IntercityRoutesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [durationHours, setDurationHours] = useState(0);
   const [durationMinutes, setDurationMinutes] = useState(0);
+  const [isCalculating, setIsCalculating] = useState(false);
   
   // Google Places Autocomplete refs
   const originAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
@@ -66,6 +68,52 @@ export default function IntercityRoutesPage() {
     setShowModal(true);
   };
   
+  // Calculate distance and duration using Google Maps Directions API
+  const calculateDistanceAndDuration = async (
+    originLat: number,
+    originLng: number,
+    destLat: number,
+    destLng: number
+  ) => {
+    if (!originLat || !originLng || !destLat || !destLng) {
+      return;
+    }
+
+    setIsCalculating(true);
+    try {
+      const directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${originLat},${originLng}&destination=${destLat},${destLng}&key=${config.GOOGLE_MAPS_API_KEY}`;
+      const directionsResponse = await axios.get(directionsUrl);
+
+      if (directionsResponse.data.status === "OK" && directionsResponse.data.routes.length > 0) {
+        const route = directionsResponse.data.routes[0];
+        const leg = route.legs[0];
+        const distanceKm = leg.distance.value / 1000; // Convert meters to km
+        const durationMin = Math.round(leg.duration.value / 60); // Convert seconds to minutes
+
+        const hours = Math.floor(durationMin / 60);
+        const minutes = durationMin % 60;
+
+        setFormData((prev) => ({
+          ...prev,
+          distanceKm: Math.round(distanceKm * 10) / 10, // Round to 1 decimal place
+          durationMinutes: durationMin,
+        }));
+        setDurationHours(hours);
+        setDurationMinutes(minutes);
+
+        toast.success("Distance and duration calculated automatically");
+      } else {
+        console.error("Directions API error:", directionsResponse.data.status);
+        toast.error("Could not calculate route. Please enter values manually.");
+      }
+    } catch (error: any) {
+      console.error("Error calculating distance and duration:", error);
+      toast.error("Failed to calculate route. Please enter values manually.");
+    } finally {
+      setIsCalculating(false);
+    }
+  };
+
   // Handle origin place selection
   const onOriginPlaceChanged = () => {
     if (originAutocompleteRef.current) {
@@ -73,16 +121,27 @@ export default function IntercityRoutesPage() {
       if (place.geometry?.location) {
         const lat = place.geometry.location.lat();
         const lng = place.geometry.location.lng();
-        setFormData({
+        const updatedFormData = {
           ...formData,
           originName: place.formatted_address || place.name || "",
           originLatitude: lat,
           originLongitude: lng,
-        });
+        };
+        setFormData(updatedFormData);
+
+        // Auto-calculate if destination is also set
+        if (updatedFormData.destinationLatitude && updatedFormData.destinationLongitude) {
+          calculateDistanceAndDuration(
+            lat,
+            lng,
+            updatedFormData.destinationLatitude,
+            updatedFormData.destinationLongitude
+          );
+        }
       }
     }
   };
-  
+
   // Handle destination place selection
   const onDestinationPlaceChanged = () => {
     if (destinationAutocompleteRef.current) {
@@ -90,12 +149,23 @@ export default function IntercityRoutesPage() {
       if (place.geometry?.location) {
         const lat = place.geometry.location.lat();
         const lng = place.geometry.location.lng();
-        setFormData({
+        const updatedFormData = {
           ...formData,
           destinationName: place.formatted_address || place.name || "",
           destinationLatitude: lat,
           destinationLongitude: lng,
-        });
+        };
+        setFormData(updatedFormData);
+
+        // Auto-calculate if origin is also set
+        if (updatedFormData.originLatitude && updatedFormData.originLongitude) {
+          calculateDistanceAndDuration(
+            updatedFormData.originLatitude,
+            updatedFormData.originLongitude,
+            lat,
+            lng
+          );
+        }
       }
     }
   };
@@ -523,7 +593,12 @@ export default function IntercityRoutesPage() {
                 <h4 className="text-sm font-semibold text-gray-700 mb-3">Route Details</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Distance (km)</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Distance (km)
+                      {isCalculating && (
+                        <span className="ml-2 text-xs text-teal-600">Calculating...</span>
+                      )}
+                    </label>
                     <input
                       type="number"
                       step="0.1"
@@ -532,10 +607,16 @@ export default function IntercityRoutesPage() {
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-teal-500 focus:border-teal-500"
                       required
                       min="0"
+                      disabled={isCalculating}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Duration (hours)</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Duration (hours)
+                      {isCalculating && (
+                        <span className="ml-2 text-xs text-teal-600">Calculating...</span>
+                      )}
+                    </label>
                     <input
                       type="number"
                       value={durationHours}
@@ -546,10 +627,16 @@ export default function IntercityRoutesPage() {
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-teal-500 focus:border-teal-500"
                       required
                       min="0"
+                      disabled={isCalculating}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Duration (minutes)</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Duration (minutes)
+                      {isCalculating && (
+                        <span className="ml-2 text-xs text-teal-600">Calculating...</span>
+                      )}
+                    </label>
                     <input
                       type="number"
                       value={durationMinutes}
@@ -561,6 +648,7 @@ export default function IntercityRoutesPage() {
                       required
                       min="0"
                       max="59"
+                      disabled={isCalculating}
                     />
                   </div>
                   <div>

@@ -8,6 +8,7 @@ import {
   confirmIntercityBooking,
   assignDriverToBooking,
   getAvailableDrivers,
+  updateBookingCommission,
 } from "@/utils/reducers/intercityReducers";
 import { toast } from "react-hot-toast";
 import type { IntercityBookingStatus, IntercityBooking } from "@/utils/slices/intercitySlice";
@@ -42,6 +43,9 @@ export default function IntercityBookingsPage() {
   const [selectedDriverId, setSelectedDriverId] = useState<number | null>(null);
   const [availableDrivers, setAvailableDrivers] = useState<any[]>([]);
   const [loadingDrivers, setLoadingDrivers] = useState(false);
+  const [showCommissionModal, setShowCommissionModal] = useState(false);
+  const [editingCommissionBookingId, setEditingCommissionBookingId] = useState<number | null>(null);
+  const [commissionPercentage, setCommissionPercentage] = useState("");
 
   useEffect(() => {
     setMounted(true);
@@ -144,6 +148,29 @@ export default function IntercityBookingsPage() {
       toast.error("Failed to load drivers");
     } finally {
       setLoadingDrivers(false);
+    }
+  };
+
+  const handleUpdateCommission = async () => {
+    if (!editingCommissionBookingId) return;
+
+    try {
+      const result = await dispatch(
+        updateBookingCommission({
+          bookingId: editingCommissionBookingId,
+          commissionPercentage: parseFloat(commissionPercentage),
+        })
+      );
+      if (updateBookingCommission.fulfilled.match(result)) {
+        toast.success("Commission updated successfully!");
+        setShowCommissionModal(false);
+        setEditingCommissionBookingId(null);
+        dispatch(getIntercityBookings({ page: currentPage, size: 10 }));
+      } else {
+        toast.error("Failed to update commission");
+      }
+    } catch {
+      toast.error("An error occurred while updating commission");
     }
   };
 
@@ -289,6 +316,9 @@ export default function IntercityBookingsPage() {
                     Amount
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Commission
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -338,6 +368,16 @@ export default function IntercityBookingsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        ₹{booking.commissionAmount || "0.00"}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {booking.commissionAmount && booking.totalAmount
+                          ? `${((booking.commissionAmount / booking.totalAmount) * 100).toFixed(1)}%`
+                          : "—"}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(booking.status)}
                       {booking.paymentStatus && (
                         <div className="text-xs text-gray-500 mt-1">
@@ -380,6 +420,21 @@ export default function IntercityBookingsPage() {
                             Cancel
                           </button>
                         )}
+                        <button
+                          onClick={() => {
+                            setEditingCommissionBookingId(booking.id);
+                            setCommissionPercentage(
+                              booking.commissionAmount && booking.totalAmount
+                                ? ((booking.commissionAmount / booking.totalAmount) * 100).toFixed(2)
+                                : "5.00"
+                            );
+                            setShowCommissionModal(true);
+                          }}
+                          className="text-purple-600 hover:text-purple-900"
+                          title="Edit Commission"
+                        >
+                          💰
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -749,6 +804,71 @@ export default function IntercityBookingsPage() {
                   className="px-4 py-2 bg-red-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
                 >
                   {isLoading ? "Cancelling..." : "Cancel Booking"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Commission Edit Modal */}
+      {showCommissionModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Edit Commission</h3>
+              <button
+                onClick={() => {
+                  setShowCommissionModal(false);
+                  setEditingCommissionBookingId(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">
+                Update commission percentage for booking #{editingCommissionBookingId}
+              </p>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Commission Percentage (%)
+                </label>
+                <input
+                  type="number"
+                  value={commissionPercentage}
+                  onChange={(e) => setCommissionPercentage(e.target.value)}
+                  placeholder="Enter commission percentage"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-purple-500 focus:border-purple-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">Enter percentage (e.g., 5.0 for 5%)</p>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCommissionModal(false);
+                    setEditingCommissionBookingId(null);
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdateCommission}
+                  disabled={isLoading || !commissionPercentage}
+                  className="px-4 py-2 bg-purple-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
+                >
+                  {isLoading ? "Updating..." : "Update Commission"}
                 </button>
               </div>
             </div>

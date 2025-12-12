@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { debounce } from "lodash";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -31,7 +31,7 @@ import { requestRide } from "@/utils/reducers/rideReducers";
 import { useAppDispatch, useAppSelector } from "@/utils/store/store";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { getLocationIqUrl } from "@/utils/config";
+import { getLocationIqUrl, config, getApiUrl } from "@/utils/config";
 
 const validationSchema = Yup.object().shape({
   pickupArea: Yup.string().required("Pickup location is required"),
@@ -46,6 +46,8 @@ function BookRide() {
   const [locationError, setLocationError] = useState("");
   const [estimatedFare, setEstimatedFare] = useState<number | null>(null);
   const [estimatedTime, setEstimatedTime] = useState<string>("");
+  const [estimatedDistance, setEstimatedDistance] = useState<number | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
   const dispatch = useAppDispatch();
   const ride = useAppSelector((state) => state.ride);
   const router = useRouter();
@@ -68,6 +70,18 @@ function BookRide() {
       setLocationError("Geolocation is not supported by this browser.");
     }
   }, []);
+
+  // Recalculate when both locations are set
+  useEffect(() => {
+    if (formik.values.pickupLatitude && formik.values.destinationLatitude) {
+      calculateFareAndTime();
+    } else {
+      // Clear estimates if locations are not complete
+      setEstimatedFare(null);
+      setEstimatedTime("");
+      setEstimatedDistance(null);
+    }
+  }, [calculateFareAndTime]);
 
   const fetchSuggestions = debounce(
     async (input: string) => {
@@ -143,18 +157,90 @@ function BookRide() {
     formik.setFieldValue("destinationArea", tempArea);
     formik.setFieldValue("destinationLatitude", tempLat);
     formik.setFieldValue("destinationLongitude", tempLng);
+    
+    // Recalculate after swapping
+    if (formik.values.destinationLatitude && tempLat) {
+      setTimeout(() => calculateFareAndTime(), 100);
+    }
   };
 
-  const calculateFareAndTime = () => {
-    // Mock calculation - in real app, this would call an API
-    const baseFare = 50;
-    const perKmRate = 15;
-    const mockDistance = Math.random() * 20 + 5; // 5-25 km
-    const mockTime = Math.random() * 30 + 15; // 15-45 minutes
-    
-    setEstimatedFare(Math.round(baseFare + (mockDistance * perKmRate)));
-    setEstimatedTime(`${Math.round(mockTime)} min`);
-  };
+  const calculateFareAndTime = useCallback(async () => {
+    const pickupLat = formik.values.pickupLatitude;
+    const pickupLng = formik.values.pickupLongitude;
+    const dropLat = formik.values.destinationLatitude;
+    const dropLng = formik.values.destinationLongitude;
+
+    if (!pickupLat || !pickupLng || !dropLat || !dropLng) {
+      return;
+    }
+
+    setIsCalculating(true);
+    try {
+      // Use Google Maps Directions API to get distance and duration
+      const directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${pickupLat},${pickupLng}&destination=${dropLat},${dropLng}&key=${config.GOOGLE_MAPS_API_KEY}`;
+      
+      const directionsResponse = await axios.get(directionsUrl);
+      
+      if (directionsResponse.data.status === 'OK' && directionsResponse.data.routes.length > 0) {
+        const route = directionsResponse.data.routes[0];
+        const leg = route.legs[0];
+        
+        // Distance in meters, convert to km
+        const distanceKm = leg.distance.value / 1000;
+        // Duration in seconds, convert to minutes
+        const durationMin = Math.round(leg.duration.value / 60);
+        
+        setEstimatedDistance(Math.round(distanceKm * 10) / 10); // Round to 1 decimal
+        setEstimatedTime(`${durationMin} min`);
+        
+        // Now call backend API to get fare estimate
+        try {
+          const fareRequest = {
+            serviceType: "CAR", // Default to CAR, can be made dynamic
+            distanceKm: distanceKm,
+            durationMin: durationMin,
+            pickupLat: parseFloat(pickupLat),
+            pickupLng: parseFloat(pickupLng),
+            dropLat: parseFloat(dropLat),
+            dropLng: parseFloat(dropLng),
+          };
+          
+          const fareResponse = await axios.post(
+            getApiUrl("/api/fare/estimate"),
+            fareRequest,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+          
+          if (fareResponse.data && fareResponse.data.finalTotal) {
+            setEstimatedFare(Math.round(fareResponse.data.finalTotal));
+          } else {
+            // Fallback calculation if API doesn't return fare
+            const baseFare = 50;
+            const perKmRate = 15;
+            setEstimatedFare(Math.round(baseFare + (distanceKm * perKmRate)));
+          }
+        } catch (fareError) {
+          console.error("Error fetching fare estimate:", fareError);
+          // Fallback calculation
+          const baseFare = 50;
+          const perKmRate = 15;
+          setEstimatedFare(Math.round(baseFare + (distanceKm * perKmRate)));
+        }
+      } else {
+        console.error("Directions API error:", directionsResponse.data.status);
+        toast.error("Could not calculate route. Please try again.");
+      }
+    } catch (error: any) {
+      console.error("Error calculating distance and time:", error);
+      toast.error("Failed to calculate trip details. Please try again.");
+    } finally {
+      setIsCalculating(false);
+    }
+  }, [formik.values.pickupLatitude, formik.values.pickupLongitude, formik.values.destinationLatitude, formik.values.destinationLongitude]);
 
   const handleOnSubmit = async (values: {
     pickupArea: string;
@@ -368,31 +454,57 @@ function BookRide() {
                   )}
                 </div>
 
-                {/* Estimated Fare and Time */}
-                {(estimatedFare || estimatedTime) && (
+                {/* Estimated Fare, Distance, and Time */}
+                {(estimatedFare || estimatedTime || estimatedDistance) && (
                   <Card className="bg-blue-50 border-blue-200">
                     <CardContent className="p-4">
                       <Typography variant="h6" className="text-blue-800 mb-3">
                         Trip Details
                       </Typography>
-                      <div className="flex justify-between items-center">
-                        {estimatedFare && (
-                          <div className="flex items-center space-x-2">
-                            <LocalGasStation className="text-green-600" />
-                            <Typography variant="body1" className="font-semibold">
-                              ₹{estimatedFare}
-                            </Typography>
-                          </div>
-                        )}
-                        {estimatedTime && (
-                          <div className="flex items-center space-x-2">
-                            <AccessTime className="text-orange-600" />
-                            <Typography variant="body1" className="font-semibold">
-                              {estimatedTime}
-                            </Typography>
-                          </div>
-                        )}
-                      </div>
+                      {isCalculating ? (
+                        <div className="flex items-center justify-center py-4">
+                          <CircularProgress size={24} />
+                          <Typography variant="body2" className="ml-2">
+                            Calculating...
+                          </Typography>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-3 gap-4">
+                          {estimatedDistance && (
+                            <div className="flex flex-col items-center">
+                              <DirectionsCar className="text-blue-600 mb-1" />
+                              <Typography variant="body2" className="text-gray-600">
+                                Distance
+                              </Typography>
+                              <Typography variant="body1" className="font-semibold">
+                                {estimatedDistance} km
+                              </Typography>
+                            </div>
+                          )}
+                          {estimatedTime && (
+                            <div className="flex flex-col items-center">
+                              <AccessTime className="text-orange-600 mb-1" />
+                              <Typography variant="body2" className="text-gray-600">
+                                ETA
+                              </Typography>
+                              <Typography variant="body1" className="font-semibold">
+                                {estimatedTime}
+                              </Typography>
+                            </div>
+                          )}
+                          {estimatedFare && (
+                            <div className="flex flex-col items-center">
+                              <LocalGasStation className="text-green-600 mb-1" />
+                              <Typography variant="body2" className="text-gray-600">
+                                Fare
+                              </Typography>
+                              <Typography variant="body1" className="font-semibold">
+                                ₹{estimatedFare}
+                              </Typography>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 )}

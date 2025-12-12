@@ -1,7 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/utils/store/store";
-import { getIntercityDashboard } from "@/utils/reducers/intercityReducers";
+import { getIntercityDashboard, getCommissionSetting, updateCommissionSetting } from "@/utils/reducers/intercityReducers";
+import { toast } from "react-hot-toast";
 import Link from "next/link";
 
 export default function IntercityDashboardPage() {
@@ -195,6 +196,21 @@ export default function IntercityDashboardPage() {
             <div className="ml-4">
               <h3 className="text-sm font-medium text-gray-900">Route Management</h3>
               <p className="text-xs text-gray-500">Create & manage travel routes</p>
+            </div>
+          </Link>
+
+          <Link
+            href="/admin/intercity/pricing"
+            className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-teal-500 hover:bg-teal-50 transition-colors"
+          >
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center">
+                💰
+              </div>
+            </div>
+            <div className="ml-4">
+              <h3 className="text-sm font-medium text-gray-900">Pricing & Commission</h3>
+              <p className="text-xs text-gray-500">Configure pricing & commission rates</p>
             </div>
           </Link>
 

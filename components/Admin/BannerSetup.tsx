@@ -153,6 +153,47 @@ function BannerSetup() {
     return true;
   });
 
+  // Convert imageUrl to valid URL for Next.js Image component
+  const getValidImageUrl = (imageUrl: string | null | undefined): string | null => {
+    if (!imageUrl) return null;
+    
+    // Already a valid URL
+    if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+      return imageUrl;
+    }
+    
+    // Convert gs:// path to Firebase Storage public URL
+    if (imageUrl.startsWith("gs://")) {
+      const match = imageUrl.match(/^gs:\/\/([^/]+)\/(.+)$/);
+      if (match) {
+        const [, bucket, path] = match;
+        // Firebase Storage public URL format: 
+        // https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{encodedPath}?alt=media
+        // Each path segment needs to be encoded separately
+        const pathSegments = path.split('/');
+        const encodedPath = pathSegments.map(segment => encodeURIComponent(segment)).join('%2F');
+        const url = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodedPath}?alt=media`;
+        console.log('Converted gs:// URL:', { original: imageUrl, converted: url });
+        return url;
+      }
+    }
+    
+    // Convert relative path to Firebase Storage URL (assuming default bucket)
+    // Path format: documents/banners/filename.jpg
+    if (imageUrl.includes("documents/") || imageUrl.includes("banners/")) {
+      const defaultBucket = "gauva-15d9a.appspot.com";
+      // Encode each path segment separately
+      const pathSegments = imageUrl.split('/');
+      const encodedPath = pathSegments.map(segment => encodeURIComponent(segment)).join('%2F');
+      const url = `https://firebasestorage.googleapis.com/v0/b/${defaultBucket}/o/${encodedPath}?alt=media`;
+      console.log('Converted relative path URL:', { original: imageUrl, converted: url });
+      return url;
+    }
+    
+    console.warn('Could not convert imageUrl:', imageUrl);
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* ADD NEW BANNER Section */}
@@ -454,18 +495,41 @@ function BannerSetup() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredBanners.map((banner) => (
-                <div key={banner.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                  {banner.imageUrl && (
-                    <div className="relative w-full h-32">
-                      <Image
-                        src={banner.imageUrl}
-                        alt={banner.title}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  )}
+              {filteredBanners.map((banner) => {
+                const validImageUrl = getValidImageUrl(banner.imageUrl);
+                return (
+                  <div key={banner.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                    {validImageUrl ? (
+                      <div className="relative w-full h-32">
+                        <Image
+                          src={validImageUrl}
+                          alt={banner.title}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                          onError={(e) => {
+                            console.error('Image failed to load:', validImageUrl, e);
+                            // Fallback to regular img tag if Next.js Image fails
+                            const img = e.target as HTMLImageElement;
+                            if (img) {
+                              img.style.display = 'none';
+                              const fallback = document.createElement('img');
+                              fallback.src = validImageUrl;
+                              fallback.alt = banner.title;
+                              fallback.className = 'w-full h-32 object-cover';
+                              fallback.onerror = () => {
+                                console.error('Fallback image also failed:', validImageUrl);
+                              };
+                              img.parentElement?.appendChild(fallback);
+                            }
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full h-32 bg-gray-200 flex items-center justify-center">
+                        <span className="text-gray-400 text-sm">No image</span>
+                      </div>
+                    )}
                   <div className="p-4">
                     <h3 className="font-bold text-gray-800 mb-2">{banner.title}</h3>
                     <p className="text-sm text-gray-600 mb-2 line-clamp-2">{banner.shortDescription}</p>
@@ -495,7 +559,8 @@ function BannerSetup() {
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

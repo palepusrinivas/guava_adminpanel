@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useCallback, useRef } from "react";
-import { GoogleMap, LoadScript, Polygon, DrawingManager } from "@react-google-maps/api";
+import { GoogleMap, useJsApiLoader, Polygon, DrawingManager } from "@react-google-maps/api";
 import { config } from "@/utils/config";
 import { useFormik } from "formik";
 import * as yup from "yup";
@@ -47,6 +47,12 @@ function ZoneSetup({ onCreateZone }: ZoneSetupProps) {
   const [polygon, setPolygon] = useState<google.maps.Polygon | null>(null);
   const [coordinates, setCoordinates] = useState<google.maps.LatLng[]>([]);
   const mapRef = useRef<google.maps.Map | null>(null);
+
+  // Load Google Maps script
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: config.GOOGLE_MAPS_API_KEY || "",
+    libraries: libraries,
+  });
 
   const formik = useFormik({
     initialValues: {
@@ -188,27 +194,7 @@ function ZoneSetup({ onCreateZone }: ZoneSetupProps) {
 
           {/* Google Map */}
           <div className="border border-gray-300 rounded-lg overflow-hidden">
-            {config.GOOGLE_MAPS_API_KEY ? (
-              <LoadScript googleMapsApiKey={config.GOOGLE_MAPS_API_KEY} libraries={libraries}>
-                <GoogleMap
-                  mapContainerStyle={mapContainerStyle}
-                  center={defaultCenter}
-                  zoom={12}
-                  onLoad={onMapLoad}
-                  options={{
-                    streetViewControl: true,
-                    mapTypeControl: true,
-                    fullscreenControl: true,
-                    zoomControl: true,
-                  }}
-                >
-                  <DrawingManager
-                    options={drawingManagerOptions}
-                    onPolygonComplete={onPolygonComplete}
-                  />
-                </GoogleMap>
-              </LoadScript>
-            ) : (
+            {!config.GOOGLE_MAPS_API_KEY ? (
               <div className="h-[500px] flex items-center justify-center bg-gray-100">
                 <div className="text-center">
                   <p className="text-gray-600 mb-2">Google Maps API Key not configured</p>
@@ -217,6 +203,40 @@ function ZoneSetup({ onCreateZone }: ZoneSetupProps) {
                   </p>
                 </div>
               </div>
+            ) : loadError ? (
+              <div className="h-[500px] flex items-center justify-center bg-red-50">
+                <div className="text-center">
+                  <p className="text-red-600 mb-2">Error loading Google Maps</p>
+                  <p className="text-sm text-red-500">
+                    Please check your API key and internet connection
+                  </p>
+                </div>
+              </div>
+            ) : !isLoaded ? (
+              <div className="h-[500px] flex items-center justify-center bg-gray-100">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading Google Maps...</p>
+                </div>
+              </div>
+            ) : (
+              <GoogleMap
+                mapContainerStyle={mapContainerStyle}
+                center={defaultCenter}
+                zoom={12}
+                onLoad={onMapLoad}
+                options={{
+                  streetViewControl: true,
+                  mapTypeControl: true,
+                  fullscreenControl: true,
+                  zoomControl: true,
+                }}
+              >
+                <DrawingManager
+                  options={drawingManagerOptions}
+                  onPolygonComplete={onPolygonComplete}
+                />
+              </GoogleMap>
             )}
           </div>
 

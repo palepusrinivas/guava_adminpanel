@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/utils/store/store";
-import { getAnalyticsHeatmap } from "@/utils/reducers/adminReducers";
+import { getAnalyticsHeatmap, getZones } from "@/utils/reducers/adminReducers";
 import { toast } from "react-hot-toast";
 import EnhancedHeatMap from "@/components/Admin/EnhancedHeatMap";
 
@@ -43,6 +43,12 @@ export default function HeatMapPage() {
     }
   };
 
+  // Fetch zones on component mount
+  useEffect(() => {
+    dispatch(getZones());
+  }, [dispatch]);
+
+  // Fetch heatmap data when date range changes
   useEffect(() => {
     fetchHeatmapData();
   }, [dateRange]);

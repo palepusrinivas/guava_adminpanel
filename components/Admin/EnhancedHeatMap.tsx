@@ -187,20 +187,8 @@ const EnhancedHeatMap: React.FC<EnhancedHeatMapProps> = ({
     );
   }
 
-  // No data
-  if (!data || data.length === 0) {
-    return (
-      <div className="w-full h-[600px] bg-gray-100 rounded-lg flex items-center justify-center">
-        <div className="text-center p-6">
-          <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-          </svg>
-          <p className="text-gray-600 font-medium">No heatmap data available</p>
-          <p className="text-gray-500 text-sm mt-2">Try selecting a different date range with ride activity</p>
-        </div>
-      </div>
-    );
-  }
+  // No data - but still show the map
+  const hasData = data && data.length > 0;
 
   return (
     <div className="flex gap-4">
@@ -300,7 +288,7 @@ const EnhancedHeatMap: React.FC<EnhancedHeatMapProps> = ({
               options={{ ...mapOptions, mapTypeId: mapType }}
             >
               {/* Render custom markers with numbers */}
-              {clusteredData.map((point, index) => {
+              {hasData && clusteredData.map((point, index) => {
                 const count = point.count || 1;
                 const isHighDensity = count >= densityThreshold;
                 
@@ -318,6 +306,19 @@ const EnhancedHeatMap: React.FC<EnhancedHeatMapProps> = ({
                 );
               })}
             </GoogleMap>
+            
+            {/* Show message overlay when no data */}
+            {!hasData && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="bg-white bg-opacity-90 rounded-lg p-6 text-center shadow-lg pointer-events-auto">
+                  <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  </svg>
+                  <p className="text-gray-600 font-medium">No heatmap data available</p>
+                  <p className="text-gray-500 text-sm mt-2">Try selecting a different date range with ride activity</p>
+                </div>
+              </div>
+            )}
 
             {/* Map Type Toggle */}
             <div className="absolute bottom-4 left-4 flex gap-2">
@@ -346,22 +347,24 @@ const EnhancedHeatMap: React.FC<EnhancedHeatMapProps> = ({
         </div>
 
         {/* Legend */}
-        <div className="mt-4 flex items-center justify-center gap-6 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
-              5
+        {hasData && (
+          <div className="mt-4 flex items-center justify-center gap-6 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
+                5
+              </div>
+              <span className="text-gray-600">Low Density</span>
             </div>
-            <span className="text-gray-600">Low Density</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center text-white text-xs font-bold">
-              50
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center text-white text-xs font-bold">
+                50
+              </div>
+              <span className="text-gray-600">High Density</span>
             </div>
-            <span className="text-gray-600">High Density</span>
+            <span className="text-gray-500">|</span>
+            <span className="text-gray-600">{data.length} locations</span>
           </div>
-          <span className="text-gray-500">|</span>
-          <span className="text-gray-600">{data.length} locations</span>
-        </div>
+        )}
       </div>
     </div>
   );

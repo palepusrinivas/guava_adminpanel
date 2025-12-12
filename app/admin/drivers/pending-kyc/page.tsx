@@ -45,7 +45,7 @@ export default function PendingKycPage() {
     try {
       const token = getAuthToken();
       const response = await fetch(
-        getApiUrl(`/api/admin/drivers/pending-kyc?page=${page}&size=20`),
+        getApiUrl(`/api/admin/kyc/pending?page=${page}&size=20`),
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -56,36 +56,23 @@ export default function PendingKycPage() {
       const data = await response.json();
       const kycList = data.content || [];
       
-      // Fetch document URLs for each driver
-      const driversWithDocs = await Promise.all(
-        kycList.map(async (kyc: any) => {
-          try {
-            const detailsResponse = await fetch(
-              getApiUrl(`/api/admin/drivers/${kyc.driver.id}/details`),
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
-            );
-            if (detailsResponse.ok) {
-              const details = await detailsResponse.json();
-              return {
-                ...kyc,
-                documents: details.kyc?.documents || {},
-              };
-            }
-          } catch (err) {
-            console.error("Failed to fetch driver details:", err);
-          }
-          return { ...kyc, documents: {} };
-        })
-      );
+      // Map the enriched data from the new endpoint
+      const driversWithDocs = kycList.map((item: any) => ({
+        id: item.kyc?.id || 0,
+        driver: item.driver || {},
+        status: item.kyc?.status || "PENDING",
+        aadhaarNumber: item.kyc?.aadhaarNumber,
+        licenseNumber: item.kyc?.licenseNumber,
+        rcNumber: item.kyc?.rcNumber,
+        submittedAt: item.kyc?.submittedAt,
+        documents: item.documentUrls || {},
+      }));
       
       setDrivers(driversWithDocs);
       setTotalPages(data.totalPages || 0);
     } catch (err: any) {
       setError(err.message);
+      toast.error("Failed to fetch pending KYC requests");
     } finally {
       setLoading(false);
     }
@@ -100,7 +87,7 @@ export default function PendingKycPage() {
     try {
       const token = getAuthToken();
       const response = await fetch(
-        getApiUrl(`/api/admin/drivers/${driverId}/kyc/approve`),
+        getApiUrl(`/api/admin/kyc/drivers/${driverId}/approve`),
         {
           method: "PUT",
           headers: {
@@ -108,11 +95,14 @@ export default function PendingKycPage() {
           },
         }
       );
-      if (!response.ok) throw new Error("Failed to approve KYC");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to approve KYC");
+      }
       toast.success("KYC approved successfully!");
       fetchPendingKyc();
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(err.message || "Failed to approve KYC");
     } finally {
       setActionLoading(null);
     }
@@ -127,7 +117,7 @@ export default function PendingKycPage() {
     try {
       const token = getAuthToken();
       const response = await fetch(
-        getApiUrl(`/api/admin/drivers/${driverId}/kyc/reject`),
+        getApiUrl(`/api/admin/kyc/drivers/${driverId}/reject`),
         {
           method: "PUT",
           headers: {
@@ -137,11 +127,14 @@ export default function PendingKycPage() {
           body: JSON.stringify({ reason }),
         }
       );
-      if (!response.ok) throw new Error("Failed to reject KYC");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to reject KYC");
+      }
       toast.success("KYC rejected");
       fetchPendingKyc();
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(err.message || "Failed to reject KYC");
     } finally {
       setActionLoading(null);
     }
@@ -264,24 +257,27 @@ export default function PendingKycPage() {
                   </div>
 
                   {/* Document Preview */}
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                    {kyc.documents?.photo && (
+                      <DocumentViewer label="Profile Photo" url={kyc.documents.photo} />
+                    )}
                     {kyc.documents?.licenseFront && (
-                      <DocumentBadge label="License Front" />
+                      <DocumentViewer label="License Front" url={kyc.documents.licenseFront} />
                     )}
                     {kyc.documents?.licenseBack && (
-                      <DocumentBadge label="License Back" />
+                      <DocumentViewer label="License Back" url={kyc.documents.licenseBack} />
                     )}
                     {kyc.documents?.rcFront && (
-                      <DocumentBadge label="RC Front" />
+                      <DocumentViewer label="RC Front" url={kyc.documents.rcFront} />
                     )}
                     {kyc.documents?.rcBack && (
-                      <DocumentBadge label="RC Back" />
+                      <DocumentViewer label="RC Back" url={kyc.documents.rcBack} />
                     )}
                     {kyc.documents?.aadhaarFront && (
-                      <DocumentBadge label="Aadhaar Front" />
+                      <DocumentViewer label="Aadhaar Front" url={kyc.documents.aadhaarFront} />
                     )}
                     {kyc.documents?.aadhaarBack && (
-                      <DocumentBadge label="Aadhaar Back" />
+                      <DocumentViewer label="Aadhaar Back" url={kyc.documents.aadhaarBack} />
                     )}
                   </div>
                 </div>
@@ -343,11 +339,46 @@ export default function PendingKycPage() {
   );
 }
 
-function DocumentBadge({ label }: { label: string }) {
+function DocumentViewer({ label, url }: { label: string; url: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  
   return (
-    <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
-      📄 {label}
-    </span>
+    <>
+      <button
+        onClick={() => setIsOpen(true)}
+        className="relative group p-2 border border-gray-300 rounded-lg hover:border-blue-500 transition-colors"
+      >
+        <div className="flex flex-col items-center gap-1">
+          <div className="text-2xl">📄</div>
+          <span className="text-xs text-gray-600">{label}</span>
+        </div>
+        <div className="absolute inset-0 bg-blue-500 bg-opacity-0 group-hover:bg-opacity-10 rounded-lg transition-opacity" />
+      </button>
+      
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={() => setIsOpen(false)}
+        >
+          <div className="relative max-w-4xl max-h-full">
+            <button
+              onClick={() => setIsOpen(false)}
+              className="absolute top-4 right-4 bg-white rounded-full p-2 text-gray-800 hover:bg-gray-200 z-10"
+            >
+              ✕
+            </button>
+            <img
+              src={url}
+              alt={label}
+              className="max-w-full max-h-[90vh] object-contain rounded-lg"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "/placeholder-document.png";
+              }}
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

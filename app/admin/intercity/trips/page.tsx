@@ -5,6 +5,7 @@ import {
   getIntercityTrips,
   dispatchIntercityTrip,
   cancelIntercityTrip,
+  updateTripPrices,
 } from "@/utils/reducers/intercityReducers";
 import { toast } from "react-hot-toast";
 import type { IntercityTripStatus } from "@/utils/slices/intercitySlice";
@@ -28,6 +29,10 @@ export default function IntercityTripsPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancellingTripId, setCancellingTripId] = useState<number | null>(null);
   const [cancelReason, setCancelReason] = useState("");
+  const [showPriceModal, setShowPriceModal] = useState(false);
+  const [editingTripId, setEditingTripId] = useState<number | null>(null);
+  const [totalPrice, setTotalPrice] = useState("");
+  const [currentPerHeadPrice, setCurrentPerHeadPrice] = useState("");
 
   useEffect(() => {
     setMounted(true);
@@ -84,6 +89,36 @@ export default function IntercityTripsPage() {
       }
     } catch {
       toast.error("An error occurred while cancelling trip");
+    }
+  };
+
+  const handleOpenPriceModal = (trip: any) => {
+    setEditingTripId(trip.id);
+    setTotalPrice(trip.totalPrice?.toString() || "");
+    setCurrentPerHeadPrice(trip.currentPerHeadPrice?.toString() || "");
+    setShowPriceModal(true);
+  };
+
+  const handleUpdatePrices = async () => {
+    if (!editingTripId) return;
+    
+    try {
+      const result = await dispatch(
+        updateTripPrices({
+          tripId: editingTripId,
+          totalPrice: totalPrice ? parseFloat(totalPrice) : undefined,
+          currentPerHeadPrice: currentPerHeadPrice ? parseFloat(currentPerHeadPrice) : undefined,
+        })
+      );
+      if (updateTripPrices.fulfilled.match(result)) {
+        toast.success("Trip prices updated successfully!");
+        setShowPriceModal(false);
+        dispatch(getIntercityTrips({ page: currentPage, size: 10 }));
+      } else {
+        toast.error("Failed to update trip prices");
+      }
+    } catch {
+      toast.error("An error occurred while updating prices");
     }
   };
 
@@ -201,6 +236,9 @@ export default function IntercityTripsPage() {
                     Driver
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Price
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -261,9 +299,24 @@ export default function IntercityTripsPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        Total: ₹{trip.totalPrice?.toFixed(2) || "0.00"}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        Per Head: ₹{trip.currentPerHeadPrice?.toFixed(2) || "0.00"}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(trip.status)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => handleOpenPriceModal(trip)}
+                        className="text-blue-600 hover:text-blue-900 mr-3"
+                        title="Edit Prices"
+                      >
+                        💰
+                      </button>
                       {trip.status === "FILLING" && (
                         <button
                           onClick={() => handleDispatch(trip.id)}
@@ -368,6 +421,76 @@ export default function IntercityTripsPage() {
                   className="px-4 py-2 bg-red-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
                 >
                   {isLoading ? "Cancelling..." : "Cancel Trip"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Price Edit Modal */}
+      {showPriceModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Edit Trip Prices</h3>
+              <button
+                onClick={() => setShowPriceModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Total Price (₹)
+                </label>
+                <input
+                  type="number"
+                  value={totalPrice}
+                  onChange={(e) => setTotalPrice(e.target.value)}
+                  placeholder="Enter total price"
+                  step="0.01"
+                  min="0"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-teal-500 focus:border-teal-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">Total price for the entire trip</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Current Per-Head Price (₹)
+                </label>
+                <input
+                  type="number"
+                  value={currentPerHeadPrice}
+                  onChange={(e) => setCurrentPerHeadPrice(e.target.value)}
+                  placeholder="Enter per-head price"
+                  step="0.01"
+                  min="0"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-teal-500 focus:border-teal-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">Price per passenger (leave empty to auto-calculate)</p>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowPriceModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdatePrices}
+                  disabled={isLoading || (!totalPrice && !currentPerHeadPrice)}
+                  className="px-4 py-2 bg-teal-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
+                >
+                  {isLoading ? "Updating..." : "Update Prices"}
                 </button>
               </div>
             </div>

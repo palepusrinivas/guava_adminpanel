@@ -18,6 +18,8 @@ import {
   confirmIntercityBooking,
   assignDriverToBooking,
   seedIntercityVehicles,
+  getIntercityPricingConfig,
+  updateIntercityPricingConfig,
 } from "../reducers/intercityReducers";
 
 // Enums matching backend
@@ -73,6 +75,23 @@ export interface IntercityRoute {
   priceMultiplier: number;
   isActive: boolean;
   bidirectional: boolean;
+}
+
+export interface IntercityPricingConfig {
+  id?: number;
+  commissionPercent: number;
+  platformFeePercent?: number;
+  gstPercent?: number;
+  minCommissionAmount?: number;
+  maxCommissionAmount?: number;
+  nightFareMultiplier: number;
+  defaultRoutePriceMultiplier: number;
+  commissionEnabled: boolean;
+  nightFareEnabled: boolean;
+  nightFareStartHour: number;
+  nightFareEndHour: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface IntercityTrip {
@@ -136,6 +155,7 @@ interface IntercityState {
   bookings: IntercityBooking[];
   bookingsPage: PageInfo | null;
   selectedBooking: IntercityBooking | null;
+  pricingConfig: IntercityPricingConfig | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -149,6 +169,7 @@ const initialState: IntercityState = {
   bookings: [],
   bookingsPage: null,
   selectedBooking: null,
+  pricingConfig: null,
   isLoading: false,
   error: null,
 };
@@ -486,6 +507,35 @@ const intercitySlice = createSlice({
         state.error = null;
       })
       .addCase(assignDriverToBooking.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      });
+
+    // Pricing Configuration
+    builder
+      .addCase(getIntercityPricingConfig.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getIntercityPricingConfig.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.pricingConfig = action.payload;
+        state.error = null;
+      })
+      .addCase(getIntercityPricingConfig.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(updateIntercityPricingConfig.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateIntercityPricingConfig.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.pricingConfig = action.payload;
+        state.error = null;
+      })
+      .addCase(updateIntercityPricingConfig.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       });
