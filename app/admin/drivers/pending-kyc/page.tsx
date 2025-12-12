@@ -258,8 +258,8 @@ export default function PendingKycPage() {
 
                   {/* Document Preview */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-                    {kyc.documents?.photo && (
-                      <DocumentViewer label="Profile Photo" url={kyc.documents.photo} />
+                    {kyc.documents?.profilePhoto && (
+                      <DocumentViewer label="Profile Photo" url={kyc.documents.profilePhoto} />
                     )}
                     {kyc.documents?.licenseFront && (
                       <DocumentViewer label="License Front" url={kyc.documents.licenseFront} />

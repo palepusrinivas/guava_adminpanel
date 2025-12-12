@@ -105,6 +105,8 @@ export interface IntercityTrip {
   actualArrival?: string;
   totalSeats: number;
   bookedSeats: number;
+  totalPrice?: number;
+  currentPerHeadPrice?: number;
   driverId?: number;
   driverName?: string;
   vehicleNumber?: string;
@@ -121,6 +123,7 @@ export interface IntercityBooking {
   seatCount: number;
   pricePerSeat: number;
   totalAmount: number;
+  commissionAmount?: number;
   status: IntercityBookingStatus;
   paymentStatus?: string;
   pickupPoint?: string;

@@ -7,6 +7,7 @@ import type {
   IntercityDashboardStats,
   IntercityTripStatus,
   IntercityBookingStatus,
+  IntercityPricingConfig,
 } from "../slices/intercitySlice";
 
 // Error message extractor
@@ -298,11 +299,102 @@ export const assignDriverToBooking = createAsyncThunk(
 
 export const getAvailableDrivers = createAsyncThunk(
   "intercity/getAvailableDrivers",
-  async (search?: string, { rejectWithValue }) => {
+  async (search: string | undefined, { rejectWithValue }) => {
     try {
       const response = await adminAxios.get(`${INTERCITY_BASE}/drivers/available`, {
         params: search ? { search } : {},
       });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+// ==================== Trip Price Management ====================
+
+export const updateTripPrices = createAsyncThunk(
+  "intercity/updateTripPrices",
+  async (
+    { tripId, totalPrice, currentPerHeadPrice }: { tripId: number; totalPrice?: number; currentPerHeadPrice?: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await adminAxios.put(`${INTERCITY_BASE}/trips/${tripId}/prices`, {
+        totalPrice,
+        currentPerHeadPrice,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+// ==================== Commission Management ====================
+
+export const getCommissionSetting = createAsyncThunk(
+  "intercity/getCommissionSetting",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.get(`${INTERCITY_BASE}/settings/commission`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const updateCommissionSetting = createAsyncThunk(
+  "intercity/updateCommissionSetting",
+  async (commissionPercentage: number, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.put(`${INTERCITY_BASE}/settings/commission`, {
+        commissionPercentage,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const updateBookingCommission = createAsyncThunk(
+  "intercity/updateBookingCommission",
+  async ({ bookingId, commissionPercentage }: { bookingId: number; commissionPercentage: number }, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.put(`${INTERCITY_BASE}/bookings/${bookingId}/commission`, {
+        commissionPercentage,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+// ==================== Pricing Configuration ====================
+
+export const getIntercityPricingConfig = createAsyncThunk<IntercityPricingConfig>(
+  "intercity/getPricingConfig",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.get(`${INTERCITY_BASE}/pricing`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const updateIntercityPricingConfig = createAsyncThunk<
+  IntercityPricingConfig,
+  Partial<IntercityPricingConfig>
+>(
+  "intercity/updatePricingConfig",
+  async (configData, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.put(`${INTERCITY_BASE}/pricing`, configData);
       return response.data;
     } catch (error) {
       return rejectWithValue(extractErrorMessage(error));

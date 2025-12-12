@@ -71,18 +71,6 @@ function BookRide() {
     }
   }, []);
 
-  // Recalculate when both locations are set
-  useEffect(() => {
-    if (formik.values.pickupLatitude && formik.values.destinationLatitude) {
-      calculateFareAndTime();
-    } else {
-      // Clear estimates if locations are not complete
-      setEstimatedFare(null);
-      setEstimatedTime("");
-      setEstimatedDistance(null);
-    }
-  }, [calculateFareAndTime]);
-
   const fetchSuggestions = debounce(
     async (input: string) => {
       if (input.length < 2) {
@@ -144,6 +132,57 @@ function BookRide() {
       toast.error("Unable to get current location");
     }
   };
+
+  const handleOnSubmit = async (values: {
+    pickupArea: string;
+    destinationArea: string;
+    destinationLatitude: string;
+    destinationLongitude: string;
+    pickupLatitude: string;
+    pickupLongitude: string;
+  }) => {
+    try {
+      const response = await dispatch(
+        requestRide({
+          destinationArea: values.destinationArea,
+          pickupArea: values.pickupArea,
+          destinationLatitude: parseFloat(values.destinationLatitude),
+          destinationLongitude: parseFloat(values.destinationLongitude),
+          pickupLatitude: parseFloat(values.pickupLatitude),
+          pickupLongitude: parseFloat(values.pickupLongitude),
+        })
+      );
+      if (response.payload.code === 401) {
+        router.replace("/login");
+        return;
+      }
+      if (response.payload.error) {
+        toast.error(response.payload.message);
+      } else if (response.payload === "Internal Server Error") {
+        toast.error(response.payload);
+      } else {
+        toast.success(response.payload.message || "Ride Booked successfully");
+        router.push(`/rideDetail/${response.payload?.id}`);
+      }
+    } catch (error) {
+      toast.error("An error occurred while Booking Ride");
+    }
+  };
+
+  const formik = useFormik({
+    initialValues: {
+      pickupArea: "",
+      pickupLatitude: "",
+      pickupLongitude: "",
+      destinationArea: "",
+      destinationLatitude: "",
+      destinationLongitude: "",
+    },
+    validationSchema,
+    onSubmit: (values) => {
+      if (formik.isValid) handleOnSubmit(values);
+    },
+  });
 
   const swapLocations = () => {
     const tempArea = formik.values.pickupArea;
@@ -242,56 +281,17 @@ function BookRide() {
     }
   }, [formik.values.pickupLatitude, formik.values.pickupLongitude, formik.values.destinationLatitude, formik.values.destinationLongitude]);
 
-  const handleOnSubmit = async (values: {
-    pickupArea: string;
-    destinationArea: string;
-    destinationLatitude: string;
-    destinationLongitude: string;
-    pickupLatitude: string;
-    pickupLongitude: string;
-  }) => {
-    try {
-      const response = await dispatch(
-        requestRide({
-          destinationArea: values.destinationArea,
-          pickupArea: values.pickupArea,
-          destinationLatitude: parseFloat(values.destinationLatitude),
-          destinationLongitude: parseFloat(values.destinationLongitude),
-          pickupLatitude: parseFloat(values.pickupLatitude),
-          pickupLongitude: parseFloat(values.pickupLongitude),
-        })
-      );
-      if (response.payload.code === 401) {
-        router.replace("/login");
-        return;
-      }
-      if (response.payload.error) {
-        toast.error(response.payload.message);
-      } else if (response.payload === "Internal Server Error") {
-        toast.error(response.payload);
-      } else {
-        toast.success(response.payload.message || "Ride Booked successfully");
-        router.push(`/rideDetail/${response.payload?.id}`);
-      }
-    } catch (error) {
-      toast.error("An error occurred while Booking Ride");
+  // Recalculate when both locations are set
+  useEffect(() => {
+    if (formik.values.pickupLatitude && formik.values.destinationLatitude) {
+      calculateFareAndTime();
+    } else {
+      // Clear estimates if locations are not complete
+      setEstimatedFare(null);
+      setEstimatedTime("");
+      setEstimatedDistance(null);
     }
-  };
-
-  const formik = useFormik({
-    initialValues: {
-      pickupArea: "",
-      pickupLatitude: "",
-      pickupLongitude: "",
-      destinationArea: "",
-      destinationLatitude: "",
-      destinationLongitude: "",
-    },
-    validationSchema,
-    onSubmit: (values) => {
-      if (formik.isValid) handleOnSubmit(values);
-    },
-  });
+  }, [calculateFareAndTime, formik.values.pickupLatitude, formik.values.destinationLatitude]);
   const onFocused = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.name;
     setActiveField(name);

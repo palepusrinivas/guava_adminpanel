@@ -6,12 +6,6 @@ const __dirname = dirname(__filename);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Fix Turbopack root directory - explicitly set to project root
-  experimental: {
-    turbopack: {
-      root: __dirname,
-    },
-  },
   images: {
     remotePatterns: [
       { hostname: "s3-ap-southeast-1.amazonaws.com" },
