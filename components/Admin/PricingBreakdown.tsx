@@ -35,6 +35,15 @@ interface PricingBreakdownProps {
   durationMin?: number;
 }
 
+type BreakdownRow = {
+  label: string;
+  value: number;
+  description: string;
+  isSubtotal?: boolean;
+  isDiscount?: boolean;
+  isInfo?: boolean;
+};
+
 const PricingBreakdown: React.FC<PricingBreakdownProps> = ({
   breakdown,
   currency = "₹",
@@ -42,7 +51,7 @@ const PricingBreakdown: React.FC<PricingBreakdownProps> = ({
   distanceKm,
   durationMin,
 }) => {
-  const rows = [
+  const rows: BreakdownRow[] = [
     {
       label: "Base Fare",
       value: breakdown.baseFare,
