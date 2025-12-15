@@ -38,11 +38,14 @@ import {
   creditDriverWallet,
   debitUserWallet,
   debitDriverWallet,
+  manualPaymentUser,
+  manualPaymentDriver,
   getWalletBalance,
   getWalletTransactions,
   initiateWalletTopUp,
   clearCreditSuccess,
   clearDebitSuccess,
+  clearManualPaymentSuccess,
   setWorkflowStep,
   resetWalletState,
   getUsers,
@@ -79,6 +82,15 @@ const creditValidationSchema = yup.object({
   notes: yup.string().required("Notes are required"),
 });
 
+const manualPaymentValidationSchema = yup.object({
+  ownerType: yup.string().required("Owner type is required"),
+  ownerId: yup.string().required("Owner ID is required"),
+  amount: yup.number().required("Amount is required").positive("Amount must be positive"),
+  paymentMethod: yup.string().required("Payment method is required"),
+  referenceNumber: yup.string(),
+  notes: yup.string(),
+});
+
 const balanceValidationSchema = yup.object({
   ownerType: yup.string().required("Owner type is required"),
   ownerId: yup.string().required("Owner ID is required"),
@@ -86,7 +98,7 @@ const balanceValidationSchema = yup.object({
 
 const WalletManagement = () => {
   const dispatch = useAppDispatch();
-  const { balance, transactions, isLoading, error, creditSuccess, debitSuccess, topUpLink, users: rawUsers, drivers: rawDrivers, workflowStep } = useAppSelector(
+  const { balance, transactions, isLoading, error, creditSuccess, debitSuccess, manualPaymentSuccess, topUpLink, users: rawUsers, drivers: rawDrivers, workflowStep } = useAppSelector(
     (state) => state.wallet
   );
   
@@ -276,6 +288,38 @@ const WalletManagement = () => {
 
   const debitSteps = ["Select Entity", "Enter Amount", "Add Reason", "Confirm", "Complete"];
 
+  // Manual Payment Form
+  const manualPaymentFormik = useFormik({
+    initialValues: {
+      ownerType: "USER",
+      ownerId: "",
+      amount: 0,
+      paymentMethod: "CASH",
+      referenceNumber: "",
+      notes: "",
+    },
+    validationSchema: manualPaymentValidationSchema,
+    onSubmit: async (values, { resetForm }) => {
+      const { ownerType, ownerId, amount, paymentMethod, referenceNumber, notes } = values;
+      const data = { amount, paymentMethod, referenceNumber, notes };
+
+      let result;
+      if (ownerType === "USER") {
+        result = await dispatch(manualPaymentUser({ userId: ownerId, data }));
+      } else {
+        result = await dispatch(manualPaymentDriver({ driverId: ownerId, data }));
+      }
+
+      if (manualPaymentUser.fulfilled.match(result) || manualPaymentDriver.fulfilled.match(result)) {
+        toast.success(`Successfully added ₹${amount} via ${paymentMethod} to ${ownerType.toLowerCase()} wallet`);
+        resetForm();
+        setTimeout(() => dispatch(clearManualPaymentSuccess()), 3000);
+      } else {
+        toast.error(error || "Failed to process manual payment");
+      }
+    },
+  });
+
   return (
     <Box>
       {/* Header */}
@@ -321,6 +365,7 @@ const WalletManagement = () => {
           }}
         >
           <Tab label="💰 Add Funds (Pay via Razorpay)" />
+          <Tab label="💵 Manual Payment" />
           <Tab label="💸 Debit Wallet" />
           <Tab label="📊 View Balance" />
           <Tab label="📜 Transactions" />
@@ -442,8 +487,143 @@ const WalletManagement = () => {
           </form>
         </TabPanel>
 
-        {/* Tab 2: Debit Wallet - Multi-Step Workflow */}
+        {/* Tab 2: Manual Payment */}
         <TabPanel value={tabValue} index={1}>
+          <form onSubmit={manualPaymentFormik.handleSubmit}>
+            <div className="space-y-4 max-w-2xl">
+              <Alert severity="info" sx={{ mb: 2 }}>
+                <strong>💵 Manual Payment:</strong> Record cash payments, bank transfers, UPI payments, or other manual payment methods. The amount will be immediately credited to the selected user/driver wallet.
+              </Alert>
+
+              <FormControl fullWidth size="small">
+                <InputLabel>Owner Type</InputLabel>
+                <Select
+                  name="ownerType"
+                  value={manualPaymentFormik.values.ownerType}
+                  onChange={manualPaymentFormik.handleChange}
+                  label="Owner Type"
+                >
+                  <MenuItem value="USER">User</MenuItem>
+                  <MenuItem value="DRIVER">Driver</MenuItem>
+                </Select>
+              </FormControl>
+
+              <Autocomplete
+                fullWidth
+                freeSolo
+                options={manualPaymentFormik.values.ownerType === "USER" ? users : drivers}
+                getOptionLabel={(option) => {
+                  if (typeof option === 'string') return option;
+                  return `${option.fullName || option.name || 'Unknown'} (${option.email || option.mobile || option.id})`;
+                }}
+                value={
+                  (manualPaymentFormik.values.ownerType === "USER" ? users : drivers).find(
+                    (u) => u.id.toString() === manualPaymentFormik.values.ownerId
+                  ) || manualPaymentFormik.values.ownerId || null
+                }
+                onChange={(_, newValue) => {
+                  if (newValue === null) {
+                    manualPaymentFormik.setFieldValue("ownerId", "");
+                  } else if (typeof newValue === 'string') {
+                    const cleanValue = newValue.replace(/\D/g, '');
+                    manualPaymentFormik.setFieldValue("ownerId", cleanValue || newValue);
+                  } else {
+                    manualPaymentFormik.setFieldValue("ownerId", newValue.id.toString());
+                  }
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={`Select ${manualPaymentFormik.values.ownerType === "USER" ? "User" : "Driver"} or Enter ID`}
+                    error={manualPaymentFormik.touched.ownerId && Boolean(manualPaymentFormik.errors.ownerId)}
+                    helperText={manualPaymentFormik.touched.ownerId ? manualPaymentFormik.errors.ownerId : "Select from list or enter ID"}
+                    size="small"
+                  />
+                )}
+              />
+
+              <TextField
+                fullWidth
+                label="Amount (₹)"
+                name="amount"
+                type="number"
+                value={manualPaymentFormik.values.amount}
+                onChange={manualPaymentFormik.handleChange}
+                error={manualPaymentFormik.touched.amount && Boolean(manualPaymentFormik.errors.amount)}
+                helperText={manualPaymentFormik.touched.amount && manualPaymentFormik.errors.amount}
+                size="small"
+                inputProps={{ min: 1, step: 0.01 }}
+              />
+
+              <FormControl fullWidth size="small">
+                <InputLabel>Payment Method</InputLabel>
+                <Select
+                  name="paymentMethod"
+                  value={manualPaymentFormik.values.paymentMethod}
+                  onChange={manualPaymentFormik.handleChange}
+                  label="Payment Method"
+                >
+                  <MenuItem value="CASH">💵 Cash</MenuItem>
+                  <MenuItem value="BANK_TRANSFER">🏦 Bank Transfer</MenuItem>
+                  <MenuItem value="UPI">📱 UPI</MenuItem>
+                  <MenuItem value="CHEQUE">📄 Cheque</MenuItem>
+                  <MenuItem value="OTHER">🔷 Other</MenuItem>
+                </Select>
+              </FormControl>
+
+              <TextField
+                fullWidth
+                label="Reference Number (Optional)"
+                name="referenceNumber"
+                value={manualPaymentFormik.values.referenceNumber}
+                onChange={manualPaymentFormik.handleChange}
+                error={manualPaymentFormik.touched.referenceNumber && Boolean(manualPaymentFormik.errors.referenceNumber)}
+                helperText={manualPaymentFormik.touched.referenceNumber ? manualPaymentFormik.errors.referenceNumber : "Transaction ID, UPI ID, Cheque Number, etc."}
+                size="small"
+              />
+
+              <TextField
+                fullWidth
+                label="Notes (Optional)"
+                name="notes"
+                multiline
+                rows={3}
+                value={manualPaymentFormik.values.notes}
+                onChange={manualPaymentFormik.handleChange}
+                error={manualPaymentFormik.touched.notes && Boolean(manualPaymentFormik.errors.notes)}
+                helperText={manualPaymentFormik.touched.notes ? manualPaymentFormik.errors.notes : "Additional notes about this payment"}
+                size="small"
+              />
+
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={isLoading}
+                sx={{
+                  backgroundColor: "#120E43",
+                  "&:hover": { backgroundColor: "#0d0a30" },
+                  textTransform: "none",
+                  borderRadius: "8px",
+                  px: 4,
+                }}
+                startIcon={isLoading ? <CircularProgress size={20} sx={{ color: "white" }} /> : null}
+              >
+                ✅ Record Manual Payment
+              </Button>
+
+              {error && <Alert severity="error" className="mt-4">{error}</Alert>}
+
+              {manualPaymentSuccess && (
+                <Alert severity="success" className="mt-4">
+                  Payment recorded successfully! The wallet has been credited.
+                </Alert>
+              )}
+            </div>
+          </form>
+        </TabPanel>
+
+        {/* Tab 3: Debit Wallet - Multi-Step Workflow */}
+        <TabPanel value={tabValue} index={2}>
           <Box className="max-w-4xl">
             <Alert severity="warning" sx={{ mb: 3 }}>
               <strong>💸 Debit Wallet:</strong> Remove funds from user/driver wallet. The debited amount will be settled to your Razorpay account balance.
@@ -701,8 +881,8 @@ const WalletManagement = () => {
           </Box>
         </TabPanel>
 
-        {/* Tab 3: View Balance */}
-        <TabPanel value={tabValue} index={2}>
+        {/* Tab 4: View Balance */}
+        <TabPanel value={tabValue} index={3}>
           <form onSubmit={balanceFormik.handleSubmit}>
             <div className="space-y-4 max-w-2xl">
               <FormControl fullWidth size="small">
@@ -784,8 +964,8 @@ const WalletManagement = () => {
           </form>
         </TabPanel>
 
-        {/* Tab 4: Transactions */}
-        <TabPanel value={tabValue} index={3}>
+        {/* Tab 5: Transactions */}
+        <TabPanel value={tabValue} index={4}>
           <form onSubmit={transactionsFormik.handleSubmit}>
             <div className="space-y-4">
               <div className="flex gap-4 max-w-2xl">
@@ -926,8 +1106,8 @@ const WalletManagement = () => {
           </form>
         </TabPanel>
 
-        {/* Tab 5: Razorpay Payments */}
-        <TabPanel value={tabValue} index={4}>
+        {/* Tab 6: Razorpay Payments */}
+        <TabPanel value={tabValue} index={5}>
           <RazorpayTransactionsPanel />
         </TabPanel>
 

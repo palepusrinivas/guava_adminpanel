@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import { adminLoginUrl } from "../apiRoutes";
+import { adminLoginUrl, adminPricingUrl } from "../apiRoutes";
 import adminAxios from "../axiosConfig";
 import { config, getApiUrl } from "../config";
 
@@ -13,6 +13,38 @@ interface ErrorResponse {
   timestamp?: string;
 }
 
+// Pricing Config Interface
+interface PricingConfig {
+  // Auto
+  autoBaseFare?: number | null;
+  autoPerKmFare?: number | null;
+  autoNightSurchargePercent?: number | null;
+  autoPlatformFeeFlat?: number | null;
+  
+  // Bike
+  bikeCommissionPercent?: number | null;
+  bikeNightSurchargePercent?: number | null;
+  
+  // Car
+  carCommissionPercent?: number | null;
+  carNightSurchargePercent?: number | null;
+  
+  // Common
+  gstPercent?: number | null;
+  firstRideCashbackPercent?: number | null;
+  walletUsageCapPercent?: number | null;
+  walletCreditValidityDays?: number | null;
+  
+  // Night window
+  nightStartHour?: number | null;
+  nightEndHour?: number | null;
+  
+  // Payouts
+  minPayoutAmount?: number | null;
+  payoutFeeFlat?: number | null;
+  payoutFeePercent?: number | null;
+}
+
 // Admin Auth State Interface
 interface AdminAuthState {
   admin: {
@@ -22,6 +54,9 @@ interface AdminAuthState {
   token: string | null;
   isLoading: boolean;
   error: string | null;
+  pricing: PricingConfig | null;
+  pricingLoading: boolean;
+  pricingError: string | null;
 }
 
 // Safely read from localStorage only on the client
@@ -42,6 +77,9 @@ const initialState: AdminAuthState = {
   token: typeof window !== "undefined" ? localStorage.getItem("adminToken") : null,
   isLoading: false,
   error: null,
+  pricing: null,
+  pricingLoading: false,
+  pricingError: null,
 };
 
 // Admin Login Async Thunk
@@ -97,6 +135,37 @@ export const adminLogin = createAsyncThunk(
           config: { url: error.config?.url, method: error.config?.method }
         });
         return rejectWithValue(extractErrorMessage(error) || "Login failed");
+      }
+      return rejectWithValue("An unknown error occurred");
+    }
+  }
+);
+
+// Pricing Management Async Thunks
+export const getPricing = createAsyncThunk(
+  "admin/getPricing",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.get(adminPricingUrl);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        return rejectWithValue(extractErrorMessage(error) || "Failed to fetch pricing");
+      }
+      return rejectWithValue("An unknown error occurred");
+    }
+  }
+);
+
+export const updatePricing = createAsyncThunk(
+  "admin/updatePricing",
+  async (pricingData: Partial<PricingConfig>, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.put(adminPricingUrl, pricingData);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        return rejectWithValue(extractErrorMessage(error) || "Failed to update pricing");
       }
       return rejectWithValue("An unknown error occurred");
     }
@@ -184,6 +253,33 @@ const adminSlice = createSlice({
         state.isLoading = false;
         // action.payload should already be a string due to our thunk error handling
         state.error = typeof action.payload === 'string' ? action.payload : 'An unexpected error occurred';
+      })
+      // Pricing Management
+      .addCase(getPricing.pending, (state) => {
+        state.pricingLoading = true;
+        state.pricingError = null;
+      })
+      .addCase(getPricing.fulfilled, (state, action) => {
+        state.pricingLoading = false;
+        state.pricing = action.payload as PricingConfig;
+        state.pricingError = null;
+      })
+      .addCase(getPricing.rejected, (state, action) => {
+        state.pricingLoading = false;
+        state.pricingError = typeof action.payload === 'string' ? action.payload : 'Failed to fetch pricing';
+      })
+      .addCase(updatePricing.pending, (state) => {
+        state.pricingLoading = true;
+        state.pricingError = null;
+      })
+      .addCase(updatePricing.fulfilled, (state, action) => {
+        state.pricingLoading = false;
+        state.pricing = action.payload as PricingConfig;
+        state.pricingError = null;
+      })
+      .addCase(updatePricing.rejected, (state, action) => {
+        state.pricingLoading = false;
+        state.pricingError = typeof action.payload === 'string' ? action.payload : 'Failed to update pricing';
       });
   },
 });

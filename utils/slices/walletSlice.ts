@@ -5,6 +5,8 @@ import {
     adminWalletCreditDriverUrl,
     adminWalletDebitUserUrl,
     adminWalletDebitDriverUrl,
+    adminWalletManualPaymentUserUrl,
+    adminWalletManualPaymentDriverUrl,
     walletBalanceUrl,
     walletTransactionsUrl,
     walletTopUpUrl,
@@ -20,6 +22,13 @@ export interface CreditRequest {
 export interface DebitRequest {
     amount: number;
     reason: string;
+    notes?: string;
+}
+
+export interface ManualPaymentRequest {
+    amount: number;
+    paymentMethod: string; // CASH, BANK_TRANSFER, UPI, CHEQUE, OTHER
+    referenceNumber?: string;
     notes?: string;
 }
 
@@ -69,6 +78,7 @@ interface WalletState {
     error: string | null;
     creditSuccess: boolean;
     debitSuccess: boolean;
+    manualPaymentSuccess: boolean;
     topUpLink: string | null;
     users: any[];
     drivers: any[];
@@ -82,6 +92,7 @@ const initialState: WalletState = {
     error: null,
     creditSuccess: false,
     debitSuccess: false,
+    manualPaymentSuccess: false,
     topUpLink: null,
     users: [],
     drivers: [],
@@ -133,6 +144,30 @@ export const debitDriverWallet = createAsyncThunk(
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || "Failed to debit driver wallet");
+        }
+    }
+);
+
+export const manualPaymentUser = createAsyncThunk(
+    "wallet/manualPaymentUser",
+    async ({ userId, data }: { userId: string; data: ManualPaymentRequest }, { rejectWithValue }) => {
+        try {
+            const response = await adminAxios.post(adminWalletManualPaymentUserUrl(userId), data);
+            return response.data;
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.message || "Failed to process manual payment for user");
+        }
+    }
+);
+
+export const manualPaymentDriver = createAsyncThunk(
+    "wallet/manualPaymentDriver",
+    async ({ driverId, data }: { driverId: string; data: ManualPaymentRequest }, { rejectWithValue }) => {
+        try {
+            const response = await adminAxios.post(adminWalletManualPaymentDriverUrl(driverId), data);
+            return response.data;
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.message || "Failed to process manual payment for driver");
         }
     }
 );
@@ -189,6 +224,9 @@ const walletSlice = createSlice({
         clearDebitSuccess: (state) => {
             state.debitSuccess = false;
         },
+        clearManualPaymentSuccess: (state) => {
+            state.manualPaymentSuccess = false;
+        },
         setWorkflowStep: (state, action) => {
             state.workflowStep = action.payload;
         },
@@ -198,6 +236,7 @@ const walletSlice = createSlice({
             state.error = null;
             state.creditSuccess = false;
             state.debitSuccess = false;
+            state.manualPaymentSuccess = false;
             state.topUpLink = null;
             state.workflowStep = 0;
         },
@@ -309,10 +348,38 @@ const walletSlice = createSlice({
             .addCase(getDrivers.fulfilled, (state, action) => {
                 const data = action.payload?.content || action.payload;
                 state.drivers = Array.isArray(data) ? data : [];
+            })
+            // Manual Payment User
+            .addCase(manualPaymentUser.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+                state.manualPaymentSuccess = false;
+            })
+            .addCase(manualPaymentUser.fulfilled, (state) => {
+                state.isLoading = false;
+                state.manualPaymentSuccess = true;
+            })
+            .addCase(manualPaymentUser.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload as string;
+            })
+            // Manual Payment Driver
+            .addCase(manualPaymentDriver.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+                state.manualPaymentSuccess = false;
+            })
+            .addCase(manualPaymentDriver.fulfilled, (state) => {
+                state.isLoading = false;
+                state.manualPaymentSuccess = true;
+            })
+            .addCase(manualPaymentDriver.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload as string;
             });
     },
 });
 
-export const { clearWalletError, clearCreditSuccess, clearDebitSuccess, setWorkflowStep, resetWalletState } = walletSlice.actions;
+export const { clearWalletError, clearCreditSuccess, clearDebitSuccess, clearManualPaymentSuccess, setWorkflowStep, resetWalletState } = walletSlice.actions;
 export { getUsers, getDrivers };
 export default walletSlice.reducer;

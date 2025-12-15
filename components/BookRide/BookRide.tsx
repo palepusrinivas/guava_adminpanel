@@ -26,6 +26,7 @@ import {
 } from "@mui/icons-material";
 import AvailableCab from "./AvailableCabs";
 import SearchResult from "./SearchResult";
+import PricingBreakdown from "@/components/Admin/PricingBreakdown";
 import axios from "axios";
 import { requestRide } from "@/utils/reducers/rideReducers";
 import { useAppDispatch, useAppSelector } from "@/utils/store/store";
@@ -48,6 +49,7 @@ function BookRide() {
   const [estimatedTime, setEstimatedTime] = useState<string>("");
   const [estimatedDistance, setEstimatedDistance] = useState<number | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [fareBreakdown, setFareBreakdown] = useState<any>(null);
   const dispatch = useAppDispatch();
   const ride = useAppSelector((state) => state.ride);
   const router = useRouter();
@@ -256,6 +258,24 @@ function BookRide() {
           
           if (fareResponse.data && fareResponse.data.finalTotal) {
             setEstimatedFare(Math.round(fareResponse.data.finalTotal));
+            // Store full breakdown for display
+            if (fareResponse.data.breakdown) {
+              setFareBreakdown(fareResponse.data.breakdown);
+            } else {
+              // Create breakdown from response data
+              setFareBreakdown({
+                baseFare: fareResponse.data.baseFare || 0,
+                distanceFare: fareResponse.data.distanceFare || 0,
+                timeFare: fareResponse.data.timeFare || 0,
+                platformFee: fareResponse.data.platformFee || 0,
+                gst: fareResponse.data.gst || 0,
+                commission: fareResponse.data.commission || 0,
+                nightSurcharge: fareResponse.data.nightSurcharge || 0,
+                subtotal: fareResponse.data.subtotal || fareResponse.data.total || 0,
+                discount: fareResponse.data.discount || 0,
+                finalTotal: fareResponse.data.finalTotal || 0,
+              });
+            }
           } else {
             // Fallback calculation if API doesn't return fare
             const baseFare = 50;
@@ -290,6 +310,7 @@ function BookRide() {
       setEstimatedFare(null);
       setEstimatedTime("");
       setEstimatedDistance(null);
+      setFareBreakdown(null);
     }
   }, [calculateFareAndTime, formik.values.pickupLatitude, formik.values.destinationLatitude]);
   const onFocused = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -503,6 +524,20 @@ function BookRide() {
                               </Typography>
                             </div>
                           )}
+                        </div>
+                      )}
+                      
+                      {/* Pricing Breakdown */}
+                      {fareBreakdown && (
+                        <div className="mt-4">
+                          <PricingBreakdown
+                            breakdown={fareBreakdown}
+                            distanceKm={estimatedDistance || undefined}
+                            durationMin={estimatedTime ? parseInt(estimatedTime.replace(" min", "")) : undefined}
+                            isNightTime={false}
+                          />
+                        </div>
+                      )}
                         </div>
                       )}
                     </CardContent>

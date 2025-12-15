@@ -1,50 +1,55 @@
 "use client";
-import React, { useState } from "react";
-import { useAppSelector } from "@/utils/store/store";
+import React, { useState, useEffect } from "react";
+import { useAppSelector, useAppDispatch } from "@/utils/store/store";
+import { getFleetLocations } from "@/utils/reducers/adminReducers";
+import type { FleetDriver } from "@/utils/slices/fleetSlice";
+
+interface FleetDriverData {
+  driverId: string;
+  title: string;
+  subtitle: string;
+  position: { lat: number; lng: number };
+  status: string;
+  rating: number;
+  totalRides: number;
+}
 
 function FleetManagement() {
-  const [selectedDriver, setSelectedDriver] = useState<any>(null);
+  const dispatch = useAppDispatch();
+  const [selectedDriver, setSelectedDriver] = useState<FleetDriverData | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
-  // Sample fleet data - replace with actual data from Redux store
-  const fleetData = [
-    {
-      driverId: "D001",
-      title: "John Driver",
-      subtitle: "Available",
-      position: { lat: 12.9716, lng: 77.5946 },
-      status: "available",
-      rating: 4.5,
-      totalRides: 125,
-    },
-    {
-      driverId: "D002",
-      title: "Jane Driver",
-      subtitle: "On Ride",
-      position: { lat: 12.9756, lng: 77.5996 },
-      status: "on_ride",
-      rating: 4.8,
-      totalRides: 89,
-    },
-    {
-      driverId: "D003",
-      title: "Mike Driver",
-      subtitle: "Offline",
-      position: { lat: 12.9676, lng: 77.5896 },
-      status: "offline",
-      rating: 4.2,
-      totalRides: 156,
-    },
-    {
-      driverId: "D004",
-      title: "Sarah Driver",
-      subtitle: "Available",
-      position: { lat: 12.9736, lng: 77.5916 },
-      status: "available",
-      rating: 4.7,
-      totalRides: 203,
-    },
-  ];
+  // Get fleet data from Redux store
+  const { locations, isLoading, error } = useAppSelector((state) => state.fleet);
+
+  // Fetch fleet data on component mount
+  useEffect(() => {
+    dispatch(getFleetLocations());
+  }, [dispatch]);
+
+  // Transform API data to component format
+  const fleetData: FleetDriverData[] = locations.map((driver: FleetDriver) => {
+    // Determine status text
+    let statusText = "Available";
+    if (driver.status === "on_ride" || driver.status === "on-trip") {
+      statusText = "On Ride";
+    } else if (driver.status === "offline") {
+      statusText = "Offline";
+    }
+
+    return {
+      driverId: driver.driverId || `D${String(driver.id).padStart(3, "0")}`,
+      title: driver.name || `Driver ${driver.id}`,
+      subtitle: statusText,
+      position: {
+        lat: driver.latitude || driver.lat || 0,
+        lng: driver.longitude || driver.lng || 0,
+      },
+      status: driver.status || "offline",
+      rating: (driver as any).rating || 0.0,
+      totalRides: (driver as any).totalRides || 0,
+    };
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -71,6 +76,12 @@ function FleetManagement() {
         return "Unknown";
     }
   };
+
+  // Calculate statistics
+  const availableCount = fleetData.filter((d) => d.status === "available").length;
+  const onRideCount = fleetData.filter((d) => d.status === "on_ride" || d.status === "on-trip").length;
+  const offlineCount = fleetData.filter((d) => d.status === "offline").length;
+  const totalDrivers = fleetData.length;
 
   return (
     <div className="space-y-6">
@@ -118,7 +129,7 @@ function FleetManagement() {
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">Available</dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {fleetData.filter(driver => driver.status === "available").length}
+                    {isLoading ? "..." : availableCount}
                   </dd>
                 </dl>
               </div>
@@ -138,7 +149,7 @@ function FleetManagement() {
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">On Ride</dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {fleetData.filter(driver => driver.status === "on_ride").length}
+                    {isLoading ? "..." : onRideCount}
                   </dd>
                 </dl>
               </div>
@@ -158,7 +169,7 @@ function FleetManagement() {
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">Offline</dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {fleetData.filter(driver => driver.status === "offline").length}
+                    {isLoading ? "..." : offlineCount}
                   </dd>
                 </dl>
               </div>
@@ -177,7 +188,7 @@ function FleetManagement() {
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">Total Drivers</dt>
-                  <dd className="text-lg font-medium text-gray-900">{fleetData.length}</dd>
+                  <dd className="text-lg font-medium text-gray-900">{isLoading ? "..." : totalDrivers}</dd>
                 </dl>
               </div>
             </div>
@@ -185,12 +196,30 @@ function FleetManagement() {
         </div>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          <p className="font-medium">Error loading fleet data</p>
+          <p className="text-sm">{error}</p>
+        </div>
+      )}
+
       {viewMode === "list" ? (
         /* List View */
         <div className="bg-white shadow overflow-hidden sm:rounded-md">
           <div className="px-4 py-5 sm:p-6">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+            {isLoading ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p className="mt-2 text-gray-600">Loading fleet data...</p>
+              </div>
+            ) : fleetData.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-600">No drivers found</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -258,7 +287,8 @@ function FleetManagement() {
                   ))}
                 </tbody>
               </table>
-            </div>
+              </div>
+            )}
           </div>
         </div>
       ) : (

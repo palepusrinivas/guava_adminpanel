@@ -36,6 +36,8 @@ export const adminDriverKycFileUrl = (id: string, name: string) => getApiUrl(con
 export const adminDriverKycDownloadUrl = (id: string, name: string) => getApiUrl(config.ENDPOINTS.ADMIN.DRIVER_KYC_DOWNLOAD.replace(':id', id).replace(':name', name));
 export const adminWalletCreditUserUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.WALLET_CREDIT_USER.replace(':id', id));
 export const adminWalletCreditDriverUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.WALLET_CREDIT_DRIVER.replace(':id', id));
+export const adminWalletManualPaymentUserUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.WALLET_MANUAL_PAYMENT_USER.replace(':id', id));
+export const adminWalletManualPaymentDriverUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.WALLET_MANUAL_PAYMENT_DRIVER.replace(':id', id));
 export const adminZonesUrl = getApiUrl(config.ENDPOINTS.ADMIN.ZONES);
 export const adminZoneByIdUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.ZONE_BY_ID.replace(':id', id));
 export const adminFleetLocationsUrl = getApiUrl(config.ENDPOINTS.ADMIN.FLEET_LOCATIONS);

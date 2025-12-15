@@ -288,7 +288,14 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
     {
       title: "OTHER",
       items: [
-        { name: "Pricing", href: "/admin/pricing", icon: "💰" },
+        {
+          name: "Pricing",
+          icon: "💰",
+          children: [
+            { name: "Pricing Management", href: "/admin/pricing" },
+            { name: "Pricing Breakdown", href: "/admin/pricing/breakdown" },
+          ],
+        },
         { name: "Fleet", href: "/admin/fleet", icon: "🚛" },
         { name: "Analytics", href: "/admin/analytics", icon: "📈" },
         { name: "Wallet", href: "/admin/wallet", icon: "💳" },
@@ -313,6 +320,7 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
     "Business Setup": true,
     "Pages & Media": true,
     "Configurations": true,
+    "Pricing": true,
   });
   const toggleGroup = (name: string) => setOpenGroups((s) => ({ ...s, [name]: !s[name] }));
 
