@@ -562,12 +562,33 @@ export const getDashboardStats = createAsyncThunk(
           
           const users = usersRes.status === 'fulfilled' ? (usersRes.value.data?.content || usersRes.value.data || []) : [];
           const drivers = driversRes.status === 'fulfilled' ? (driversRes.value.data?.content || driversRes.value.data || []) : [];
-          const trips = tripsRes.status === 'fulfilled' ? (tripsRes.value.data?.content || tripsRes.value.data || []) : [];
           
-          const totalUsers = users.length;
-          const activeDrivers = drivers.filter((d: any) => d.isActive !== false).length;
-          const totalRides = trips.length;
-          const totalRevenue = trips.reduce((sum: number, trip: any) => sum + (trip.fare || 0), 0);
+          // Handle trips - ensure it's always an array
+          // The backend returns { trips: [...], statistics: {...} } structure
+          let trips: any[] = [];
+          if (tripsRes.status === 'fulfilled') {
+            const tripsData = tripsRes.value.data;
+            if (Array.isArray(tripsData)) {
+              trips = tripsData;
+            } else if (tripsData && typeof tripsData === 'object') {
+              // Check for various possible structures
+              if (Array.isArray(tripsData.content)) {
+                trips = tripsData.content;
+              } else if (Array.isArray(tripsData.trips)) {
+                trips = tripsData.trips;
+              } else if (Array.isArray(tripsData.data)) {
+                trips = tripsData.data;
+              } else {
+                // If it's an object but no array found, default to empty array
+                trips = [];
+              }
+            }
+          }
+          
+          const totalUsers = Array.isArray(users) ? users.length : 0;
+          const activeDrivers = Array.isArray(drivers) ? drivers.filter((d: any) => d.isActive !== false).length : 0;
+          const totalRides = Array.isArray(trips) ? trips.length : 0;
+          const totalRevenue = Array.isArray(trips) ? trips.reduce((sum: number, trip: any) => sum + (trip.fare || 0), 0) : 0;
           
           return {
             totalUsers,

@@ -538,8 +538,6 @@ function BookRide() {
                           />
                         </div>
                       )}
-                        </div>
-                      )}
                     </CardContent>
                   </Card>
                 )}
