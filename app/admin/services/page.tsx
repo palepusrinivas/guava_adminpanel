@@ -42,6 +42,8 @@ import {
   DirectionsCar as CarIcon,
   LocalTaxi as TaxiIcon,
   Refresh as RefreshIcon,
+  CloudUpload as CloudUploadIcon,
+  Image as ImageIcon,
 } from "@mui/icons-material";
 import toast from "react-hot-toast";
 import { useAppDispatch, useAppSelector } from "@/utils/store/store";
@@ -55,6 +57,7 @@ import {
   getServicesStats,
   ServiceConfig,
 } from "@/utils/slices/serviceConfigSlice";
+import { config } from "@/utils/config";
 
 const VEHICLE_TYPES = [
   { value: "two_wheeler", label: "Two Wheeler (Bike)" },
@@ -70,7 +73,20 @@ const CATEGORIES = [
   { value: "luxury", label: "Luxury" },
 ];
 
-const ICONS = ["🏍️", "🛺", "🚗", "🚘", "🚙", "🚕", "🚐", "🚎"];
+// Expanded icon list with vehicle and parcel-related icons
+const ICONS = [
+  // Vehicles
+  "🏍️", "🛺", "🚗", "🚘", "🚙", "🚕", "🚐", "🚎",
+  // More vehicles with colors
+  "🚑", "🚒", "🚓", "🚔", "🚖", "🚛", "🚜", "🏎️",
+  // Parcel/Delivery related
+  "📦", "📮", "📬", "📭", "📯", "📨", "📧", "📪",
+  "🚚", "🚛", "🚜", "🛵", "🛴", "🚲",
+  // Business/Delivery
+  "🏢", "🏪", "🏬", "🏭", "🏗️", "📦", "📮",
+  // Package/Delivery emojis
+  "🎁", "📦", "📮", "🚚", "📬", "📭",
+];
 
 const initialFormState: Partial<ServiceConfig> = {
   serviceId: "",
@@ -104,6 +120,10 @@ export default function ServicesPage() {
   const [selectedService, setSelectedService] = useState<ServiceConfig | null>(null);
   const [formData, setFormData] = useState<Partial<ServiceConfig>>(initialFormState);
   const [isEditing, setIsEditing] = useState(false);
+  const [iconPickerOpen, setIconPickerOpen] = useState(false);
+  const [uploadingIcon, setUploadingIcon] = useState(false);
+  const [iconFile, setIconFile] = useState<File | null>(null);
+  const [iconPreview, setIconPreview] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(getServicesList());
@@ -113,11 +133,16 @@ export default function ServicesPage() {
   const handleOpenDialog = (service?: ServiceConfig) => {
     if (service) {
       setFormData(service);
+      setSelectedService(service);
       setIsEditing(true);
     } else {
       setFormData(initialFormState);
+      setSelectedService(null);
       setIsEditing(false);
     }
+    setIconFile(null);
+    setIconPreview(null);
+    setIconPickerOpen(false);
     setDialogOpen(true);
   };
 
@@ -134,12 +159,43 @@ export default function ServicesPage() {
     }
 
     try {
+      let savedService;
       if (isEditing && selectedService) {
-        await dispatch(updateService({ id: selectedService.id.toString(), data: formData })).unwrap();
+        savedService = await dispatch(updateService({ id: selectedService.id.toString(), data: formData })).unwrap();
         toast.success("Service updated successfully");
       } else {
-        await dispatch(createService(formData)).unwrap();
+        savedService = await dispatch(createService(formData)).unwrap();
         toast.success("Service created successfully");
+        
+        // If icon file was selected for new service, upload it now
+        if (iconFile && savedService?.id) {
+          const uploadFormData = new FormData();
+          uploadFormData.append('icon', iconFile);
+
+          const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
+          try {
+            const uploadResponse = await fetch(`${config.API_BASE_URL}/api/admin/service-config/${savedService.id}/icon`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+              body: uploadFormData,
+            });
+
+            if (uploadResponse.ok) {
+              const uploadData = await uploadResponse.json();
+              // Update the service with the icon URL
+              await dispatch(updateService({ 
+                id: savedService.id.toString(), 
+                data: { iconUrl: uploadData.iconUrl, icon: "" } 
+              })).unwrap();
+              toast.success("Icon uploaded successfully");
+            }
+          } catch (uploadErr) {
+            console.error('Icon upload failed:', uploadErr);
+            // Don't fail the whole operation if icon upload fails
+          }
+        }
       }
       handleCloseDialog();
       dispatch(getServicesList());
@@ -181,6 +237,80 @@ export default function ServicesPage() {
       dispatch(getServicesStats());
     } catch (err: any) {
       toast.error(err || "Failed to seed defaults");
+    }
+  };
+
+  const handleIconSelect = (icon: string) => {
+    setFormData({ ...formData, icon, iconUrl: "" }); // Clear iconUrl when selecting emoji
+    setIconPickerOpen(false);
+  };
+
+  const handleIconFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast.error('File size should be less than 5MB');
+        return;
+      }
+      setIconFile(file);
+      // Preview the image (but don't store base64 in iconUrl - it's too long)
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        // Store preview URL separately, not in formData.iconUrl
+        setIconPreview(e.target?.result as string);
+        // Clear emoji icon when file is selected
+        setFormData({ ...formData, icon: "" });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleIconUpload = async () => {
+    if (!iconFile) {
+      toast.error('Please select an icon file');
+      return;
+    }
+
+    // For new services, we'll save the icon URL after creating the service
+    if (!isEditing || !selectedService) {
+      // Store the file to upload after service creation
+      toast.info('Icon will be uploaded after service is created');
+      return;
+    }
+
+    setUploadingIcon(true);
+    try {
+      const uploadFormData = new FormData();
+      uploadFormData.append('icon', iconFile);
+
+      const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
+      const response = await fetch(`${config.API_BASE_URL}/api/admin/service-config/${selectedService.id}/icon`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: uploadFormData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || error.message || 'Failed to upload icon');
+      }
+
+      const data = await response.json();
+      setFormData({ ...formData, iconUrl: data.iconUrl, icon: "" });
+      setIconPreview(null); // Clear preview after successful upload
+      toast.success('Icon uploaded successfully');
+      setIconFile(null);
+      dispatch(getServicesList());
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to upload icon');
+    } finally {
+      setUploadingIcon(false);
     }
   };
 
@@ -304,7 +434,15 @@ export default function ServicesPage() {
               safeServices.map((service) => (
                 <TableRow key={service.id} hover>
                   <TableCell>
-                    <Typography fontSize={32}>{service.icon}</Typography>
+                    {service.iconUrl ? (
+                      <img 
+                        src={service.iconUrl} 
+                        alt={service.name} 
+                        style={{ width: 32, height: 32, objectFit: 'contain' }}
+                      />
+                    ) : (
+                      <Typography fontSize={32}>{service.icon || '🚗'}</Typography>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Chip label={service.serviceId} size="small" color="primary" />
@@ -401,17 +539,140 @@ export default function ServicesPage() {
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
                 <InputLabel>Icon</InputLabel>
-                <Select
-                  value={formData.icon}
-                  label="Icon"
-                  onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                >
-                  {ICONS.map((icon) => (
-                    <MenuItem key={icon} value={icon}>
-                      <Typography fontSize={24}>{icon}</Typography>
-                    </MenuItem>
-                  ))}
-                </Select>
+                <Box>
+                  <Box display="flex" gap={1} alignItems="center" mb={1}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<ImageIcon />}
+                      onClick={() => setIconPickerOpen(!iconPickerOpen)}
+                      sx={{ flex: 1 }}
+                    >
+                      {formData.icon ? `Selected: ${formData.icon}` : formData.iconUrl ? 'Custom Icon' : 'Select Icon'}
+                    </Button>
+                    <input
+                      accept="image/png,image/jpeg,image/jpg"
+                      style={{ display: 'none' }}
+                      id="icon-upload"
+                      type="file"
+                      onChange={handleIconFileSelect}
+                    />
+                    <label htmlFor="icon-upload">
+                      <Button
+                        variant="outlined"
+                        component="span"
+                        size="small"
+                        startIcon={<CloudUploadIcon />}
+                      >
+                        Upload PNG
+                      </Button>
+                    </label>
+                  </Box>
+                  
+                  {/* Icon Preview */}
+                  {(formData.icon || formData.iconUrl || iconPreview) && (
+                    <Box 
+                      display="flex" 
+                      alignItems="center" 
+                      gap={1} 
+                      p={1} 
+                      sx={{ 
+                        border: '1px solid #ddd', 
+                        borderRadius: 1, 
+                        bgcolor: '#f9f9f9',
+                        mb: 1
+                      }}
+                    >
+                      {iconPreview ? (
+                        <img 
+                          src={iconPreview} 
+                          alt="Icon preview" 
+                          style={{ width: 32, height: 32, objectFit: 'contain' }}
+                        />
+                      ) : formData.iconUrl ? (
+                        <img 
+                          src={formData.iconUrl} 
+                          alt="Icon preview" 
+                          style={{ width: 32, height: 32, objectFit: 'contain' }}
+                        />
+                      ) : (
+                        <Typography fontSize={32}>{formData.icon}</Typography>
+                      )}
+                      <Typography variant="caption" color="text.secondary">
+                        {iconPreview ? 'New icon (not uploaded yet)' : formData.iconUrl ? 'Uploaded icon' : 'Current icon'}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* Icon Picker Grid */}
+                  {iconPickerOpen && (
+                    <Paper 
+                      sx={{ 
+                        p: 2, 
+                        mt: 1, 
+                        maxHeight: 300, 
+                        overflow: 'auto',
+                        border: '1px solid #ddd'
+                      }}
+                    >
+                      <Typography variant="caption" color="text.secondary" gutterBottom>
+                        Select an icon:
+                      </Typography>
+                      <Box 
+                        display="grid" 
+                        gridTemplateColumns="repeat(8, 1fr)" 
+                        gap={1}
+                        sx={{ mt: 1 }}
+                      >
+                        {ICONS.map((icon) => (
+                          <Box
+                            key={icon}
+                            onClick={() => handleIconSelect(icon)}
+                            sx={{
+                              p: 1,
+                              cursor: 'pointer',
+                              borderRadius: 1,
+                              border: formData.icon === icon ? '2px solid #1976d2' : '1px solid #ddd',
+                              bgcolor: formData.icon === icon ? '#e3f2fd' : 'transparent',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: 24,
+                              '&:hover': {
+                                bgcolor: '#f5f5f5',
+                                borderColor: '#1976d2',
+                              },
+                            }}
+                          >
+                            {icon}
+                          </Box>
+                        ))}
+                      </Box>
+                    </Paper>
+                  )}
+
+                  {/* Upload button for existing services */}
+                  {isEditing && selectedService && iconFile && (
+                    <Button
+                      variant="contained"
+                      size="small"
+                      fullWidth
+                      onClick={handleIconUpload}
+                      disabled={uploadingIcon}
+                      startIcon={uploadingIcon ? <CircularProgress size={16} /> : <CloudUploadIcon />}
+                      sx={{ mt: 1 }}
+                    >
+                      {uploadingIcon ? 'Uploading...' : 'Upload Icon Now'}
+                    </Button>
+                  )}
+                  
+                  {/* Info for new services */}
+                  {!isEditing && iconFile && (
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                      Icon will be uploaded when you create the service
+                    </Typography>
+                  )}
+                </Box>
               </FormControl>
             </Grid>
             <Grid item xs={12}>

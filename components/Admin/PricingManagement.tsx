@@ -626,7 +626,7 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
                 <button
                   type="button"
                   onClick={handleCancel}
-                  disabled={isLoading}
+                  disabled={pricingLoading}
                   className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                 >
                   Cancel
