@@ -278,7 +278,7 @@ export default function ServicesPage() {
     // For new services, we'll save the icon URL after creating the service
     if (!isEditing || !selectedService) {
       // Store the file to upload after service creation
-      toast.info('Icon will be uploaded after service is created');
+      toast('Icon will be uploaded after service is created', { icon: 'ℹ️' });
       return;
     }
 
