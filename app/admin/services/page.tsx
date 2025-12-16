@@ -59,6 +59,7 @@ import {
 } from "@/utils/slices/serviceConfigSlice";
 import { getVehicleCategories } from "@/utils/reducers/adminReducers";
 import { config } from "@/utils/config";
+import adminAxios from "@/utils/axiosConfig";
 
 // ServiceType enum values from backend
 const SERVICE_TYPES = [
@@ -107,6 +108,7 @@ const initialFormState: Partial<ServiceConfig> = {
   capacity: 4,
   displayOrder: 0,
   isActive: true,
+  isIntercity: false,
   vehicleType: "four_wheeler",
   estimatedArrival: "5-10 mins",
   baseFare: 50,
@@ -183,27 +185,28 @@ export default function ServicesPage() {
           const uploadFormData = new FormData();
           uploadFormData.append('icon', iconFile);
 
-          const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
           try {
-            const uploadResponse = await fetch(`${config.API_BASE_URL}/api/admin/service-config/${savedService.id}/icon`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-              },
-              body: uploadFormData,
-            });
+            const uploadResponse = await adminAxios.post(
+              `/api/admin/services/${savedService.id}/icon`,
+              uploadFormData,
+              {
+                headers: {
+                  'Content-Type': 'multipart/form-data',
+                },
+              }
+            );
 
-            if (uploadResponse.ok) {
-              const uploadData = await uploadResponse.json();
+            if (uploadResponse.data) {
               // Update the service with the icon URL
               await dispatch(updateService({ 
                 id: savedService.id.toString(), 
-                data: { iconUrl: uploadData.iconUrl, icon: "" } 
+                data: { iconUrl: uploadResponse.data.iconUrl, icon: "" } 
               })).unwrap();
               toast.success("Icon uploaded successfully");
             }
-          } catch (uploadErr) {
+          } catch (uploadErr: any) {
             console.error('Icon upload failed:', uploadErr);
+            toast.error(uploadErr.response?.data?.error || uploadErr.message || 'Failed to upload icon');
             // Don't fail the whole operation if icon upload fails
           }
         }
@@ -298,22 +301,17 @@ export default function ServicesPage() {
       const uploadFormData = new FormData();
       uploadFormData.append('icon', iconFile);
 
-      const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
-      const response = await fetch(`${config.API_BASE_URL}/api/admin/service-config/${selectedService.id}/icon`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: uploadFormData,
-      });
+      const response = await adminAxios.post(
+        `/api/admin/services/${selectedService.id}/icon`,
+        uploadFormData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || error.message || 'Failed to upload icon');
-      }
-
-      const data = await response.json();
-      setFormData({ ...formData, iconUrl: data.iconUrl, icon: "" });
+      setFormData({ ...formData, iconUrl: response.data.iconUrl, icon: "" });
       setIconPreview(null); // Clear preview after successful upload
       toast.success('Icon uploaded successfully');
       setIconFile(null);
@@ -427,6 +425,7 @@ export default function ServicesPage() {
               <TableCell>Capacity</TableCell>
               <TableCell>Base Fare</TableCell>
               <TableCell>Per KM</TableCell>
+              <TableCell>Intercity</TableCell>
               <TableCell>Status</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
@@ -434,7 +433,7 @@ export default function ServicesPage() {
           <TableBody>
             {safeServices.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
                   <CarIcon sx={{ fontSize: 48, color: "grey.400", mb: 1 }} />
                   <Typography color="text.secondary">
                     No services found. Click "Seed Defaults" to add default services.
@@ -474,6 +473,14 @@ export default function ServicesPage() {
                   <TableCell>{service.capacity} persons</TableCell>
                   <TableCell>₹{service.baseFare}</TableCell>
                   <TableCell>₹{service.perKmRate}/km</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={service.isIntercity ? "Intercity" : "City"}
+                      size="small"
+                      color={service.isIntercity ? "primary" : "default"}
+                      variant={service.isIntercity ? "filled" : "outlined"}
+                    />
+                  </TableCell>
                   <TableCell>
                     <Switch
                       checked={service.isActive}
@@ -876,6 +883,17 @@ export default function ServicesPage() {
                   />
                 }
                 label="Active (visible to users)"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.isIntercity || false}
+                    onChange={(e) => setFormData({ ...formData, isIntercity: e.target.checked })}
+                  />
+                }
+                label="Intercity Service (for long-distance trips between cities)"
               />
             </Grid>
           </Grid>

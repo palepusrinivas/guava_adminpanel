@@ -23,6 +23,7 @@ export interface ServiceConfig {
   maxDistance: number;
   maxWaitTime: number;
   category: string;
+  isIntercity?: boolean;  // Whether this service is for intercity trips
   createdAt: string;
   updatedAt: string;
 }

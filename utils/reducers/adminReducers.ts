@@ -948,7 +948,29 @@ export const createCoupon = createAsyncThunk(
   "admin/createCoupon",
   async (couponData: any, { rejectWithValue }) => {
     try {
-      const response = await adminAxios.post(adminCouponsUrl, couponData);
+      // Transform frontend fields to backend fields
+      const backendData: any = {
+        code: couponData.code,
+        type: couponData.couponType === "percentage" ? "PERCENT" : 
+              couponData.couponType === "flat" ? "FLAT" : 
+              couponData.type || "PERCENT", // Fallback to type if couponType not provided
+        value: couponData.amount || couponData.value, // Map amount to value
+        minFare: couponData.minFare || null,
+        startsAt: couponData.startsAt || null,
+        endsAt: couponData.endsAt || null,
+        maxRedemptions: couponData.maxRedemptions || null,
+        maxRedemptionsPerUser: couponData.maxRedemptionsPerUser || null,
+        active: couponData.active !== undefined ? couponData.active : true,
+      };
+      
+      // Remove undefined fields
+      Object.keys(backendData).forEach(key => {
+        if (backendData[key] === undefined) {
+          delete backendData[key];
+        }
+      });
+      
+      const response = await adminAxios.post(adminCouponsUrl, backendData);
       return response.data;
     } catch (error) {
       return rejectWithValue(extractErrorMessage(error));
