@@ -20,8 +20,22 @@ const extractErrorMessage = (error: unknown): string => {
     if (status === 404) return "Requested resource not found (404)";
     if (status === 403) return "Permission denied (403)";
     if (status === 500) return "Server error (500)";
-    if (errorData && typeof errorData === 'object' && 'message' in errorData) {
-      return (errorData as ErrorResponse).message;
+    // Check for error field first (our backend returns Map with "error" key)
+    if (errorData && typeof errorData === 'object') {
+      if ('error' in errorData && typeof (errorData as any).error === 'string') {
+        return (errorData as any).error;
+      }
+      if ('message' in errorData && typeof (errorData as any).message === 'string') {
+        return (errorData as any).message;
+      }
+      // Check for validation errors
+      if ('validations' in errorData && typeof (errorData as any).validations === 'object') {
+        const validations = (errorData as any).validations;
+        const validationMessages = Object.entries(validations)
+          .map(([field, msg]) => `${field}: ${msg}`)
+          .join(', ');
+        return validationMessages || "Validation failed";
+      }
     }
     if (typeof errorData === 'string') {
       return errorData;
@@ -61,6 +75,11 @@ import {
   adminLeaderboardUrl,
   adminBannersUrl,
   adminBannerByIdUrl,
+  adminLegalDocumentsUrl,
+  adminLegalDocumentByIdUrl,
+  adminLegalDocumentActiveUrl,
+  adminLegalDocumentActivateUrl,
+  adminLegalDocumentDeactivateUrl,
   adminDriverAccessConfigsUrl,
   adminDriverAccessConfigByVehicleUrl,
   adminDriverAccessProcessDailyFeesUrl,
@@ -913,6 +932,103 @@ export const deleteBanner = createAsyncThunk(
     try {
       await adminAxios.delete(adminBannerByIdUrl(bannerId));
       return bannerId;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+// Legal Documents Management (Privacy Policy & Terms & Conditions)
+export const getLegalDocuments = createAsyncThunk(
+  "admin/getLegalDocuments",
+  async (params?: { documentType?: string; targetAudience?: string }, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.get(adminLegalDocumentsUrl, { params });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const getLegalDocumentById = createAsyncThunk(
+  "admin/getLegalDocumentById",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.get(adminLegalDocumentByIdUrl(id));
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const getActiveLegalDocument = createAsyncThunk(
+  "admin/getActiveLegalDocument",
+  async (params: { documentType: string; targetAudience: string }, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.get(adminLegalDocumentActiveUrl, { params });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const createLegalDocument = createAsyncThunk(
+  "admin/createLegalDocument",
+  async (documentData: any, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.post(adminLegalDocumentsUrl, documentData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const updateLegalDocument = createAsyncThunk(
+  "admin/updateLegalDocument",
+  async ({ id, documentData }: { id: string; documentData: any }, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.put(adminLegalDocumentByIdUrl(id), documentData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const deleteLegalDocument = createAsyncThunk(
+  "admin/deleteLegalDocument",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await adminAxios.delete(adminLegalDocumentByIdUrl(id));
+      return id;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const activateLegalDocument = createAsyncThunk(
+  "admin/activateLegalDocument",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.post(adminLegalDocumentActivateUrl(id));
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const deactivateLegalDocument = createAsyncThunk(
+  "admin/deactivateLegalDocument",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.post(adminLegalDocumentDeactivateUrl(id));
+      return response.data;
     } catch (error) {
       return rejectWithValue(extractErrorMessage(error));
     }

@@ -68,6 +68,7 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
         { name: "API Keys", href: "/admin/settings/api-keys", icon: "🔑" },
         { name: "Wallet Management", href: "/admin/wallet", icon: "💰" },
         { name: "Banner Setup", href: "/admin/banner-setup", icon: "🖼️" },
+        { name: "Legal Documents", href: "/admin/legal-documents", icon: "📄" },
       ],
     },
     {
