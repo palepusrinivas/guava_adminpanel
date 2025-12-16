@@ -3,18 +3,26 @@ import { getCoupons, getCouponById, createCoupon, updateCoupon, deleteCoupon } f
 
 export interface Coupon {
   id: number;
-  title: string;
   code: string;
-  couponType: string; // percentage, flat, etc.
+  type?: string; // PERCENT or FLAT (optional for backward compatibility)
+  value: number; // percent: 0-100; flat: absolute value
+  minFare?: number; // optional minimum fare to apply
+  startsAt?: string; // ISO date string
+  endsAt?: string; // ISO date string
+  maxRedemptions?: number; // total global usage allowed; null means unlimited
+  maxRedemptionsPerUser?: number; // per user usage; null means unlimited
+  active: boolean;
+  // Legacy fields for backward compatibility (will be derived from backend fields)
+  title?: string; // derived from code
+  couponType?: string; // derived from type
+  amount?: number; // derived from value
   zone?: string;
   customerLevel?: string;
   customer?: string;
   category?: string;
-  amount: number;
   duration?: string;
   totalTimesUsed?: number;
   totalAmount?: number;
-  active: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -33,7 +33,7 @@ export default function CouponSetup() {
     if (!searchQuery) return base;
     const q = searchQuery.toLowerCase();
     return base.filter((c) =>
-      [c.code, c.type, c.zone, c.customerLevel, c.customer, c.category, c.title, c.couponType]
+      [c.code, c.type || c.couponType, c.zone, c.customerLevel, c.customer, c.category, c.title]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q))
     );
