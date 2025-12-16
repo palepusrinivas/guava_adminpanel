@@ -115,7 +115,7 @@ export default function LandingPage() {
             </div>
 
             {/* Right Image/Illustration */}
-            <div className="relative">
+            {/* <div className="relative">
               <div className="relative w-full h-[500px] bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 rounded-2xl overflow-hidden shadow-2xl transform hover:scale-105 transition-transform duration-300">
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center space-y-4">
@@ -138,7 +138,8 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
+            <img src="https://images.pexels.com/photos/1092644/pexels-photo-1092644.jpeg" alt="Gauva" className="w-full h-full object-cover" />
           </div>
         </div>
       </section>
