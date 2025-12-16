@@ -98,6 +98,7 @@ export default function VehicleAttributeSetup() {
 
   const [categoryImage, setCategoryImage] = useState<File | null>(null);
   const [categoryImagePreview, setCategoryImagePreview] = useState<string | null>(null);
+  const [categoryNameMode, setCategoryNameMode] = useState<"select" | "custom">("select");
 
   // Vehicle category type options for dropdown
   const VEHICLE_CATEGORY_TYPES = [
@@ -134,10 +135,40 @@ export default function VehicleAttributeSetup() {
       try {
         setSubmitError(null);
         setSubmitSuccess(null);
+        
+        // Validate that name is not an existing category name
+        if (categoryNameMode === "select" && values.name) {
+          const existingCategory = categories && Array.isArray(categories) 
+            ? categories.find((cat: any) => (cat.name || cat.categoryName) === values.name)
+            : null;
+          if (existingCategory) {
+            setSubmitError(`Category "${values.name}" already exists. Please use "Add New" mode and enter a different name.`);
+            return;
+          }
+        }
+        
+        // Validate required fields
+        if (!values.name || values.name.trim() === "") {
+          setSubmitError("Category name is required");
+          return;
+        }
+        if (!values.description || values.description.trim() === "") {
+          setSubmitError("Category description is required");
+          return;
+        }
+        if (!values.type || values.type.trim() === "") {
+          setSubmitError("Category type is required");
+          return;
+        }
+        if (!categoryImage) {
+          setSubmitError("Category image is required");
+          return;
+        }
+        
         const categoryData = {
-          name: values.name,
-          description: values.description,
-          type: values.type,
+          name: values.name.trim(),
+          description: values.description.trim(),
+          type: values.type.trim(),
           // Send the File object directly if available
           image: categoryImage || null,
           isActive: true,
@@ -148,6 +179,7 @@ export default function VehicleAttributeSetup() {
           categoryFormik.resetForm();
           setCategoryImage(null);
           setCategoryImagePreview(null);
+          setCategoryNameMode("select"); // Reset to select mode
           dispatch(getVehicleCategories());
         } else {
           throw new Error((result as any).payload || "Failed to create category");
@@ -529,16 +561,118 @@ export default function VehicleAttributeSetup() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Category Name <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        name="name"
-                        value={categoryFormik.values.name}
-                        onChange={categoryFormik.handleChange}
-                        onBlur={categoryFormik.handleBlur}
-                        placeholder="Ex: MEGA, SEDAN, AUTO"
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none"
-                      />
+                      <div className="space-y-2">
+                        {/* Mode Toggle */}
+                        <div className="flex gap-2 mb-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCategoryNameMode("select");
+                              categoryFormik.setFieldValue("name", "");
+                            }}
+                            className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                              categoryNameMode === "select"
+                                ? "bg-teal-600 text-white"
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            }`}
+                          >
+                            Select Existing
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCategoryNameMode("custom");
+                              categoryFormik.setFieldValue("name", "");
+                            }}
+                            className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                              categoryNameMode === "custom"
+                                ? "bg-teal-600 text-white"
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            }`}
+                          >
+                            Add New
+                          </button>
+                        </div>
+                        
+                        {/* Dropdown for existing categories */}
+                        {categoryNameMode === "select" ? (
+                          <>
+                            <select
+                              name="name"
+                              value={categoryFormik.values.name}
+                              onChange={(e) => {
+                                const selectedName = e.target.value;
+                                categoryFormik.setFieldValue("name", selectedName);
+                                
+                                // If an existing category is selected, show warning
+                                if (selectedName && categories && Array.isArray(categories)) {
+                                  const existingCategory = categories.find((cat: any) => 
+                                    (cat.name || cat.categoryName) === selectedName
+                                  );
+                                  if (existingCategory) {
+                                    setSubmitError(`⚠️ Category "${selectedName}" already exists. Use "Add New" mode to create a new category with a different name.`);
+                                  } else {
+                                    setSubmitError(null);
+                                  }
+                                }
+                              }}
+                              onBlur={categoryFormik.handleBlur}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-teal-500 outline-none"
+                            >
+                              <option value="">Select Category Name (to view details)</option>
+                              {categories && Array.isArray(categories) && categories.length > 0 ? (
+                                categories
+                                  .filter((cat: any) => {
+                                    // Filter active categories
+                                    const isActive = (cat.isActive !== false && cat.isActive !== null) || 
+                                                   (cat.active !== false && cat.active !== null);
+                                    return isActive !== false;
+                                  })
+                                  .map((cat: any) => {
+                                    const categoryName = cat.name || cat.categoryName || '';
+                                    const categoryId = cat.id || '';
+                                    return (
+                                      <option key={categoryId || categoryName} value={categoryName}>
+                                        {categoryName} {cat.type ? `(${cat.type})` : ''}
+                                      </option>
+                                    );
+                                  })
+                              ) : (
+                                <option value="" disabled>No categories available. Use "Add New" to create one.</option>
+                              )}
+                            </select>
+                            {categoryFormik.values.name && categories && Array.isArray(categories) && 
+                             categories.some((cat: any) => (cat.name || cat.categoryName) === categoryFormik.values.name) && (
+                              <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+                                ⚠️ This category already exists. Switch to "Add New" mode to create a category with a different name.
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          /* Text input for custom name */
+                          <input
+                            name="name"
+                            type="text"
+                            value={categoryFormik.values.name}
+                            onChange={categoryFormik.handleChange}
+                            onBlur={categoryFormik.handleBlur}
+                            placeholder="Ex: MEGA, SEDAN, AUTO, PREMIUM"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none"
+                          />
+                        )}
+                      </div>
                       {categoryFormik.touched.name && categoryFormik.errors.name && (
                         <p className="text-sm text-red-600 mt-1">{categoryFormik.errors.name}</p>
+                      )}
+                      {categoryNameMode === "select" && categories && categories.length > 0 && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Select from {categories.filter((c: any) => (c.isActive !== false && c.isActive !== null) || (c.active !== false && c.active !== null)).length} existing categories
+                        </p>
+                      )}
+                      {categoryNameMode === "custom" && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Enter a unique category name. It must not match any existing category.
+                        </p>
                       )}
                     </div>
                     <div>

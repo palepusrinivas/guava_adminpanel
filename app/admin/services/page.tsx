@@ -57,7 +57,16 @@ import {
   getServicesStats,
   ServiceConfig,
 } from "@/utils/slices/serviceConfigSlice";
+import { getVehicleCategories } from "@/utils/reducers/adminReducers";
 import { config } from "@/utils/config";
+
+// ServiceType enum values from backend
+const SERVICE_TYPES = [
+  { value: "BIKE", label: "BIKE" },
+  { value: "MEGA", label: "MEGA" },
+  { value: "SMALL_SEDAN", label: "SMALL_SEDAN" },
+  { value: "CAR", label: "CAR" },
+];
 
 const VEHICLE_TYPES = [
   { value: "two_wheeler", label: "Two Wheeler (Bike)" },
@@ -113,6 +122,7 @@ const initialFormState: Partial<ServiceConfig> = {
 export default function ServicesPage() {
   const dispatch = useAppDispatch();
   const { services, stats, isLoading, error } = useAppSelector((state) => state.serviceConfig);
+  const { categories: vehicleCategories } = useAppSelector((state) => state.vehicle);
   
   const [tabValue, setTabValue] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -128,6 +138,7 @@ export default function ServicesPage() {
   useEffect(() => {
     dispatch(getServicesList());
     dispatch(getServicesStats());
+    dispatch(getVehicleCategories());
   }, [dispatch]);
 
   const handleOpenDialog = (service?: ServiceConfig) => {
@@ -508,15 +519,26 @@ export default function ServicesPage() {
               </Typography>
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Service ID"
-                value={formData.serviceId}
-                onChange={(e) => setFormData({ ...formData, serviceId: e.target.value.toUpperCase() })}
-                disabled={isEditing}
-                placeholder="e.g., BIKE, CAR, AUTO"
-                helperText="Unique identifier (cannot be changed)"
-              />
+              <FormControl fullWidth>
+                <InputLabel>Service ID *</InputLabel>
+                <Select
+                  value={formData.serviceId || ""}
+                  onChange={(e) => setFormData({ ...formData, serviceId: e.target.value })}
+                  disabled={isEditing}
+                  label="Service ID *"
+                >
+                  {SERVICE_TYPES.map((type) => (
+                    <MenuItem key={type.value} value={type.value}>
+                      {type.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {!isEditing && (
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                    Select from available ServiceType enum values
+                  </Typography>
+                )}
+              </FormControl>
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
@@ -709,16 +731,47 @@ export default function ServicesPage() {
             </Grid>
             <Grid item xs={12} md={4}>
               <FormControl fullWidth>
-                <InputLabel>Category</InputLabel>
+                <InputLabel>Vehicle Category</InputLabel>
                 <Select
-                  value={formData.category}
-                  label="Category"
+                  value={formData.category || ""}
+                  label="Vehicle Category"
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 >
-                  {CATEGORIES.map((cat) => (
-                    <MenuItem key={cat.value} value={cat.value}>{cat.label}</MenuItem>
-                  ))}
+                  <MenuItem value="">
+                    <em>None</em>
+                  </MenuItem>
+                  {vehicleCategories && Array.isArray(vehicleCategories) && vehicleCategories.length > 0 ? (
+                    vehicleCategories
+                      .filter((cat: any) => {
+                        // Filter active categories - check both isActive and active fields
+                        const isActive = (cat.isActive !== false && cat.isActive !== null) || 
+                                       (cat.active !== false && cat.active !== null);
+                        return isActive !== false;
+                      })
+                      .map((cat: any) => {
+                        // API returns: name, categoryName, type, id
+                        const categoryName = cat.name || cat.categoryName || '';
+                        const categoryId = cat.id || '';
+                        const categoryType = cat.type || '';
+                        const displayName = categoryName + (categoryType ? ` (${categoryType})` : '');
+                        return (
+                          <MenuItem key={categoryId || categoryName} value={categoryName}>
+                            {displayName}
+                          </MenuItem>
+                        );
+                      })
+                  ) : (
+                    // Fallback to static categories if API hasn't loaded yet
+                    CATEGORIES.map((cat) => (
+                      <MenuItem key={cat.value} value={cat.value}>{cat.label}</MenuItem>
+                    ))
+                  )}
                 </Select>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                  {vehicleCategories && Array.isArray(vehicleCategories) && vehicleCategories.length > 0 
+                    ? `Select from ${vehicleCategories.filter((c: any) => (c.isActive !== false && c.isActive !== null) || (c.active !== false && c.active !== null)).length} available categories`
+                    : 'Loading categories from backend...'}
+                </Typography>
               </FormControl>
             </Grid>
             <Grid item xs={12} md={4}>

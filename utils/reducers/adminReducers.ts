@@ -1633,11 +1633,25 @@ export const createVehicleCategory = createAsyncThunk(
   "admin/createVehicleCategory",
   async (categoryData: any, { rejectWithValue }) => {
     try {
+      // Validate required fields before sending
+      if (!categoryData.name || categoryData.name.trim() === "") {
+        return rejectWithValue("Category name is required");
+      }
+      if (!categoryData.description || categoryData.description.trim() === "") {
+        return rejectWithValue("Category description is required");
+      }
+      if (!categoryData.type || categoryData.type.trim() === "") {
+        return rejectWithValue("Category type is required");
+      }
+      if (!categoryData.image) {
+        return rejectWithValue("Category image is required");
+      }
+      
       // Always send as FormData for multipart/form-data
       const formData = new FormData();
-      formData.append("name", categoryData.name);
-      formData.append("description", categoryData.description);
-      formData.append("type", categoryData.type);
+      formData.append("name", categoryData.name.trim());
+      formData.append("description", categoryData.description.trim());
+      formData.append("type", categoryData.type.trim());
       
       // Handle image: if it's a File, append it; if it's a URL string, append as image param
       if (categoryData.image instanceof File) {
@@ -1645,6 +1659,8 @@ export const createVehicleCategory = createAsyncThunk(
       } else if (typeof categoryData.image === "string" && categoryData.image && !categoryData.image.startsWith("blob:")) {
         // If it's a URL (not a blob URL), send as image parameter
         formData.append("image", categoryData.image);
+      } else {
+        return rejectWithValue("Category image is required (must be a file or valid URL)");
       }
       
       const response = await adminAxios.post(adminVehicleCategoriesUrl, formData, {

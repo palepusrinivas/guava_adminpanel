@@ -37,6 +37,7 @@ export default function FleetMapPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [locationSearch, setLocationSearch] = useState("");
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+  const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: config.GOOGLE_MAPS_API_KEY,
@@ -47,19 +48,33 @@ export default function FleetMapPage() {
   const { locations: fleetLocations, isLoading: fleetLoading, error: fleetError } = useAppSelector((state) => state.fleet);
 
   // Transform API data to match our Driver interface
-  const apiDrivers: Driver[] = fleetLocations.map((driver) => ({
-    id: driver.id?.toString() || driver.driverId?.toString() || "",
-    name: driver.name || "Unknown Driver",
-    phone: driver.phone || driver.mobile || "N/A",
-    vehicleNo: driver.vehicleNo || driver.vehicleNumber || "N/A",
-    model: driver.model || driver.vehicleModel || "N/A",
-    status: driver.status || "available",
-    isNew: driver.isNew || false,
-    position: {
-      lat: driver.lat || driver.latitude || 16.9902,
-      lng: driver.lng || driver.longitude || 82.2475,
-    },
-  }));
+  // Filter out drivers with invalid coordinates
+  const apiDrivers: Driver[] = fleetLocations
+    .map((driver) => {
+      // Get coordinates from various possible fields
+      const lat = driver.lat || driver.latitude;
+      const lng = driver.lng || driver.longitude;
+      
+      // Skip drivers with invalid coordinates (null, undefined, 0, 0)
+      if (!lat || !lng || lat === 0 || lng === 0) {
+        return null;
+      }
+      
+      return {
+        id: driver.id?.toString() || driver.driverId?.toString() || "",
+        name: driver.name || "Unknown Driver",
+        phone: driver.phone || driver.mobile || "N/A",
+        vehicleNo: driver.vehicleNo || driver.vehicleNumber || "N/A",
+        model: driver.model || driver.vehicleModel || "N/A",
+        status: driver.status || "available",
+        isNew: driver.isNew || false,
+        position: {
+          lat: lat,
+          lng: lng,
+        },
+      } as Driver;
+    })
+    .filter((driver): driver is Driver => driver !== null);
 
   // Use only API data (no mock/fallback)
   const allDrivers = apiDrivers;
@@ -91,23 +106,35 @@ export default function FleetMapPage() {
   };
 
   // Group drivers by location for clustering
-  const clusterDrivers = () => {
-    const clusters: Map<string, { position: { lat: number; lng: number }; count: number }> = new Map();
+  interface Cluster {
+    position: { lat: number; lng: number };
+    count: number;
+    drivers: Driver[];
+  }
+  
+  const clusterDrivers = (): Cluster[] => {
+    const clusters: Map<string, Cluster> = new Map();
     
     filteredDrivers.forEach((driver) => {
-      if (!driver.position) return;
+      if (!driver.position || !driver.position.lat || !driver.position.lng) return;
       
-      const gridLat = Math.floor(driver.position.lat / 0.05) * 0.05;
-      const gridLng = Math.floor(driver.position.lng / 0.05) * 0.05;
-      const key = `${gridLat},${gridLng}`;
+      // Use a smaller grid size (0.01 degrees ≈ 1km) for better clustering
+      const gridLat = Math.floor(driver.position.lat / 0.01) * 0.01;
+      const gridLng = Math.floor(driver.position.lng / 0.01) * 0.01;
+      const key = `${gridLat.toFixed(4)},${gridLng.toFixed(4)}`;
       
       if (clusters.has(key)) {
         const existing = clusters.get(key)!;
         existing.count++;
+        existing.drivers.push(driver);
+        // Update position to average of all drivers in cluster
+        existing.position.lat = (existing.position.lat * (existing.count - 1) + driver.position.lat) / existing.count;
+        existing.position.lng = (existing.position.lng * (existing.count - 1) + driver.position.lng) / existing.count;
       } else {
         clusters.set(key, {
           position: { lat: driver.position.lat, lng: driver.position.lng },
           count: 1,
+          drivers: [driver],
         });
       }
     });
@@ -116,10 +143,57 @@ export default function FleetMapPage() {
   };
 
   const clusters = clusterDrivers();
+  
+  // Calculate map center based on driver positions
+  const calculateMapCenter = () => {
+    if (filteredDrivers.length === 0) return defaultCenter;
+    
+    const validDrivers = filteredDrivers.filter(d => d.position && d.position.lat && d.position.lng);
+    if (validDrivers.length === 0) return defaultCenter;
+    
+    const avgLat = validDrivers.reduce((sum, d) => sum + d.position!.lat, 0) / validDrivers.length;
+    const avgLng = validDrivers.reduce((sum, d) => sum + d.position!.lng, 0) / validDrivers.length;
+    
+    return { lat: avgLat, lng: avgLng };
+  };
+
+  const mapCenter = calculateMapCenter();
 
   useEffect(() => {
     dispatch(getFleetLocations());
   }, [dispatch]);
+
+  // Debug: Log driver data when it changes
+  useEffect(() => {
+    if (fleetLocations.length > 0) {
+      console.log('[FleetMap] Fetched drivers:', fleetLocations.length);
+      console.log('[FleetMap] Valid drivers with positions:', allDrivers.length);
+      if (allDrivers.length > 0) {
+        console.log('[FleetMap] Sample driver:', allDrivers[0]);
+      }
+    }
+  }, [fleetLocations, allDrivers.length]);
+
+  // Update map center when drivers are loaded
+  useEffect(() => {
+    if (mapInstance && allDrivers.length > 0) {
+      const center = calculateMapCenter();
+      mapInstance.setCenter(center);
+      // Auto-zoom to fit all drivers
+      if (allDrivers.length > 1) {
+        const bounds = new google.maps.LatLngBounds();
+        allDrivers.forEach(driver => {
+          if (driver.position) {
+            bounds.extend(new google.maps.LatLng(driver.position.lat, driver.position.lng));
+          }
+        });
+        mapInstance.fitBounds(bounds);
+      } else if (allDrivers.length === 1 && allDrivers[0].position) {
+        mapInstance.setCenter(allDrivers[0].position);
+        mapInstance.setZoom(14);
+      }
+    }
+  }, [mapInstance, allDrivers.length]);
 
   const tabs = [
     { id: "all", label: "All Drivers", count: allDrivers.length },
@@ -143,6 +217,16 @@ export default function FleetMapPage() {
         {fleetError && !fleetLoading && (
           <div className="mt-2 text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded-md">
             ⚠️ {fleetError}
+          </div>
+        )}
+        {!fleetLoading && !fleetError && allDrivers.length === 0 && (
+          <div className="mt-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-md">
+            ℹ️ No drivers with valid locations found. Drivers need to have latitude and longitude set.
+          </div>
+        )}
+        {!fleetLoading && !fleetError && allDrivers.length > 0 && (
+          <div className="mt-2 text-sm text-teal-600 bg-teal-50 px-3 py-2 rounded-md">
+            ✅ Found {allDrivers.length} driver(s) with valid locations
           </div>
         )}
       </div>
@@ -268,8 +352,9 @@ export default function FleetMapPage() {
                   {isLoaded ? (
                     <GoogleMap
                       mapContainerStyle={containerStyle}
-                      center={defaultCenter}
-                      zoom={11}
+                      center={mapCenter}
+                      zoom={filteredDrivers.length > 0 ? 12 : 11}
+                      onLoad={(map) => setMapInstance(map)}
                       options={{
                         disableDefaultUI: false,
                         zoomControl: true,
@@ -278,31 +363,60 @@ export default function FleetMapPage() {
                         fullscreenControl: true,
                       }}
                     >
-                      {clusters.map((cluster, index) => (
-                        <Marker
-                          key={index}
-                          position={cluster.position}
-                          icon={{
-                            url: getMarkerIcon(cluster.count),
-                            scaledSize: new google.maps.Size(40, 40),
-                            anchor: new google.maps.Point(20, 20),
-                          }}
-                          title={`${cluster.count} driver(s)`}
-                          onClick={() => {
-                            // If it's a single driver, show details
-                            if (cluster.count === 1) {
-                              const singleDriver = filteredDrivers.find(
-                                d => d.position && 
-                                Math.abs(d.position.lat - cluster.position.lat) < 0.001 &&
-                                Math.abs(d.position.lng - cluster.position.lng) < 0.001
-                              );
-                              if (singleDriver) {
-                                setSelectedDriver(singleDriver);
+                      {clusters.map((cluster, index) => {
+                        // For single drivers, show individual marker with driver icon
+                        if (cluster.count === 1 && cluster.drivers.length > 0) {
+                          const driver = cluster.drivers[0];
+                          // Determine marker color based on status
+                          let markerColor = "#4B5563"; // grey (offline/default)
+                          if (driver.status === "available" || driver.status === "idle") {
+                            markerColor = "#10B981"; // green (available)
+                          } else if (driver.status === "on-trip" || driver.status === "on_ride") {
+                            markerColor = "#3B82F6"; // blue (on trip)
+                          }
+                          
+                          const singleMarkerIcon = `
+                            <svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+                              <circle cx="16" cy="16" r="14" fill="${markerColor}" opacity="0.9" stroke="white" stroke-width="2"/>
+                              <text x="16" y="21" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white" text-anchor="middle">🚗</text>
+                            </svg>
+                          `;
+                          
+                          return (
+                            <Marker
+                              key={`driver-${driver.id}-${index}`}
+                              position={driver.position!}
+                              icon={{
+                                url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(singleMarkerIcon)}`,
+                                scaledSize: new google.maps.Size(32, 32),
+                                anchor: new google.maps.Point(16, 16),
+                              }}
+                              title={`${driver.name} - ${driver.status}`}
+                              onClick={() => setSelectedDriver(driver)}
+                            />
+                          );
+                        }
+                        
+                        // For clusters with multiple drivers, show cluster marker
+                        return (
+                          <Marker
+                            key={`cluster-${index}`}
+                            position={cluster.position}
+                            icon={{
+                              url: getMarkerIcon(cluster.count),
+                              scaledSize: new google.maps.Size(40, 40),
+                              anchor: new google.maps.Point(20, 20),
+                            }}
+                            title={`${cluster.count} driver(s) at this location`}
+                            onClick={() => {
+                              // If clicked on cluster, select the first driver or show list
+                              if (cluster.drivers.length > 0) {
+                                setSelectedDriver(cluster.drivers[0]);
                               }
-                            }
-                          }}
-                        />
-                      ))}
+                            }}
+                          />
+                        );
+                      })}
                     </GoogleMap>
                   ) : (
                     <div className="flex items-center justify-center h-[650px] bg-gray-100">
