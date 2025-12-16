@@ -1,10 +1,11 @@
 // Application Configuration
+// Using 'as const' to preserve literal types while allowing index access
 export const config = {
   // API Configuration
   // Production (Netlify): Use Azure backend
   API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://gauva-f6f6d9ddagfqc9fw.canadacentral-01.azurewebsites.net",
   // Uncomment below for local development:
-   //API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080",
+  // API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080",
   LOCATIONIQ_API_KEY: process.env.NEXT_PUBLIC_LOCATIONIQ_API_KEY || "pk.1dca78a113a7c45533e83e6c9f2196ae",
   GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyA4l8wJ5bYRj_iPcaWF1TTuPt5KVDGMFpo", // Temporary hardcoded key
 
@@ -91,6 +92,8 @@ export const config = {
       DRIVERS_PENDING_KYC: "/api/admin/drivers/pending-kyc",
       WALLET_CREDIT_USER: "/api/admin/wallet/credit/user/:id",
       WALLET_CREDIT_DRIVER: "/api/admin/wallet/credit/driver/:id",
+      WALLET_MANUAL_PAYMENT_USER: "/api/admin/wallet/manual-payment/user/:id",
+      WALLET_MANUAL_PAYMENT_DRIVER: "/api/admin/wallet/manual-payment/driver/:id",
       WALLET_TOPUP: "/api/admin/wallet/topup",
       RAZORPAY_TRANSACTIONS: "/api/admin/wallet/razorpay-transactions",
       RAZORPAY_TRANSACTION_BY_ID: "/api/admin/wallet/razorpay-transactions/:id",
@@ -216,8 +219,30 @@ export const config = {
       CASHBACK_USER_ENTRIES: "/api/admin/cashback/entries/user/:userId",
       CASHBACK_EXPIRE_ENTRY: "/api/admin/cashback/entries/:id/expire",
       CASHBACK_PROCESS_EXPIRED: "/api/admin/cashback/process-expired",
-    },
+    } as Record<string, string>,
   },
+} as {
+  API_BASE_URL: string;
+  LOCATIONIQ_API_KEY: string;
+  GOOGLE_MAPS_API_KEY: string;
+  APP_NAME: string;
+  APP_DESCRIPTION: string;
+  ENABLE_LOCATION_SERVICES: boolean;
+  ENABLE_PAYMENT_INTEGRATION: boolean;
+  ENABLE_REAL_TIME_TRACKING: boolean;
+  ENABLE_ANALYTICS: boolean;
+  DEFAULT_RIDE_TIMEOUT: number;
+  MAX_RIDE_DISTANCE: number;
+  MIN_RIDE_DISTANCE: number;
+  THEME: Record<string, string>;
+  ENDPOINTS: {
+    SUPERADMIN: Record<string, string>;
+    AUTH: Record<string, string>;
+    DRIVER: Record<string, string>;
+    RIDE: Record<string, string>;
+    USER: Record<string, string>;
+    ADMIN: Record<string, string>;
+  };
 };
 
 // Helper function to get full API URL
