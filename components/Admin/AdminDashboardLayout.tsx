@@ -69,6 +69,7 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
         { name: "Wallet Management", href: "/admin/wallet", icon: "💰" },
         { name: "Banner Setup", href: "/admin/banner-setup", icon: "🖼️" },
         { name: "Legal Documents", href: "/admin/legal-documents", icon: "📄" },
+        { name: "Mail Server", href: "/admin/mail-server", icon: "📧" },
       ],
     },
     {

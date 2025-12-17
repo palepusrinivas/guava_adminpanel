@@ -80,6 +80,12 @@ import {
   adminLegalDocumentActiveUrl,
   adminLegalDocumentActivateUrl,
   adminLegalDocumentDeactivateUrl,
+  adminMailServerUrl,
+  adminMailServerByIdUrl,
+  adminMailServerActiveUrl,
+  adminMailServerTestConnectionUrl,
+  adminMailServerTestEmailUrl,
+  adminMailServerTestConnectionDirectUrl,
   adminDriverAccessConfigsUrl,
   adminDriverAccessConfigByVehicleUrl,
   adminDriverAccessProcessDailyFeesUrl,
@@ -2615,6 +2621,115 @@ export const updateThirdPartyConfiguration = createAsyncThunk(
   async (data: any, { rejectWithValue }) => {
     try {
       const response = await adminAxios.put(adminThirdPartyConfigurationUrl, data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+// Mail Server Configuration
+export const getMailServerConfigs = createAsyncThunk(
+  "admin/getMailServerConfigs",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.get(adminMailServerUrl);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const getMailServerConfig = createAsyncThunk(
+  "admin/getMailServerConfig",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.get(adminMailServerByIdUrl(id));
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const getActiveMailServerConfig = createAsyncThunk(
+  "admin/getActiveMailServerConfig",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.get(adminMailServerActiveUrl);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const createMailServerConfig = createAsyncThunk(
+  "admin/createMailServerConfig",
+  async (data: any, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.post(adminMailServerUrl, data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const updateMailServerConfig = createAsyncThunk(
+  "admin/updateMailServerConfig",
+  async ({ id, data }: { id: string; data: any }, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.put(adminMailServerByIdUrl(id), data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const deleteMailServerConfig = createAsyncThunk(
+  "admin/deleteMailServerConfig",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await adminAxios.delete(adminMailServerByIdUrl(id));
+      return id;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const testMailServerConnection = createAsyncThunk(
+  "admin/testMailServerConnection",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.post(adminMailServerTestConnectionUrl(id));
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const testMailServerEmail = createAsyncThunk(
+  "admin/testMailServerEmail",
+  async ({ id, email }: { id: string; email: string }, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.post(adminMailServerTestEmailUrl(id), { email });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const testMailServerConnectionDirect = createAsyncThunk(
+  "admin/testMailServerConnectionDirect",
+  async (data: any, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.post(adminMailServerTestConnectionDirectUrl, data);
       return response.data;
     } catch (error) {
       return rejectWithValue(extractErrorMessage(error));

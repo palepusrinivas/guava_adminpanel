@@ -96,8 +96,15 @@ export interface IntercityPricingConfig {
 
 export interface IntercityTrip {
   id: number;
+  tripId?: number; // For DTO compatibility
+  tripCode?: string;
   vehicleType: IntercityVehicleType;
+  vehicleDisplayName?: string;
   route?: IntercityRoute;
+  routeId?: number;
+  routeCode?: string;
+  originName?: string;
+  destinationName?: string;
   status: IntercityTripStatus;
   scheduledDeparture: string;
   actualDeparture?: string;
@@ -105,32 +112,108 @@ export interface IntercityTrip {
   actualArrival?: string;
   totalSeats: number;
   bookedSeats: number;
+  seatsBooked?: number; // For DTO compatibility
+  availableSeats?: number;
   totalPrice?: number;
   currentPerHeadPrice?: number;
   driverId?: number;
   driverName?: string;
+  driverPhone?: string;
   vehicleNumber?: string;
+  vehicleModel?: string;
+  driverRating?: number;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface IntercityBooking {
   id: number;
+  bookingId?: number;
   tripId: number;
   userId: number;
   userName?: string;
   userPhone?: string;
+  userEmail?: string;
   seatCount: number;
+  seatsBooked?: number;
   pricePerSeat: number;
+  perSeatAmount?: number;
   totalAmount: number;
   commissionAmount?: number;
   status: IntercityBookingStatus;
+  bookingStatus?: IntercityBookingStatus;
+  bookingType?: string;
   paymentStatus?: string;
+  paymentMethod?: string;
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
   pickupPoint?: string;
   dropPoint?: string;
   bookingCode?: string;
+  otp?: number;
+  otpVerified?: boolean;
+  otpVerifiedAt?: string;
+  passengersOnboarded?: number;
+  confirmedAt?: string;
+  cancelledAt?: string;
   createdAt: string;
   updatedAt: string;
+  // Additional fields from backend DTO
+  otpVerifiedAt?: string;
+  // User details (new structure from backend)
+  user?: {
+    userId: string; // UUID as String
+    name: string;
+    email: string;
+    phone: string;
+  };
+  // Trip details
+  trip?: {
+    tripId: number;
+    tripCode?: string;
+    vehicleType?: string;
+    vehicleDisplayName?: string;
+    tripStatus?: string;
+    pickupAddress?: string;
+    pickupLatitude?: number;
+    pickupLongitude?: number;
+    dropAddress?: string;
+    dropLatitude?: number;
+    dropLongitude?: number;
+    scheduledDeparture?: string;
+    totalSeats?: number;
+    seatsBooked?: number;
+    availableSeats?: number;
+    minSeats?: number;
+    minSeatsMet?: boolean;
+    totalPrice?: number;
+    currentPerHeadPrice?: number;
+    driver?: {
+      driverId?: number;
+      name?: string;
+      phone?: string;
+      vehicleNumber?: string;
+      vehicleModel?: string;
+      rating?: number;
+      totalTrips?: number;
+    };
+    route?: {
+      routeId?: number;
+      routeCode?: string;
+      originName?: string;
+      destinationName?: string;
+      distanceKm?: number;
+      estimatedDurationMinutes?: number;
+    };
+  };
+  // Seat details
+  seats?: Array<{
+    seatNumber: number;
+    status: string;
+    pricePaid: number;
+    passengerName: string;
+    passengerPhone: string;
+  }>;
 }
 
 export interface IntercityDashboardStats {

@@ -224,6 +224,13 @@ export const config = {
       CASHBACK_USER_ENTRIES: "/api/admin/cashback/entries/user/:userId",
       CASHBACK_EXPIRE_ENTRY: "/api/admin/cashback/entries/:id/expire",
       CASHBACK_PROCESS_EXPIRED: "/api/admin/cashback/process-expired",
+      // Mail Server Configuration
+      MAIL_SERVER: "/api/admin/mail-server",
+      MAIL_SERVER_BY_ID: "/api/admin/mail-server/:id",
+      MAIL_SERVER_ACTIVE: "/api/admin/mail-server/active",
+      MAIL_SERVER_TEST_CONNECTION: "/api/admin/mail-server/:id/test-connection",
+      MAIL_SERVER_TEST_EMAIL: "/api/admin/mail-server/:id/test-email",
+      MAIL_SERVER_TEST_CONNECTION_DIRECT: "/api/admin/mail-server/test-connection",
     } as Record<string, string>,
   },
 } as {

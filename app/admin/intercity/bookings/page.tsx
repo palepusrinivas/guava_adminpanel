@@ -316,6 +316,9 @@ export default function IntercityBookingsPage() {
                     Amount
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Payment
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Commission
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -368,6 +371,22 @@ export default function IntercityBookingsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
+                      {booking.paymentMethod && (
+                        <div className="text-xs text-gray-500 mb-1">
+                          {booking.paymentMethod}
+                        </div>
+                      )}
+                      {booking.paymentStatus && (
+                        <div className={`text-xs font-medium ${
+                          booking.paymentStatus === 'COMPLETED' ? 'text-green-600' : 
+                          booking.paymentStatus === 'PENDING' ? 'text-yellow-600' : 
+                          'text-gray-600'
+                        }`}>
+                          {booking.paymentStatus}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         ₹{booking.commissionAmount || "0.00"}
                       </div>
@@ -378,12 +397,7 @@ export default function IntercityBookingsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(booking.status)}
-                      {booking.paymentStatus && (
-                        <div className="text-xs text-gray-500 mt-1">
-                          Pay: {booking.paymentStatus}
-                        </div>
-                      )}
+                      {getStatusBadge(booking.status || booking.bookingStatus || "PENDING")}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDateTime(booking.createdAt)}
@@ -496,97 +510,488 @@ export default function IntercityBookingsPage() {
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-500">Status</span>
-                {getStatusBadge(selectedBooking.status)}
+            <div className="space-y-4 max-h-[80vh] overflow-y-auto">
+              {/* Booking Status */}
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-semibold text-gray-700">Booking Status</span>
+                  {getStatusBadge(selectedBooking.status || selectedBooking.bookingStatus || "PENDING")}
+                </div>
+                {selectedBooking.bookingCode && (
+                  <div className="text-xs text-gray-600 mt-1">
+                    Code: <span className="font-mono font-semibold">{selectedBooking.bookingCode}</span>
+                  </div>
+                )}
+                {selectedBooking.bookingType && (
+                  <div className="text-xs text-gray-600 mt-1">
+                    Type: <span className="font-semibold">{selectedBooking.bookingType}</span>
+                  </div>
+                )}
               </div>
 
-              {selectedBooking.bookingCode && (
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Booking Code</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {selectedBooking.bookingCode}
-                  </span>
+              {/* User Details */}
+              <div className="border-t pt-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  👤 User Details
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-xs text-gray-500">Name</span>
+                    <div className="text-sm font-medium text-gray-900">
+                      {selectedBooking.user?.name || selectedBooking.userName || "N/A"}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500">Phone</span>
+                    <div className="text-sm font-medium text-gray-900">
+                      {selectedBooking.user?.phone || selectedBooking.userPhone || "N/A"}
+                    </div>
+                  </div>
+                  {(selectedBooking.user?.email || selectedBooking.userEmail) && (
+                    <div>
+                      <span className="text-xs text-gray-500">Email</span>
+                      <div className="text-sm font-medium text-gray-900">
+                        {selectedBooking.user?.email || selectedBooking.userEmail}
+                      </div>
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-xs text-gray-500">User ID</span>
+                    <div className="text-sm font-medium text-gray-900">
+                      #{selectedBooking.user?.userId || selectedBooking.userId}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Route Details */}
+              {(selectedBooking.trip?.route || (selectedBooking.pickupPoint && selectedBooking.dropPoint)) && (
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    🛤️ Route Details
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {selectedBooking.trip?.route?.routeCode && (
+                      <div>
+                        <span className="text-xs text-gray-500">Route Code</span>
+                        <div className="text-sm font-medium text-gray-900">
+                          {selectedBooking.trip.route.routeCode}
+                        </div>
+                      </div>
+                    )}
+                    {(selectedBooking.trip?.route?.originName || selectedBooking.pickupPoint) && (
+                      <div>
+                        <span className="text-xs text-gray-500">Origin</span>
+                        <div className="text-sm font-medium text-gray-900">
+                          {selectedBooking.trip?.route?.originName || selectedBooking.pickupPoint}
+                        </div>
+                      </div>
+                    )}
+                    {(selectedBooking.trip?.route?.destinationName || selectedBooking.dropPoint) && (
+                      <div>
+                        <span className="text-xs text-gray-500">Destination</span>
+                        <div className="text-sm font-medium text-gray-900">
+                          {selectedBooking.trip?.route?.destinationName || selectedBooking.dropPoint}
+                        </div>
+                      </div>
+                    )}
+                    {selectedBooking.trip?.route?.distanceKm && (
+                      <div>
+                        <span className="text-xs text-gray-500">Distance</span>
+                        <div className="text-sm font-medium text-gray-900">
+                          {selectedBooking.trip.route.distanceKm} km
+                        </div>
+                      </div>
+                    )}
+                    {selectedBooking.trip?.route?.estimatedDurationMinutes && (
+                      <div>
+                        <span className="text-xs text-gray-500">Duration</span>
+                        <div className="text-sm font-medium text-gray-900">
+                          {Math.floor(selectedBooking.trip.route.estimatedDurationMinutes / 60)}h {selectedBooking.trip.route.estimatedDurationMinutes % 60}m
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
+              {/* Trip Details */}
               <div className="border-t pt-4">
-                <h4 className="text-sm font-semibold text-gray-700 mb-2">Customer Info</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Name</span>
-                    <span className="text-sm text-gray-900">
-                      {selectedBooking.userName || "N/A"}
-                    </span>
+                <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  🚗 Trip Details
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-xs text-gray-500">Trip ID</span>
+                    <div className="text-sm font-medium text-gray-900">
+                      #{selectedBooking.tripId}
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Phone</span>
-                    <span className="text-sm text-gray-900">
-                      {selectedBooking.userPhone || "N/A"}
-                    </span>
-                  </div>
+                  {selectedBooking.trip?.tripCode && (
+                    <div>
+                      <span className="text-xs text-gray-500">Trip Code</span>
+                      <div className="text-sm font-medium text-gray-900">
+                        {selectedBooking.trip.tripCode}
+                      </div>
+                    </div>
+                  )}
+                  {selectedBooking.trip?.tripStatus && (
+                    <div>
+                      <span className="text-xs text-gray-500">Trip Status</span>
+                      <div className="text-sm font-medium text-gray-900">
+                        {selectedBooking.trip.tripStatus}
+                      </div>
+                    </div>
+                  )}
+                  {(selectedBooking.trip?.pickupAddress || selectedBooking.pickupPoint) && (
+                    <div className="col-span-2">
+                      <span className="text-xs text-gray-500">📍 Pickup Address</span>
+                      <div className="text-sm font-medium text-gray-900">
+                        {selectedBooking.trip?.pickupAddress || selectedBooking.pickupPoint}
+                      </div>
+                      {selectedBooking.trip?.pickupLatitude && selectedBooking.trip?.pickupLongitude && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          {selectedBooking.trip.pickupLatitude}, {selectedBooking.trip.pickupLongitude}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {(selectedBooking.trip?.dropAddress || selectedBooking.dropPoint) && (
+                    <div className="col-span-2">
+                      <span className="text-xs text-gray-500">📍 Drop Address</span>
+                      <div className="text-sm font-medium text-gray-900">
+                        {selectedBooking.trip?.dropAddress || selectedBooking.dropPoint}
+                      </div>
+                      {selectedBooking.trip?.dropLatitude && selectedBooking.trip?.dropLongitude && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          {selectedBooking.trip.dropLatitude}, {selectedBooking.trip.dropLongitude}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {selectedBooking.trip?.scheduledDeparture && (
+                    <div>
+                      <span className="text-xs text-gray-500">🚀 Scheduled Departure</span>
+                      <div className="text-sm font-medium text-gray-900">
+                        {formatDateTime(selectedBooking.trip.scheduledDeparture)}
+                      </div>
+                    </div>
+                  )}
+                  {selectedBooking.trip?.totalSeats && (
+                    <div>
+                      <span className="text-xs text-gray-500">Seats</span>
+                      <div className="text-sm font-medium text-gray-900">
+                        {selectedBooking.trip.seatsBooked || 0} / {selectedBooking.trip.totalSeats}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="border-t pt-4">
-                <h4 className="text-sm font-semibold text-gray-700 mb-2">Trip Info</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Trip ID</span>
-                    <span className="text-sm text-gray-900">#{selectedBooking.tripId}</span>
+              {/* Driver Details */}
+              {selectedBooking.trip?.driver && (
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    👨‍✈️ Driver Details
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {selectedBooking.trip.driver.name && (
+                      <div>
+                        <span className="text-xs text-gray-500">Name</span>
+                        <div className="text-sm font-medium text-gray-900">
+                          {selectedBooking.trip.driver.name}
+                        </div>
+                      </div>
+                    )}
+                    {selectedBooking.trip.driver.phone && (
+                      <div>
+                        <span className="text-xs text-gray-500">Phone</span>
+                        <div className="text-sm font-medium text-gray-900">
+                          {selectedBooking.trip.driver.phone}
+                        </div>
+                      </div>
+                    )}
+                    {selectedBooking.trip.driver.vehicleNumber && (
+                      <div>
+                        <span className="text-xs text-gray-500">Vehicle Number</span>
+                        <div className="text-sm font-medium text-gray-900">
+                          {selectedBooking.trip.driver.vehicleNumber}
+                        </div>
+                      </div>
+                    )}
+                    {selectedBooking.trip.driver.vehicleModel && (
+                      <div>
+                        <span className="text-xs text-gray-500">Vehicle Model</span>
+                        <div className="text-sm font-medium text-gray-900">
+                          {selectedBooking.trip.driver.vehicleModel}
+                        </div>
+                      </div>
+                    )}
+                    {selectedBooking.trip.driver.rating && (
+                      <div>
+                        <span className="text-xs text-gray-500">Rating</span>
+                        <div className="text-sm font-medium text-gray-900">
+                          ⭐ {selectedBooking.trip.driver.rating.toFixed(1)}
+                        </div>
+                      </div>
+                    )}
+                    {selectedBooking.trip.driver.totalTrips !== undefined && (
+                      <div>
+                        <span className="text-xs text-gray-500">Total Trips</span>
+                        <div className="text-sm font-medium text-gray-900">
+                          {selectedBooking.trip.driver.totalTrips}
+                        </div>
+                      </div>
+                    )}
+                    {selectedBooking.trip.driver.driverId && (
+                      <div>
+                        <span className="text-xs text-gray-500">Driver ID</span>
+                        <div className="text-sm font-medium text-gray-900">
+                          #{selectedBooking.trip.driver.driverId}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  {selectedBooking.pickupPoint && (
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Pickup</span>
-                      <span className="text-sm text-gray-900">
-                        {selectedBooking.pickupPoint}
-                      </span>
-                    </div>
-                  )}
-                  {selectedBooking.dropPoint && (
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Drop</span>
-                      <span className="text-sm text-gray-900">{selectedBooking.dropPoint}</span>
-                    </div>
-                  )}
                 </div>
-              </div>
+              )}
 
+              {/* Vehicle Details */}
+              {selectedBooking.trip?.vehicleType && (
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    🚙 Vehicle Details
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <span className="text-xs text-gray-500">Vehicle Type</span>
+                      <div className="text-sm font-medium text-gray-900">
+                        {selectedBooking.trip.vehicleType}
+                      </div>
+                    </div>
+                    {selectedBooking.trip.vehicleDisplayName && (
+                      <div>
+                        <span className="text-xs text-gray-500">Display Name</span>
+                        <div className="text-sm font-medium text-gray-900">
+                          {selectedBooking.trip.vehicleDisplayName}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Details */}
               <div className="border-t pt-4">
-                <h4 className="text-sm font-semibold text-gray-700 mb-2">Payment Info</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Seats</span>
-                    <span className="text-sm text-gray-900">{selectedBooking.seatCount}</span>
+                <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  💳 Payment Details
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-xs text-gray-500">Seats Booked</span>
+                    <div className="text-sm font-medium text-gray-900">
+                      {selectedBooking.seatsBooked || selectedBooking.seatCount || 0}
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Price per Seat</span>
-                    <span className="text-sm text-gray-900">
-                      ₹{selectedBooking.pricePerSeat}
-                    </span>
+                  <div>
+                    <span className="text-xs text-gray-500">Price per Seat</span>
+                    <div className="text-sm font-medium text-gray-900">
+                      ₹{selectedBooking.perSeatAmount || selectedBooking.pricePerSeat || 0}
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Total Amount</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      ₹{selectedBooking.totalAmount}
-                    </span>
+                  <div>
+                    <span className="text-xs text-gray-500">Total Amount</span>
+                    <div className="text-sm font-semibold text-gray-900 text-lg">
+                      ₹{selectedBooking.totalAmount || 0}
+                    </div>
                   </div>
+                  {selectedBooking.commissionAmount && (
+                    <div>
+                      <span className="text-xs text-gray-500">Commission</span>
+                      <div className="text-sm font-medium text-gray-900">
+                        ₹{selectedBooking.commissionAmount}
+                        {selectedBooking.totalAmount && (
+                          <span className="text-xs text-gray-500 ml-1">
+                            ({((selectedBooking.commissionAmount / selectedBooking.totalAmount) * 100).toFixed(1)}%)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {selectedBooking.paymentMethod && (
+                    <div>
+                      <span className="text-xs text-gray-500">Payment Method</span>
+                      <div className="text-sm font-medium text-gray-900">
+                        {selectedBooking.paymentMethod}
+                      </div>
+                    </div>
+                  )}
                   {selectedBooking.paymentStatus && (
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Payment Status</span>
-                      <span className="text-sm text-gray-900">
+                    <div>
+                      <span className="text-xs text-gray-500">Payment Status</span>
+                      <div className={`text-sm font-medium ${
+                        selectedBooking.paymentStatus === 'COMPLETED' ? 'text-green-600' : 
+                        selectedBooking.paymentStatus === 'PENDING' ? 'text-yellow-600' : 
+                        'text-gray-900'
+                      }`}>
                         {selectedBooking.paymentStatus}
-                      </span>
+                      </div>
+                    </div>
+                  )}
+                  {selectedBooking.razorpayOrderId && (
+                    <div>
+                      <span className="text-xs text-gray-500">Razorpay Order ID</span>
+                      <div className="text-sm font-mono text-gray-900">
+                        {selectedBooking.razorpayOrderId}
+                      </div>
+                    </div>
+                  )}
+                  {selectedBooking.razorpayPaymentId && (
+                    <div>
+                      <span className="text-xs text-gray-500">Razorpay Payment ID</span>
+                      <div className="text-sm font-mono text-gray-900">
+                        {selectedBooking.razorpayPaymentId}
+                      </div>
+                    </div>
+                  )}
+                  {selectedBooking.commissionAmount && (
+                    <div>
+                      <span className="text-xs text-gray-500">Commission Amount</span>
+                      <div className="text-sm font-medium text-gray-900">
+                        ₹{selectedBooking.commissionAmount}
+                        {selectedBooking.totalAmount && (
+                          <span className="text-xs text-gray-500 ml-1">
+                            ({((selectedBooking.commissionAmount / selectedBooking.totalAmount) * 100).toFixed(1)}%)
+                          </span>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
 
+              {/* OTP & Onboarding */}
+              {(selectedBooking.otp || selectedBooking.otpVerified !== undefined || selectedBooking.passengersOnboarded) && (
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    🔐 OTP & Onboarding
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {selectedBooking.otp && (
+                      <div>
+                        <span className="text-xs text-gray-500">OTP</span>
+                        <div className="text-sm font-mono font-semibold text-gray-900">
+                          {selectedBooking.otp}
+                        </div>
+                      </div>
+                    )}
+                    {selectedBooking.otpVerified !== undefined && (
+                      <div>
+                        <span className="text-xs text-gray-500">OTP Verified</span>
+                        <div className={`text-sm font-medium ${
+                          selectedBooking.otpVerified ? 'text-green-600' : 'text-yellow-600'
+                        }`}>
+                          {selectedBooking.otpVerified ? '✅ Yes' : '⏳ No'}
+                        </div>
+                      </div>
+                    )}
+                    {selectedBooking.otpVerifiedAt && (
+                      <div>
+                        <span className="text-xs text-gray-500">Verified At</span>
+                        <div className="text-sm text-gray-900">
+                          {formatDateTime(selectedBooking.otpVerifiedAt)}
+                        </div>
+                      </div>
+                    )}
+                    {selectedBooking.passengersOnboarded !== undefined && (
+                      <div>
+                        <span className="text-xs text-gray-500">Passengers Onboarded</span>
+                        <div className="text-sm font-medium text-gray-900">
+                          {selectedBooking.passengersOnboarded}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Seat Details */}
+              {selectedBooking.seats && selectedBooking.seats.length > 0 && (
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    🪑 Seat Details
+                  </h4>
+                  <div className="space-y-2">
+                    {selectedBooking.seats.map((seat, index) => (
+                      <div key={index} className="bg-gray-50 p-2 rounded text-xs">
+                        <div className="flex justify-between">
+                          <span className="font-medium">Seat {seat.seatNumber}</span>
+                          <span className={`px-2 py-1 rounded ${
+                            seat.status === 'BOOKED' ? 'bg-green-100 text-green-700' :
+                            seat.status === 'LOCKED' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-gray-100 text-gray-700'
+                          }`}>
+                            {seat.status}
+                          </span>
+                        </div>
+                        <div className="mt-1 text-gray-600">
+                          {seat.passengerName} ({seat.passengerPhone}) - ₹{seat.pricePaid}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Cancellation Info */}
+              {selectedBooking.status === 'CANCELLED' && selectedBooking.cancelledAt && (
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-semibold text-red-700 mb-3 flex items-center gap-2">
+                    ❌ Cancellation Details
+                  </h4>
+                  <div className="text-sm text-gray-900">
+                    Cancelled at: {formatDateTime(selectedBooking.cancelledAt)}
+                  </div>
+                </div>
+              )}
+
+              {/* Timestamps */}
               <div className="border-t pt-4">
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>Created: {formatDateTime(selectedBooking.createdAt)}</span>
-                  <span>Updated: {formatDateTime(selectedBooking.updatedAt)}</span>
+                <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  ⏰ Timestamps
+                </h4>
+                <div className="grid grid-cols-2 gap-3 text-xs text-gray-500">
+                  <div>
+                    <span className="block mb-1">Created</span>
+                    <span className="font-medium text-gray-700">{formatDateTime(selectedBooking.createdAt)}</span>
+                  </div>
+                  <div>
+                    <span className="block mb-1">Updated</span>
+                    <span className="font-medium text-gray-700">{formatDateTime(selectedBooking.updatedAt)}</span>
+                  </div>
+                  {selectedBooking.confirmedAt && (
+                    <div>
+                      <span className="block mb-1">Confirmed</span>
+                      <span className="font-medium text-green-700">{formatDateTime(selectedBooking.confirmedAt)}</span>
+                    </div>
+                  )}
+                  {selectedBooking.cancelledAt && (
+                    <div>
+                      <span className="block mb-1">Cancelled</span>
+                      <span className="font-medium text-red-700">{formatDateTime(selectedBooking.cancelledAt)}</span>
+                    </div>
+                  )}
+                  {selectedBooking.otpVerifiedAt && (
+                    <div>
+                      <span className="block mb-1">OTP Verified</span>
+                      <span className="font-medium text-blue-700">{formatDateTime(selectedBooking.otpVerifiedAt)}</span>
+                    </div>
+                  )}
+                  {selectedBooking.confirmedAt && (
+                    <div>
+                      <span className="block mb-1">Confirmed</span>
+                      <span className="font-medium text-gray-700">{formatDateTime(selectedBooking.confirmedAt)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 

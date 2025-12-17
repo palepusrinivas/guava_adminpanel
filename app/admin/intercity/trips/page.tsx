@@ -247,10 +247,19 @@ export default function IntercityTripsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {trips.map((trip) => (
-                  <tr key={trip.id}>
+                {trips.map((trip) => {
+                  // Handle both DTO format (tripId) and entity format (id)
+                  const tripId = trip.tripId || trip.id;
+                  const bookedSeats = trip.seatsBooked || trip.bookedSeats || 0;
+                  const totalSeats = trip.totalSeats || 0;
+                  
+                  return (
+                  <tr key={tripId}>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">#{trip.id}</div>
+                      <div className="text-sm font-medium text-gray-900">#{tripId}</div>
+                      {trip.tripCode && (
+                        <div className="text-xs text-gray-500">Code: {trip.tripCode}</div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{trip.vehicleType.replace(/_/g, " ")}</div>
@@ -258,9 +267,16 @@ export default function IntercityTripsPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       {trip.route ? (
                         <div>
-                          <div className="text-sm text-gray-900">{trip.route.routeCode}</div>
+                          <div className="text-sm text-gray-900">{trip.route.routeCode || trip.routeCode}</div>
                           <div className="text-xs text-gray-500">
-                            {trip.route.originName} → {trip.route.destinationName}
+                            {trip.route.originName || trip.originName} → {trip.route.destinationName || trip.destinationName}
+                          </div>
+                        </div>
+                      ) : (trip.routeCode || trip.originName) ? (
+                        <div>
+                          <div className="text-sm text-gray-900">{trip.routeCode || "N/A"}</div>
+                          <div className="text-xs text-gray-500">
+                            {trip.originName} → {trip.destinationName}
                           </div>
                         </div>
                       ) : (
@@ -277,21 +293,32 @@ export default function IntercityTripsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {trip.bookedSeats} / {trip.totalSeats}
+                        {bookedSeats} / {totalSeats}
                       </div>
-                      <div className="w-20 h-2 bg-gray-200 rounded-full mt-1">
-                        <div
-                          className="h-2 bg-teal-500 rounded-full"
-                          style={{ width: `${(trip.bookedSeats / trip.totalSeats) * 100}%` }}
-                        ></div>
-                      </div>
+                      {totalSeats > 0 && (
+                        <div className="w-20 h-2 bg-gray-200 rounded-full mt-1">
+                          <div
+                            className="h-2 bg-teal-500 rounded-full"
+                            style={{ width: `${(bookedSeats / totalSeats) * 100}%` }}
+                          ></div>
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {trip.driverName ? (
                         <div>
-                          <div className="text-sm text-gray-900">{trip.driverName}</div>
+                          <div className="text-sm font-medium text-gray-900">{trip.driverName}</div>
+                          {trip.driverPhone && (
+                            <div className="text-xs text-gray-500">📞 {trip.driverPhone}</div>
+                          )}
                           {trip.vehicleNumber && (
-                            <div className="text-xs text-gray-500">{trip.vehicleNumber}</div>
+                            <div className="text-xs text-gray-500">🚗 {trip.vehicleNumber}</div>
+                          )}
+                          {trip.vehicleModel && (
+                            <div className="text-xs text-gray-500">{trip.vehicleModel}</div>
+                          )}
+                          {trip.driverRating && (
+                            <div className="text-xs text-yellow-600">⭐ {trip.driverRating.toFixed(1)}</div>
                           )}
                         </div>
                       ) : (
@@ -319,7 +346,7 @@ export default function IntercityTripsPage() {
                       </button>
                       {trip.status === "FILLING" && (
                         <button
-                          onClick={() => handleDispatch(trip.id)}
+                          onClick={() => handleDispatch(tripId)}
                           className="text-teal-600 hover:text-teal-900 mr-3"
                         >
                           Dispatch
@@ -327,7 +354,7 @@ export default function IntercityTripsPage() {
                       )}
                       {(trip.status === "SCHEDULED" || trip.status === "FILLING") && (
                         <button
-                          onClick={() => handleOpenCancelModal(trip.id)}
+                          onClick={() => handleOpenCancelModal(tripId)}
                           className="text-red-600 hover:text-red-900"
                         >
                           Cancel
@@ -341,7 +368,8 @@ export default function IntercityTripsPage() {
                       )}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

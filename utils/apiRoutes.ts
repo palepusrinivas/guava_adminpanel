@@ -70,6 +70,12 @@ export const adminLegalDocumentByIdUrl = (id: string) => getApiUrl(config.ENDPOI
 export const adminLegalDocumentActiveUrl = getApiUrl(config.ENDPOINTS.ADMIN.LEGAL_DOCUMENT_ACTIVE);
 export const adminLegalDocumentActivateUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.LEGAL_DOCUMENT_ACTIVATE.replace(':id', id));
 export const adminLegalDocumentDeactivateUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.LEGAL_DOCUMENT_DEACTIVATE.replace(':id', id));
+export const adminMailServerUrl = getApiUrl(config.ENDPOINTS.ADMIN.MAIL_SERVER);
+export const adminMailServerByIdUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.MAIL_SERVER_BY_ID.replace(':id', id));
+export const adminMailServerActiveUrl = getApiUrl(config.ENDPOINTS.ADMIN.MAIL_SERVER_ACTIVE);
+export const adminMailServerTestConnectionUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.MAIL_SERVER_TEST_CONNECTION.replace(':id', id));
+export const adminMailServerTestEmailUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.MAIL_SERVER_TEST_EMAIL.replace(':id', id));
+export const adminMailServerTestConnectionDirectUrl = getApiUrl(config.ENDPOINTS.ADMIN.MAIL_SERVER_TEST_CONNECTION_DIRECT);
 export const adminServicesUrl = getApiUrl(config.ENDPOINTS.ADMIN.SERVICES);
 export const adminServiceByIdUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.SERVICE_BY_ID.replace(':id', id));
 export const adminServicesStatsUrl = getApiUrl(config.ENDPOINTS.ADMIN.SERVICES_STATS);
