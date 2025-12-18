@@ -49,6 +49,9 @@ export interface Vehicle {
   vehicleBrand?: string;
   vehicleModel?: string;
   vehicleCategory?: string;
+  vehicleType?: string; // Vehicle type (e.g., "two_wheeler", "three_wheeler", "four_wheeler")
+  serviceType?: string; // Service type (e.g., "BIKE", "MEGA", "CAR", "SMALL_SEDAN")
+  type?: string; // Generic type field (legacy support)
   licensePlate?: string;
   licenseExpiryDate?: string;
   vinNumber?: string;
