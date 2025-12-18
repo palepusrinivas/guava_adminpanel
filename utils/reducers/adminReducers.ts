@@ -947,7 +947,7 @@ export const deleteBanner = createAsyncThunk(
 // Legal Documents Management (Privacy Policy & Terms & Conditions)
 export const getLegalDocuments = createAsyncThunk(
   "admin/getLegalDocuments",
-  async (params?: { documentType?: string; targetAudience?: string }, { rejectWithValue }) => {
+  async (params: { documentType?: string; targetAudience?: string } = {}, { rejectWithValue }) => {
     try {
       const response = await adminAxios.get(adminLegalDocumentsUrl, { params });
       return response.data;

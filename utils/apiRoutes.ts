@@ -27,6 +27,10 @@ export const adminPricingZonesRulesUrl = (zoneId: string) => getApiUrl(config.EN
 export const adminPricingProfilesUrl = getApiUrl(config.ENDPOINTS.ADMIN.PRICING_PROFILES);
 export const adminPricingProfilesServiceRatesUrl = (profileId: string) => getApiUrl(config.ENDPOINTS.ADMIN.PRICING_PROFILES_SERVICE_RATES.replace(':profileId', profileId));
 export const adminPricingProfilesActivateUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.PRICING_PROFILES_ACTIVATE.replace(':id', id));
+// Tiered pricing
+export const adminPricingTiersUrl = getApiUrl(config.ENDPOINTS.ADMIN.PRICING_TIERS);
+export const adminPricingTiersByServiceUrl = (serviceType: string) => getApiUrl(config.ENDPOINTS.ADMIN.PRICING_TIERS_BY_SERVICE.replace(':serviceType', serviceType));
+export const adminPricingTiersBulkUpdateUrl = (serviceType: string) => getApiUrl(config.ENDPOINTS.ADMIN.PRICING_TIERS_BULK_UPDATE.replace(':serviceType', serviceType));
 export const adminUsersUrl = getApiUrl(config.ENDPOINTS.ADMIN.USERS);
 export const adminUserByIdUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.USER_BY_ID.replace(':id', id));
 export const adminDriversUrl = getApiUrl(config.ENDPOINTS.ADMIN.DRIVERS);

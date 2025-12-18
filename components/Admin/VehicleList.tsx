@@ -5,13 +5,116 @@ import { getVehicles, updateVehicle } from "@/utils/reducers/adminReducers";
 import { setVehicleFilter, setVehicleSearchQuery } from "@/utils/slices/vehicleSlice";
 import { useRouter } from "next/navigation";
 
+// Comprehensive vehicle type icon mapping
 const vehicleTypeIcons: Record<string, string> = {
+  // Old format (legacy)
   Auto: "🛺",
   Mega: "🛺",
   "Small Car / Sedan": "🚗",
   "Bike.": "🏍️",
   "Mahila Ride": "🛵",
   "Car (XL SUV)-(MUV)": "🚙",
+  
+  // New format - Vehicle Types
+  "two_wheeler": "🏍️",
+  "two-wheeler": "🏍️",
+  "TWO_WHEELER": "🏍️",
+  "Two Wheeler": "🏍️",
+  "two wheeler": "🏍️",
+  
+  "three_wheeler": "🛺",
+  "three-wheeler": "🛺",
+  "THREE_WHEELER": "🛺",
+  "Three Wheeler": "🛺",
+  "three wheeler": "🛺",
+  
+  "four_wheeler": "🚗",
+  "four-wheeler": "🚗",
+  "FOUR_WHEELER": "🚗",
+  "Four Wheeler": "🚗",
+  "four wheeler": "🚗",
+  
+  "four_wheeler_premium": "🚙",
+  "four-wheeler-premium": "🚙",
+  "FOUR_WHEELER_PREMIUM": "🚙",
+  "Four Wheeler Premium": "🚙",
+  "four wheeler premium": "🚙",
+  
+  // Service Types
+  "BIKE": "🏍️",
+  "bike": "🏍️",
+  "Bike": "🏍️",
+  
+  "MEGA": "🛺",
+  "mega": "🛺",
+  "Mega": "🛺",
+  
+  "CAR": "🚗",
+  "car": "🚗",
+  "Car": "🚗",
+  
+  "SMALL_SEDAN": "🚗",
+  "small_sedan": "🚗",
+  "SMALL-SEDAN": "🚗",
+  "small-sedan": "🚗",
+  "Small Sedan": "🚗",
+  "small sedan": "🚗",
+  "Sedan": "🚗",
+  "sedan": "🚗",
+  
+  // Additional variations
+  "SUV": "🚙",
+  "suv": "🚙",
+  "XL": "🚙",
+  "xl": "🚙",
+  "Premium": "🚙",
+  "premium": "🚙",
+  "Luxury": "🚙",
+  "luxury": "🚙",
+};
+
+// Helper function to get vehicle icon from multiple possible fields
+const getVehicleIcon = (vehicle: any): string => {
+  // Check multiple fields in order of preference
+  const typeValue = 
+    vehicle?.vehicleCategory || 
+    vehicle?.vehicleType || 
+    vehicle?.serviceType || 
+    vehicle?.type || 
+    "";
+  
+  if (!typeValue) return "🚗"; // Default to car
+  
+  // Normalize the value (trim, lowercase for matching)
+  const normalized = typeValue.toString().trim();
+  const lowerNormalized = normalized.toLowerCase();
+  
+  // Try exact match first
+  if (vehicleTypeIcons[normalized]) {
+    return vehicleTypeIcons[normalized];
+  }
+  
+  // Try case-insensitive match
+  if (vehicleTypeIcons[lowerNormalized]) {
+    return vehicleTypeIcons[lowerNormalized];
+  }
+  
+  // Try partial matching for common patterns
+  if (lowerNormalized.includes("bike") || lowerNormalized.includes("two")) {
+    return "🏍️";
+  }
+  if (lowerNormalized.includes("auto") || lowerNormalized.includes("three") || lowerNormalized.includes("mega") || lowerNormalized.includes("rickshaw")) {
+    return "🛺";
+  }
+  if (lowerNormalized.includes("suv") || lowerNormalized.includes("xl") || lowerNormalized.includes("premium") || lowerNormalized.includes("luxury")) {
+    return "🚙";
+  }
+  if (lowerNormalized.includes("car") || lowerNormalized.includes("four") || lowerNormalized.includes("sedan")) {
+    return "🚗";
+  }
+  
+  // Default fallback
+  return "🚗";
 };
 
 export default function VehicleList() {
@@ -44,7 +147,8 @@ export default function VehicleList() {
   const vehicleTypeSummary = useMemo(() => {
     const summary: Record<string, number> = {};
     vehicles.forEach((v) => {
-      const type = v.vehicleCategory || "Other";
+      // Get the type from multiple possible fields
+      const type = v.vehicleCategory || v.vehicleType || v.serviceType || v.type || "Other";
       summary[type] = (summary[type] || 0) + 1;
     });
     return summary;
@@ -75,7 +179,7 @@ export default function VehicleList() {
               <div className="text-sm text-gray-600 mb-1">{type}</div>
               <div className="text-2xl font-bold text-gray-900">{count}</div>
             </div>
-            <div className="text-4xl">{vehicleTypeIcons[type] || "🚗"}</div>
+            <div className="text-4xl">{getVehicleIcon({ vehicleCategory: type, vehicleType: type, serviceType: type })}</div>
           </div>
         ))}
         {/* Fallback for empty state */}
@@ -250,7 +354,7 @@ export default function VehicleList() {
                     <td className="px-4 py-3">{vehicle.driverName || "-"}</td>
                     <td className="px-4 py-3">
                       <div className="w-10 h-10 bg-yellow-100 rounded flex items-center justify-center">
-                        {vehicleTypeIcons[vehicle.vehicleCategory || ""] || "🚗"}
+                        {getVehicleIcon(vehicle)}
                       </div>
                     </td>
                     <td className="px-4 py-3">

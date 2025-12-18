@@ -158,6 +158,7 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
           children: [
             { name: "Driver List", href: "/admin/driver-setup" },
             { name: "Add New Driver", href: "/admin/driver-setup/new" },
+            { name: "Driver Registration", href: "/driver/register", icon: "📝" },
             { name: "Driver Identity Request List", href: "/admin/driver-setup/identity-requests" },
             { name: "Driver Access Rules", href: "/admin/driver-access" },
           ],

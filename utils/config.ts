@@ -78,6 +78,10 @@ export const config = {
       PRICING_PROFILES: "/api/admin/pricing/profiles",
       PRICING_PROFILES_SERVICE_RATES: "/api/admin/pricing/profiles/:profileId/service-rates",
       PRICING_PROFILES_ACTIVATE: "/api/admin/pricing/profiles/:id/activate",
+      // Tiered pricing endpoints
+      PRICING_TIERS: "/api/admin/pricing/tiers",
+      PRICING_TIERS_BY_SERVICE: "/api/admin/pricing/tiers/service/:serviceType",
+      PRICING_TIERS_BULK_UPDATE: "/api/admin/pricing/tiers/service/:serviceType",
       USERS: "/api/admin/users",
       USER_BY_ID: "/api/admin/users/:id",
       DRIVERS: "/api/admin/drivers",

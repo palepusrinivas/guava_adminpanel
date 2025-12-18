@@ -2,7 +2,7 @@
 import { West } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { TextField, Button } from "@mui/material";
+import { TextField, Button, MenuItem, FormControl, InputLabel, Select, FormHelperText } from "@mui/material";
 import { useFormik } from "formik";
 import * as yup from "yup";
 import { useAppDispatch, useAppSelector } from "@/utils/store/store";
@@ -11,7 +11,24 @@ import toast from "react-hot-toast";
 import { registerDriver, registerUser } from "@/utils/reducers/authReducers";
 import { CircularProgressBar } from "../CustomLoader";
 
+// Vehicle type options
+const VEHICLE_TYPES = [
+  { value: "two_wheeler", label: "Two Wheeler (Bike)" },
+  { value: "three_wheeler", label: "Three Wheeler (Auto)" },
+  { value: "four_wheeler", label: "Four Wheeler (Car)" },
+  { value: "four_wheeler_premium", label: "Four Wheeler Premium" },
+];
+
+// Service type options
+const SERVICE_TYPES = [
+  { value: "BIKE", label: "BIKE" },
+  { value: "MEGA", label: "MEGA" },
+  { value: "SMALL_SEDAN", label: "SMALL_SEDAN" },
+  { value: "CAR", label: "CAR" },
+];
+
 const validationSchema = yup.object().shape({
+  // Required fields (as per backend)
   name: yup.string().required("Name is required"),
   mobile: yup.string().required("Mobile number is required"),
   email: yup
@@ -23,17 +40,28 @@ const validationSchema = yup.object().shape({
     .string()
     .min(8, "Password should be at least 8 characters")
     .required("Password is required"),
-  licenseNumber: yup.string().required("License number is required"),
-  licenseState: yup.string().required("License state is required"),
-  licenseExpirationDate: yup
-    .string()
-    .required("License expiration date is required"),
-  company: yup.string().required("Vehicle company is required"),
-  model: yup.string().required("Vehicle model is required"),
-  color: yup.string().required("Vehicle color is required"),
-  capacity: yup.number().min(1, "Capacity must be at least 1").required("Vehicle capacity is required"),
-  year: yup.number().min(1900, "Year must be after 1900").max(new Date().getFullYear() + 1, "Year cannot be in the future").required("Vehicle year is required"),
-  licensePlate: yup.string().required("License plate number is required"),
+  
+  // Optional fields - License (as per backend documentation)
+  licenseNumber: yup.string(),
+  licenseState: yup.string(),
+  licenseExpirationDate: yup.string(),
+  
+  // Optional fields - Vehicle (as per backend documentation)
+  company: yup.string(),
+  model: yup.string(),
+  color: yup.string(),
+  capacity: yup.number().min(1, "Capacity must be at least 1"),
+  year: yup.number().min(1900, "Year must be after 1900").max(new Date().getFullYear() + 1, "Year cannot be in the future"),
+  licensePlate: yup.string(),
+  vehicleType: yup.string(),
+  serviceType: yup.string(),
+  
+  // Optional fields - Bank Details (as per backend documentation)
+  accountHolderName: yup.string(),
+  bankName: yup.string(),
+  accountNumber: yup.string(),
+  ifscCode: yup.string(),
+  upiId: yup.string(),
 });
 function RegisterDriverForm() {
   const [location, setLocation] = useState({
@@ -43,6 +71,25 @@ function RegisterDriverForm() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector((state) => state.auth.isLoading);
+  
+  // Get location on component mount (optional, as per backend)
+  React.useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.warn("Location not available:", error.message);
+          // Don't block - location is optional
+        }
+      );
+    }
+  }, []);
+  
   const goBack = () => {
     router.back();
   };
@@ -53,15 +100,25 @@ function RegisterDriverForm() {
       name: "",
       mobile: "",
       location: "",
+      // License fields (optional)
       licenseNumber: "",
       licenseState: "",
       licenseExpirationDate: "",
+      // Vehicle fields (optional)
       company: "",
       model: "",
       color: "",
       year: 0,
       capacity: 0,
       licensePlate: "",
+      vehicleType: "",
+      serviceType: "",
+      // Bank details (optional)
+      accountHolderName: "",
+      bankName: "",
+      accountNumber: "",
+      ifscCode: "",
+      upiId: "",
     },
     validationSchema,
     onSubmit: async (values) => {
@@ -72,66 +129,109 @@ function RegisterDriverForm() {
         name,
         licenseExpirationDate,
         licenseNumber,
+        licenseState,
         capacity,
         color,
         company,
         model,
         year,
         licensePlate,
-        licenseState,
+        vehicleType,
+        serviceType,
+        accountHolderName,
+        bankName,
+        accountNumber,
+        ifscCode,
+        upiId,
       } = values;
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          });
-        },
-        (error) => {
-          console.error("error getting current location");
-          toast.error("Error Getting current location");
-          return;
-        }
-      );
+      
       if (formik.isValid) {
-        const driverData = {
-          name: name,
-          email: email,
+        // Build driver data according to backend DriverSignUpRequest structure
+        const driverData: any = {
+          name: name.trim(),
+          email: email.trim(),
           password: password,
-          mobile: mobile,
-          latitude: location.latitude,
-          longitude: location.longitude,
-          license: {
-            id: 0, // This will be set by the backend
-            licenseNumber: licenseNumber,
-            licenseState: licenseState,
-            licenseExpirationDate: licenseExpirationDate,
-          },
-          vehicle: {
-            id: 0, // This will be set by the backend
-            company: company,
-            model: model,
-            color: color,
-            year: year,
-            licensePlate: licensePlate,
-            capacity: capacity,
-          },
+          mobile: mobile.trim(),
         };
+        
+        // Add location if available (optional)
+        if (location.latitude !== 0 && location.longitude !== 0) {
+          driverData.latitude = location.latitude;
+          driverData.longitude = location.longitude;
+        }
+        
+        // Add license if provided (optional)
+        if (licenseNumber && licenseNumber.trim() !== "") {
+          driverData.license = {
+            licenseNumber: licenseNumber.trim(),
+            licenseState: licenseState?.trim() || "",
+            licenseExpirationDate: licenseExpirationDate || null,
+          };
+        }
+        
+        // Add vehicle if provided (optional)
+        if (licensePlate && licensePlate.trim() !== "") {
+          const vehicle: any = {
+            licensePlate: licensePlate.trim(),
+          };
+          
+          if (company && company.trim() !== "") vehicle.company = company.trim();
+          if (model && model.trim() !== "") vehicle.model = model.trim();
+          if (color && color.trim() !== "") vehicle.color = color.trim();
+          if (year && year > 0) vehicle.year = year;
+          if (capacity && capacity > 0) vehicle.capacity = capacity;
+          if (vehicleType && vehicleType.trim() !== "") vehicle.vehicleType = vehicleType.trim();
+          if (serviceType && serviceType.trim() !== "") vehicle.serviceType = serviceType.trim();
+          
+          driverData.vehicle = vehicle;
+        }
+        
+        // Add flat vehicle fields for Flutter compatibility (if vehicle type provided)
+        if (vehicleType && vehicleType.trim() !== "") {
+          driverData.vehicleType = vehicleType.trim();
+        }
+        if (serviceType && serviceType.trim() !== "") {
+          driverData.serviceType = serviceType.trim();
+        }
+        if (licensePlate && licensePlate.trim() !== "") {
+          driverData.vehicleNumber = licensePlate.trim();
+          driverData.licensePlate = licensePlate.trim();
+        }
+        if (licenseNumber && licenseNumber.trim() !== "") {
+          driverData.licenseNumber = licenseNumber.trim();
+        }
+        
+        // Add bank details if provided (optional)
+        if (accountHolderName && accountHolderName.trim() !== "") {
+          driverData.accountHolderName = accountHolderName.trim();
+        }
+        if (bankName && bankName.trim() !== "") {
+          driverData.bankName = bankName.trim();
+        }
+        if (accountNumber && accountNumber.trim() !== "") {
+          driverData.accountNumber = accountNumber.trim();
+        }
+        if (ifscCode && ifscCode.trim() !== "") {
+          driverData.ifscCode = ifscCode.trim();
+        }
+        if (upiId && upiId.trim() !== "") {
+          driverData.upiId = upiId.trim();
+        }
+        
         try {
           const response = await dispatch(registerDriver(driverData));
-          // registerUser({ name,email, password, mobile, })
-          if (response.payload.error) {
-            toast.error(response.payload.message);
+          if (response.payload?.error) {
+            toast.error(response.payload.message || "Registration failed");
           } else if (response.payload === "Internal Server Error") {
-            toast.error(response.payload);
+            toast.error("Internal Server Error");
           } else {
             toast.success(
-              response.payload.message || "Registered Successfully"
+              response.payload?.message || "Registered Successfully"
             );
             router.push("/login");
           }
-        } catch (error) {
-          toast.error("An error occured while registering");
+        } catch (error: any) {
+          toast.error(error?.message || "An error occurred while registering");
         }
       }
     },
@@ -213,7 +313,7 @@ function RegisterDriverForm() {
             sx={sx}
           />
           <label className="flex justify-center my-2 font-semibold">
-            Driving License Details
+            Driving License Details <span className="text-gray-500 text-sm">(Optional)</span>
           </label>
           <TextField
             label="Driving License Number"
@@ -222,7 +322,7 @@ function RegisterDriverForm() {
             variant="outlined"
             fullWidth
             margin="normal"
-            placeholder="AB245"
+            placeholder="DL1234567890"
             value={formik.values.licenseNumber}
             onChange={formik.handleChange}
             error={
@@ -241,7 +341,7 @@ function RegisterDriverForm() {
             variant="outlined"
             fullWidth
             margin="normal"
-            placeholder="London"
+            placeholder="Telangana"
             value={formik.values.licenseState}
             onChange={formik.handleChange}
             error={
@@ -275,7 +375,7 @@ function RegisterDriverForm() {
           />
 
           <label className="flex justify-center my-2 font-semibold">
-            Vehicle Details
+            Vehicle Details <span className="text-gray-500 text-sm">(Optional)</span>
           </label>
           <TextField
             label="Vehicle company"
@@ -356,6 +456,56 @@ function RegisterDriverForm() {
               sx={sx}
             />
           </div>
+          <div className="flex gap-2">
+            <FormControl
+              fullWidth
+              margin="normal"
+              error={formik.touched.vehicleType && Boolean(formik.errors.vehicleType)}
+              sx={sx}
+            >
+              <InputLabel>Vehicle Type</InputLabel>
+              <Select
+                name="vehicleType"
+                value={formik.values.vehicleType}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                label="Vehicle Type"
+              >
+                {VEHICLE_TYPES.map((type) => (
+                  <MenuItem key={type.value} value={type.value}>
+                    {type.label}
+                  </MenuItem>
+                ))}
+              </Select>
+              {formik.touched.vehicleType && formik.errors.vehicleType && (
+                <FormHelperText>{formik.errors.vehicleType}</FormHelperText>
+              )}
+            </FormControl>
+            <FormControl
+              fullWidth
+              margin="normal"
+              error={formik.touched.serviceType && Boolean(formik.errors.serviceType)}
+              sx={sx}
+            >
+              <InputLabel>Service Type</InputLabel>
+              <Select
+                name="serviceType"
+                value={formik.values.serviceType}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                label="Service Type"
+              >
+                {SERVICE_TYPES.map((type) => (
+                  <MenuItem key={type.value} value={type.value}>
+                    {type.label}
+                  </MenuItem>
+                ))}
+              </Select>
+              {formik.touched.serviceType && formik.errors.serviceType && (
+                <FormHelperText>{formik.errors.serviceType}</FormHelperText>
+              )}
+            </FormControl>
+          </div>
           <TextField
             label="Vehicle Plate Number"
             name="licensePlate"
@@ -374,6 +524,85 @@ function RegisterDriverForm() {
             }
             sx={sx}
           />
+          
+          <label className="flex justify-center my-2 font-semibold">
+            Bank Details <span className="text-gray-500 text-sm">(Optional)</span>
+          </label>
+          <TextField
+            label="Account Holder Name"
+            name="accountHolderName"
+            type="text"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+            placeholder="Driver Name"
+            value={formik.values.accountHolderName}
+            onChange={formik.handleChange}
+            error={formik.touched.accountHolderName && Boolean(formik.errors.accountHolderName)}
+            helperText={formik.touched.accountHolderName && formik.errors.accountHolderName}
+            sx={sx}
+          />
+          <div className="flex gap-2">
+            <TextField
+              label="Bank Name"
+              name="bankName"
+              type="text"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              placeholder="HDFC Bank"
+              value={formik.values.bankName}
+              onChange={formik.handleChange}
+              error={formik.touched.bankName && Boolean(formik.errors.bankName)}
+              helperText={formik.touched.bankName && formik.errors.bankName}
+              sx={sx}
+            />
+            <TextField
+              label="Account Number"
+              name="accountNumber"
+              type="text"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              placeholder="1234567890"
+              value={formik.values.accountNumber}
+              onChange={formik.handleChange}
+              error={formik.touched.accountNumber && Boolean(formik.errors.accountNumber)}
+              helperText={formik.touched.accountNumber && formik.errors.accountNumber}
+              sx={sx}
+            />
+          </div>
+          <div className="flex gap-2">
+            <TextField
+              label="IFSC Code"
+              name="ifscCode"
+              type="text"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              placeholder="HDFC0001234"
+              value={formik.values.ifscCode}
+              onChange={formik.handleChange}
+              error={formik.touched.ifscCode && Boolean(formik.errors.ifscCode)}
+              helperText={formik.touched.ifscCode && formik.errors.ifscCode}
+              sx={sx}
+            />
+            <TextField
+              label="UPI ID"
+              name="upiId"
+              type="text"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              placeholder="driver@upi"
+              value={formik.values.upiId}
+              onChange={formik.handleChange}
+              error={formik.touched.upiId && Boolean(formik.errors.upiId)}
+              helperText={formik.touched.upiId && formik.errors.upiId}
+              sx={sx}
+            />
+          </div>
+          
           <Button
             sx={{ padding: ".9rem 0rem" }}
             variant="contained"

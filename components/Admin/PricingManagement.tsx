@@ -102,8 +102,8 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
     firstRideCashbackPercent: null,
     walletUsageCapPercent: null,
     walletCreditValidityDays: null,
-    nightStartHour: 22,
-    nightEndHour: 6,
+    nightStartHour: 21, // 9 PM as per rate card
+    nightEndHour: 5,   // 5 AM as per rate card
     minPayoutAmount: null,
     payoutFeeFlat: null,
     payoutFeePercent: null,
@@ -263,7 +263,7 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
                   {formik.touched.autoNightSurchargePercent && formik.errors.autoNightSurchargePercent && (
                     <p className="mt-1 text-sm text-red-600">{formik.errors.autoNightSurchargePercent}</p>
                   )}
-                  <p className="mt-1 text-sm text-gray-500">Percentage surcharge during night hours</p>
+                  <p className="mt-1 text-sm text-gray-500">Percentage surcharge during night hours (15-25% as per rate card)</p>
                 </div>
 
                 <div>
@@ -338,7 +338,7 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
                   {formik.touched.bikeNightSurchargePercent && formik.errors.bikeNightSurchargePercent && (
                     <p className="mt-1 text-sm text-red-600">{formik.errors.bikeNightSurchargePercent}</p>
                   )}
-                  <p className="mt-1 text-sm text-gray-500">Percentage surcharge during night hours</p>
+                  <p className="mt-1 text-sm text-gray-500">Percentage surcharge during night hours (15-25% as per rate card)</p>
                 </div>
               </div>
             </div>
@@ -390,7 +390,7 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
                   {formik.touched.carNightSurchargePercent && formik.errors.carNightSurchargePercent && (
                     <p className="mt-1 text-sm text-red-600">{formik.errors.carNightSurchargePercent}</p>
                   )}
-                  <p className="mt-1 text-sm text-gray-500">Percentage surcharge during night hours</p>
+                  <p className="mt-1 text-sm text-gray-500">Percentage surcharge during night hours (15-25% as per rate card)</p>
                 </div>
               </div>
             </div>
@@ -517,7 +517,7 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
                   {formik.touched.nightStartHour && formik.errors.nightStartHour && (
                     <p className="mt-1 text-sm text-red-600">{formik.errors.nightStartHour}</p>
                   )}
-                  <p className="mt-1 text-sm text-gray-500">Hour when night surcharge starts (0-23)</p>
+                  <p className="mt-1 text-sm text-gray-500">Hour when night surcharge starts (0-23). Default: 21 (9 PM)</p>
                 </div>
 
                 <div>
@@ -541,7 +541,7 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
                   {formik.touched.nightEndHour && formik.errors.nightEndHour && (
                     <p className="mt-1 text-sm text-red-600">{formik.errors.nightEndHour}</p>
                   )}
-                  <p className="mt-1 text-sm text-gray-500">Hour when night surcharge ends (0-23)</p>
+                  <p className="mt-1 text-sm text-gray-500">Hour when night surcharge ends (0-23). Default: 5 (5 AM)</p>
                 </div>
               </div>
             </div>
