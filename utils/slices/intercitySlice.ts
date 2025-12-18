@@ -158,8 +158,6 @@ export interface IntercityBooking {
   cancelledAt?: string;
   createdAt: string;
   updatedAt: string;
-  // Additional fields from backend DTO
-  otpVerifiedAt?: string;
   // User details (new structure from backend)
   user?: {
     userId: string; // UUID as String
