@@ -80,6 +80,15 @@ export const adminMailServerActiveUrl = getApiUrl(config.ENDPOINTS.ADMIN.MAIL_SE
 export const adminMailServerTestConnectionUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.MAIL_SERVER_TEST_CONNECTION.replace(':id', id));
 export const adminMailServerTestEmailUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.MAIL_SERVER_TEST_EMAIL.replace(':id', id));
 export const adminMailServerTestConnectionDirectUrl = getApiUrl(config.ENDPOINTS.ADMIN.MAIL_SERVER_TEST_CONNECTION_DIRECT);
+export const adminGoogleDriveUrl = getApiUrl(config.ENDPOINTS.ADMIN.GOOGLE_DRIVE);
+export const adminGoogleDriveByIdUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.GOOGLE_DRIVE_BY_ID.replace(':id', id));
+export const adminGoogleDriveActiveUrl = getApiUrl(config.ENDPOINTS.ADMIN.GOOGLE_DRIVE_ACTIVE);
+export const adminGoogleDriveTestUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.GOOGLE_DRIVE_TEST.replace(':id', id));
+export const adminInvoicesUrl = getApiUrl(config.ENDPOINTS.ADMIN.INVOICES);
+export const adminInvoiceByIdUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.INVOICES_BY_ID.replace(':id', id));
+export const adminInvoiceDownloadUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.INVOICES_DOWNLOAD.replace(':id', id));
+export const adminInvoicesDateRangeUrl = getApiUrl(config.ENDPOINTS.ADMIN.INVOICES_DATE_RANGE);
+export const adminInvoicesRetryUploadsUrl = getApiUrl(config.ENDPOINTS.ADMIN.INVOICES_RETRY_UPLOADS);
 export const adminServicesUrl = getApiUrl(config.ENDPOINTS.ADMIN.SERVICES);
 export const adminServiceByIdUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.SERVICE_BY_ID.replace(':id', id));
 export const adminServicesStatsUrl = getApiUrl(config.ENDPOINTS.ADMIN.SERVICES_STATS);

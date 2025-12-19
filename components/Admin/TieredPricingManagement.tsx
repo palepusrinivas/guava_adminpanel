@@ -39,7 +39,7 @@ import { adminPricingTiersByServiceUrl, adminPricingTiersUrl, adminPricingTiersB
 
 interface PricingTier {
   id?: number;
-  serviceType: "BIKE" | "MEGA" | "SMALL_SEDAN" | "CAR";
+  serviceType: "BIKE" | "MEGA" | "AUTO" | "SMALL_SEDAN" | "CAR";
   distanceFromKm: number;
   distanceToKm: number | null; // null means "above this"
   ratePerKm: number;
@@ -50,12 +50,13 @@ interface PricingTier {
 
 const SERVICE_TYPES = [
   { value: "BIKE", label: "🏍️ Bike" },
-  { value: "MEGA", label: "🛺 Auto/Mega (Three Wheeler)" },
+  { value: "MEGA", label: "🛺 Mega (Three Wheeler)" },
+  { value: "AUTO", label: "🛺 Auto (Three Wheeler)" },
   { value: "SMALL_SEDAN", label: "🚙 Small Sedan" },
   { value: "CAR", label: "🚗 Car" },
 ];
 
-type ServiceTypeValue = "BIKE" | "MEGA" | "SMALL_SEDAN" | "CAR";
+type ServiceTypeValue = "BIKE" | "MEGA" | "AUTO" | "SMALL_SEDAN" | "CAR";
 
 export default function TieredPricingManagement() {
   const [selectedServiceType, setSelectedServiceType] = useState<ServiceTypeValue>("BIKE");
@@ -69,11 +70,13 @@ export default function TieredPricingManagement() {
   const [allTiers, setAllTiers] = useState<{
     BIKE: PricingTier[];
     MEGA: PricingTier[];
+    AUTO: PricingTier[];
     SMALL_SEDAN: PricingTier[];
     CAR: PricingTier[];
   }>({
     BIKE: [],
     MEGA: [],
+    AUTO: [],
     SMALL_SEDAN: [],
     CAR: [],
   });
@@ -91,6 +94,12 @@ export default function TieredPricingManagement() {
       { serviceType: "MEGA", distanceFromKm: 2, distanceToKm: 6, ratePerKm: 15, baseFare: null, displayOrder: 2, isActive: true },
       { serviceType: "MEGA", distanceFromKm: 6, distanceToKm: 8, ratePerKm: 16, baseFare: null, displayOrder: 3, isActive: true },
       { serviceType: "MEGA", distanceFromKm: 8, distanceToKm: null, ratePerKm: 18, baseFare: null, displayOrder: 4, isActive: true },
+    ],
+    AUTO: [ // AUTO (Three Wheeler) - same as MEGA
+      { serviceType: "AUTO", distanceFromKm: 0, distanceToKm: 2, ratePerKm: 0, baseFare: 45, displayOrder: 1, isActive: true },
+      { serviceType: "AUTO", distanceFromKm: 2, distanceToKm: 6, ratePerKm: 15, baseFare: null, displayOrder: 2, isActive: true },
+      { serviceType: "AUTO", distanceFromKm: 6, distanceToKm: 8, ratePerKm: 16, baseFare: null, displayOrder: 3, isActive: true },
+      { serviceType: "AUTO", distanceFromKm: 8, distanceToKm: null, ratePerKm: 18, baseFare: null, displayOrder: 4, isActive: true },
     ],
     SMALL_SEDAN: [ // Small Sedan - can use CAR rates as default or customize
       { serviceType: "SMALL_SEDAN", distanceFromKm: 0, distanceToKm: 2, ratePerKm: 0, baseFare: 75, displayOrder: 1, isActive: true },
@@ -120,16 +129,24 @@ export default function TieredPricingManagement() {
     setLoading(true);
     try {
       // Fetch tiers for all service types
-      const [bikeResponse, megaResponse, sedanResponse, carResponse] = await Promise.all([
+      const [bikeResponse, megaResponse, autoResponse, sedanResponse, carResponse] = await Promise.all([
         adminAxios.get(adminPricingTiersByServiceUrl("BIKE")).catch(() => ({ data: [] })),
         adminAxios.get(adminPricingTiersByServiceUrl("MEGA")).catch(() => ({ data: [] })),
+        adminAxios.get(adminPricingTiersByServiceUrl("AUTO")).catch(() => ({ data: [] })),
         adminAxios.get(adminPricingTiersByServiceUrl("SMALL_SEDAN")).catch(() => ({ data: [] })),
         adminAxios.get(adminPricingTiersByServiceUrl("CAR")).catch(() => ({ data: [] })),
       ]);
 
-      const updatedTiers = {
+      const updatedTiers: {
+        BIKE: PricingTier[];
+        MEGA: PricingTier[];
+        AUTO: PricingTier[];
+        SMALL_SEDAN: PricingTier[];
+        CAR: PricingTier[];
+      } = {
         BIKE: bikeResponse.data && bikeResponse.data.length > 0 ? bikeResponse.data : defaultTiers.BIKE,
         MEGA: megaResponse.data && megaResponse.data.length > 0 ? megaResponse.data : defaultTiers.MEGA,
+        AUTO: autoResponse.data && autoResponse.data.length > 0 ? autoResponse.data : defaultTiers.AUTO,
         SMALL_SEDAN: sedanResponse.data && sedanResponse.data.length > 0 ? sedanResponse.data : defaultTiers.SMALL_SEDAN,
         CAR: carResponse.data && carResponse.data.length > 0 ? carResponse.data : defaultTiers.CAR,
       };

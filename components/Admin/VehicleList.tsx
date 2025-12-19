@@ -48,6 +48,10 @@ const vehicleTypeIcons: Record<string, string> = {
   "MEGA": "🛺",
   "mega": "🛺",
   
+  "AUTO": "🛺",
+  "auto": "🛺",
+  
+  
   "CAR": "🚗",
   "car": "🚗",
   "Car": "🚗",

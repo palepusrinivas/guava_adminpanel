@@ -1104,7 +1104,31 @@ export const updateCoupon = createAsyncThunk(
   "admin/updateCoupon",
   async ({ couponId, couponData }: { couponId: string; couponData: any }, { rejectWithValue }) => {
     try {
-      const response = await adminAxios.put(adminCouponByIdUrl(couponId), couponData);
+      // Transform frontend fields to backend fields if needed
+      const backendData: any = { ...couponData };
+      
+      // Normalize code to uppercase if provided
+      if (backendData.code) {
+        backendData.code = backendData.code.toUpperCase().trim();
+      }
+      
+      // Ensure type is uppercase
+      if (backendData.type) {
+        backendData.type = backendData.type.toUpperCase();
+      }
+      
+      // Map legacy fields if present
+      if (backendData.couponType && !backendData.type) {
+        backendData.type = backendData.couponType === "percentage" ? "PERCENT" : 
+                          backendData.couponType === "flat" ? "FLAT" : 
+                          backendData.couponType.toUpperCase();
+      }
+      
+      if (backendData.amount !== undefined && backendData.value === undefined) {
+        backendData.value = backendData.amount;
+      }
+      
+      const response = await adminAxios.put(adminCouponByIdUrl(couponId), backendData);
       return response.data;
     } catch (error) {
       return rejectWithValue(extractErrorMessage(error));

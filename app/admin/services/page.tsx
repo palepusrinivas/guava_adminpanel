@@ -65,6 +65,7 @@ import adminAxios from "@/utils/axiosConfig";
 const SERVICE_TYPES = [
   { value: "BIKE", label: "BIKE" },
   { value: "MEGA", label: "MEGA" },
+  { value: "AUTO", label: "AUTO" },
   { value: "SMALL_SEDAN", label: "SMALL_SEDAN" },
   { value: "CAR", label: "CAR" },
 ];

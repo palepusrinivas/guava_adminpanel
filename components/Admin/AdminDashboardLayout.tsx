@@ -47,6 +47,14 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
         { name: "Dashboard", href: "/admin/dashboard", icon: "📊" },
         { name: "Heat Map", href: "/admin/heat-map", icon: "🗺️" },
         { name: "Fleet View", href: "/admin/fleet-map", icon: "🚗" },
+        {
+          name: "Pricing",
+          icon: "💰",
+          children: [
+            { name: "Pricing Management", href: "/admin/pricing" },
+            { name: "Pricing Breakdown", href: "/admin/pricing/breakdown" },
+          ],
+        },
       ],
     },
     ...(admin && admin.role === "SUPER_ADMIN"
@@ -61,17 +69,6 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
         ],
       }]
       : []),
-    {
-      title: "SYSTEM SETTINGS",
-      items: [
-        { name: "General Settings", href: "/admin/settings", icon: "⚙️" },
-        { name: "API Keys", href: "/admin/settings/api-keys", icon: "🔑" },
-        { name: "Wallet Management", href: "/admin/wallet", icon: "💰" },
-        { name: "Banner Setup", href: "/admin/banner-setup", icon: "🖼️" },
-        { name: "Legal Documents", href: "/admin/legal-documents", icon: "📄" },
-        { name: "Mail Server", href: "/admin/mail-server", icon: "📧" },
-      ],
-    },
     {
       title: "SERVICE MANAGEMENT",
       items: [
@@ -270,15 +267,6 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
           ],
         },
         {
-          name: "Pages & Media",
-          icon: "📄",
-          children: [
-            { name: "Business Pages", href: "/admin/business/pages-media/business-page" },
-            { name: "Landing Page Setup", href: "/admin/business/pages-media/landing-page" },
-            { name: "Social Media Links", href: "/admin/business/pages-media/social-media" },
-          ],
-        },
-        {
           name: "Configurations",
           icon: "⚙️",
           children: [
@@ -289,16 +277,21 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
       ],
     },
     {
+      title: "SYSTEM SETTINGS",
+      items: [
+        { name: "General Settings", href: "/admin/settings", icon: "⚙️" },
+        { name: "API Keys", href: "/admin/settings/api-keys", icon: "🔑" },
+        { name: "Wallet Management", href: "/admin/wallet", icon: "💰" },
+        { name: "Banner Setup", href: "/admin/banner-setup", icon: "🖼️" },
+        { name: "Legal Documents", href: "/admin/legal-documents", icon: "📄" },
+        { name: "Mail Server", href: "/admin/mail-server", icon: "📧" },
+        { name: "Google Drive", href: "/admin/google-drive", icon: "📁" },
+        { name: "Invoices", href: "/admin/invoices", icon: "📄" },
+      ],
+    },
+    {
       title: "OTHER",
       items: [
-        {
-          name: "Pricing",
-          icon: "💰",
-          children: [
-            { name: "Pricing Management", href: "/admin/pricing" },
-            { name: "Pricing Breakdown", href: "/admin/pricing/breakdown" },
-          ],
-        },
         { name: "Fleet", href: "/admin/fleet", icon: "🚛" },
         { name: "Analytics", href: "/admin/analytics", icon: "📈" },
         { name: "Wallet", href: "/admin/wallet", icon: "💳" },
@@ -321,7 +314,6 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
     "Parcel attributes": true,
     "Vehicle Attribute Setup": true,
     "Business Setup": true,
-    "Pages & Media": true,
     "Configurations": true,
     "Pricing": true,
   });
