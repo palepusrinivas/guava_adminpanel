@@ -12,6 +12,7 @@ export interface Trip {
   driverName: string | null;
   driverId?: string;
   tripType: "ride_request" | "parcel";
+  vehicleType?: string; // "BIKE", "CAR", "AUTO", "MEGA", "SMALL_SEDAN", etc.
   status: TripStatus;
   tripCost: number;
   couponDiscount: number;

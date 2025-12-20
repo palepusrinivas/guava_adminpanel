@@ -314,7 +314,7 @@ export default function AdminDashboard() {
                         {driver.name}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {driver.rides} rides • ₹{driver.earnings.toLocaleString()}{" "}
+                        {driver.rides || 0} rides • ₹{(driver.earnings || 0).toLocaleString()}{" "}
                         earned
                       </p>
                     </div>

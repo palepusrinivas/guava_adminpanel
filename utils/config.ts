@@ -4,6 +4,8 @@ export const config = {
   // API Configuration
   // Production (Netlify): Use Azure backend
   API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://gauva-f6f6d9ddagfqc9fw.canadacentral-01.azurewebsites.net",
+  //azure prod url
+  //API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://gauva-f6f6d9ddagfqc9fw.southindia-01.azurewebsites.net",
   // Uncomment below for local development:
    //API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080",
   LOCATIONIQ_API_KEY: process.env.NEXT_PUBLIC_LOCATIONIQ_API_KEY || "pk.1dca78a113a7c45533e83e6c9f2196ae",
