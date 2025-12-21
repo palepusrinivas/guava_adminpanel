@@ -48,7 +48,7 @@ import toast from "react-hot-toast";
 
 interface LegalDocument {
   id?: number;
-  documentType: "PRIVACY_POLICY" | "TERMS_CONDITIONS";
+  documentType: "PRIVACY_POLICY" | "TERMS_CONDITIONS" | "RATE_CARD";
   targetAudience: "USER" | "DRIVER" | "BOTH";
   title: string;
   content: string;
@@ -77,7 +77,7 @@ function LegalDocumentsManagement() {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editingDocument, setEditingDocument] = useState<LegalDocument | null>(null);
   const [viewingDocument, setViewingDocument] = useState<LegalDocument | null>(null);
-  const [filterType, setFilterType] = useState<"PRIVACY_POLICY" | "TERMS_CONDITIONS" | "ALL">("ALL");
+  const [filterType, setFilterType] = useState<"PRIVACY_POLICY" | "TERMS_CONDITIONS" | "RATE_CARD" | "ALL">("ALL");
   const [filterAudience, setFilterAudience] = useState<"USER" | "DRIVER" | "BOTH" | "ALL">("ALL");
 
   useEffect(() => {
@@ -234,7 +234,7 @@ function LegalDocumentsManagement() {
         📄 Legal Documents Management
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Manage Privacy Policy and Terms & Conditions for Users and Drivers
+        Manage Privacy Policy, Terms & Conditions, and Rate Card for Users and Drivers
       </Typography>
 
       {/* Filters and Actions */}
@@ -251,6 +251,7 @@ function LegalDocumentsManagement() {
                 <MenuItem value="ALL">All Types</MenuItem>
                 <MenuItem value="PRIVACY_POLICY">Privacy Policy</MenuItem>
                 <MenuItem value="TERMS_CONDITIONS">Terms & Conditions</MenuItem>
+                <MenuItem value="RATE_CARD">Rate Card</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -304,7 +305,9 @@ function LegalDocumentsManagement() {
       ) : (
         <Grid container spacing={2}>
           {Object.entries(groupedDocuments).map(([key, docs]) => {
-            const [type, audience] = key.split("_");
+            // Get type and audience from the first document (all docs in group have same type/audience)
+            const docType = docs[0]?.documentType || "";
+            const docAudience = docs[0]?.targetAudience || "";
             const activeDoc = docs.find((d) => d.active);
             
             return (
@@ -314,10 +317,16 @@ function LegalDocumentsManagement() {
                     <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                       <Box>
                         <Typography variant="h6">
-                          {type === "PRIVACY_POLICY" ? "🔒 Privacy Policy" : "📋 Terms & Conditions"}
+                          {docType === "PRIVACY_POLICY" 
+                            ? "🔒 Privacy Policy" 
+                            : docType === "TERMS_CONDITIONS"
+                            ? "📋 Terms & Conditions"
+                            : docType === "RATE_CARD"
+                            ? "💰 Rate Card"
+                            : "📄 Document"}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          For: {audience === "USER" ? "Users" : audience === "DRIVER" ? "Drivers" : "Both"}
+                          For: {docAudience === "USER" ? "Users" : docAudience === "DRIVER" ? "Drivers" : "Both"}
                         </Typography>
                       </Box>
                       {activeDoc && (
@@ -431,6 +440,7 @@ function LegalDocumentsManagement() {
                   >
                     <MenuItem value="PRIVACY_POLICY">Privacy Policy</MenuItem>
                     <MenuItem value="TERMS_CONDITIONS">Terms & Conditions</MenuItem>
+                    <MenuItem value="RATE_CARD">Rate Card</MenuItem>
                   </Select>
                   {formik.touched.documentType && formik.errors.documentType && (
                     <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
@@ -504,7 +514,11 @@ function LegalDocumentsManagement() {
       {/* View Dialog */}
       <Dialog open={viewDialogOpen} onClose={() => setViewDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>
-          {viewingDocument?.documentType === "PRIVACY_POLICY" ? "🔒 Privacy Policy" : "📋 Terms & Conditions"}
+          {viewingDocument?.documentType === "PRIVACY_POLICY" 
+            ? "🔒 Privacy Policy" 
+            : viewingDocument?.documentType === "TERMS_CONDITIONS"
+            ? "📋 Terms & Conditions"
+            : "💰 Rate Card"}
           {" - "}
           {viewingDocument?.targetAudience === "USER" ? "Users" : 
            viewingDocument?.targetAudience === "DRIVER" ? "Drivers" : "Both"}

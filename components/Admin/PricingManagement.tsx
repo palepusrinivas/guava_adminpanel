@@ -14,14 +14,21 @@ interface PricingConfig {
   // Auto
   autoBaseFare?: number | null;
   autoPerKmFare?: number | null;
+  autoCommissionPercent?: number | null;
   autoNightSurchargePercent?: number | null;
   autoPlatformFeeFlat?: number | null;
   
   // Bike
+  bikeBaseFare?: number | null;
+  bikePerKmFare?: number | null;
+  bikePlatformFeeFlat?: number | null;
   bikeCommissionPercent?: number | null;
   bikeNightSurchargePercent?: number | null;
   
   // Car
+  carBaseFare?: number | null;
+  carPerKmFare?: number | null;
+  carPlatformFeeFlat?: number | null;
   carCommissionPercent?: number | null;
   carNightSurchargePercent?: number | null;
   
@@ -45,14 +52,21 @@ const pricingValidationSchema = yup.object({
   // Auto
   autoBaseFare: yup.number().min(0, "Must be positive").nullable(),
   autoPerKmFare: yup.number().min(0, "Must be positive").nullable(),
+  autoCommissionPercent: yup.number().min(0).max(100, "Must be 0-100").nullable(),
   autoNightSurchargePercent: yup.number().min(0).max(100, "Must be 0-100").nullable(),
   autoPlatformFeeFlat: yup.number().min(0, "Must be positive").nullable(),
   
   // Bike
+  bikeBaseFare: yup.number().min(0, "Must be positive").nullable(),
+  bikePerKmFare: yup.number().min(0, "Must be positive").nullable(),
+  bikePlatformFeeFlat: yup.number().min(0, "Must be positive").nullable(),
   bikeCommissionPercent: yup.number().min(0).max(100, "Must be 0-100").nullable(),
   bikeNightSurchargePercent: yup.number().min(0).max(100, "Must be 0-100").nullable(),
   
   // Car
+  carBaseFare: yup.number().min(0, "Must be positive").nullable(),
+  carPerKmFare: yup.number().min(0, "Must be positive").nullable(),
+  carPlatformFeeFlat: yup.number().min(0, "Must be positive").nullable(),
   carCommissionPercent: yup.number().min(0).max(100, "Must be 0-100").nullable(),
   carNightSurchargePercent: yup.number().min(0).max(100, "Must be 0-100").nullable(),
   
@@ -92,10 +106,17 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
   const defaultPricing: PricingConfig = {
     autoBaseFare: null,
     autoPerKmFare: null,
+    autoCommissionPercent: null,
     autoNightSurchargePercent: null,
     autoPlatformFeeFlat: null,
+    bikeBaseFare: null,
+    bikePerKmFare: null,
+    bikePlatformFeeFlat: null,
     bikeCommissionPercent: null,
     bikeNightSurchargePercent: null,
+    carBaseFare: null,
+    carPerKmFare: null,
+    carPlatformFeeFlat: null,
     carCommissionPercent: null,
     carNightSurchargePercent: null,
     gstPercent: null,
@@ -245,6 +266,29 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Auto Commission (%)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    name="autoCommissionPercent"
+                    value={formik.values.autoCommissionPercent || ""}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    disabled={!isEditing}
+                    placeholder="e.g., 7"
+                    className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                      !isEditing ? "bg-gray-50" : ""
+                    }`}
+                  />
+                  {formik.touched.autoCommissionPercent && formik.errors.autoCommissionPercent && (
+                    <p className="mt-1 text-sm text-red-600">{formik.errors.autoCommissionPercent}</p>
+                  )}
+                  <p className="mt-1 text-sm text-gray-500">Commission percentage for auto rides</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Auto Night Surcharge (%)
                   </label>
                   <input
@@ -297,6 +341,74 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Bike Base Fare (₹)
+                  </label>
+                  <input
+                    type="number"
+                    name="bikeBaseFare"
+                    value={formik.values.bikeBaseFare || ""}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    disabled={!isEditing}
+                    placeholder="e.g., 25"
+                    className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                      !isEditing ? "bg-gray-50" : ""
+                    }`}
+                  />
+                  {formik.touched.bikeBaseFare && formik.errors.bikeBaseFare && (
+                    <p className="mt-1 text-sm text-red-600">{formik.errors.bikeBaseFare}</p>
+                  )}
+                  <p className="mt-1 text-sm text-gray-500">Fixed base fare for bike rides</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Bike Per KM Fare (₹)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="bikePerKmFare"
+                    value={formik.values.bikePerKmFare || ""}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    disabled={!isEditing}
+                    placeholder="e.g., 7"
+                    className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                      !isEditing ? "bg-gray-50" : ""
+                    }`}
+                  />
+                  {formik.touched.bikePerKmFare && formik.errors.bikePerKmFare && (
+                    <p className="mt-1 text-sm text-red-600">{formik.errors.bikePerKmFare}</p>
+                  )}
+                  <p className="mt-1 text-sm text-gray-500">Rate per kilometer for bike rides</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Bike Platform Fee (₹)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="bikePlatformFeeFlat"
+                    value={formik.values.bikePlatformFeeFlat || ""}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    disabled={!isEditing}
+                    placeholder="e.g., 5"
+                    className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                      !isEditing ? "bg-gray-50" : ""
+                    }`}
+                  />
+                  {formik.touched.bikePlatformFeeFlat && formik.errors.bikePlatformFeeFlat && (
+                    <p className="mt-1 text-sm text-red-600">{formik.errors.bikePlatformFeeFlat}</p>
+                  )}
+                  <p className="mt-1 text-sm text-gray-500">Flat platform fee for bike rides</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Bike Commission (%)
                   </label>
                   <input
@@ -347,6 +459,74 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">🚗 Car Settings</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Car Base Fare (₹)
+                  </label>
+                  <input
+                    type="number"
+                    name="carBaseFare"
+                    value={formik.values.carBaseFare || ""}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    disabled={!isEditing}
+                    placeholder="e.g., 100"
+                    className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                      !isEditing ? "bg-gray-50" : ""
+                    }`}
+                  />
+                  {formik.touched.carBaseFare && formik.errors.carBaseFare && (
+                    <p className="mt-1 text-sm text-red-600">{formik.errors.carBaseFare}</p>
+                  )}
+                  <p className="mt-1 text-sm text-gray-500">Fixed base fare for car rides</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Car Per KM Fare (₹)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="carPerKmFare"
+                    value={formik.values.carPerKmFare || ""}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    disabled={!isEditing}
+                    placeholder="e.g., 12"
+                    className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                      !isEditing ? "bg-gray-50" : ""
+                    }`}
+                  />
+                  {formik.touched.carPerKmFare && formik.errors.carPerKmFare && (
+                    <p className="mt-1 text-sm text-red-600">{formik.errors.carPerKmFare}</p>
+                  )}
+                  <p className="mt-1 text-sm text-gray-500">Rate per kilometer for car rides</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Car Platform Fee (₹)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="carPlatformFeeFlat"
+                    value={formik.values.carPlatformFeeFlat || ""}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    disabled={!isEditing}
+                    placeholder="e.g., 10"
+                    className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                      !isEditing ? "bg-gray-50" : ""
+                    }`}
+                  />
+                  {formik.touched.carPlatformFeeFlat && formik.errors.carPlatformFeeFlat && (
+                    <p className="mt-1 text-sm text-red-600">{formik.errors.carPlatformFeeFlat}</p>
+                  )}
+                  <p className="mt-1 text-sm text-gray-500">Flat platform fee for car rides</p>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Car Commission (%)
@@ -658,22 +838,119 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
         <div className="px-4 py-5 sm:p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Summary</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="text-sm font-medium text-blue-900">Auto Base Fare</div>
-              <div className="text-2xl font-bold text-blue-600">₹{currentPricing.autoBaseFare || "N/A"}</div>
+          
+          {/* Base Fares Section */}
+          <div className="mb-6">
+            <h4 className="text-sm font-semibold text-gray-700 mb-3">Base Fares</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm font-medium text-blue-900">🛺 Auto Base Fare</div>
+                </div>
+                <div className="text-2xl font-bold text-blue-600">
+                  ₹{currentPricing.autoBaseFare != null ? currentPricing.autoBaseFare : "N/A"}
+                </div>
+                <div className="text-xs text-blue-700 mt-1">Per KM: ₹{currentPricing.autoPerKmFare != null ? currentPricing.autoPerKmFare : "N/A"}</div>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm font-medium text-green-900">🏍️ Bike Base Fare</div>
+                </div>
+                <div className="text-2xl font-bold text-green-600">
+                  ₹{currentPricing.bikeBaseFare != null ? currentPricing.bikeBaseFare : "N/A"}
+                </div>
+                <div className="text-xs text-green-700 mt-1">Per KM: ₹{currentPricing.bikePerKmFare != null ? currentPricing.bikePerKmFare : "N/A"}</div>
+              </div>
+              <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm font-medium text-purple-900">🚗 Car Base Fare</div>
+                </div>
+                <div className="text-2xl font-bold text-purple-600">
+                  ₹{currentPricing.carBaseFare != null ? currentPricing.carBaseFare : "N/A"}
+                </div>
+                <div className="text-xs text-purple-700 mt-1">Per KM: ₹{currentPricing.carPerKmFare != null ? currentPricing.carPerKmFare : "N/A"}</div>
+              </div>
             </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <div className="text-sm font-medium text-green-900">GST</div>
-              <div className="text-2xl font-bold text-green-600">{currentPricing.gstPercent || "N/A"}%</div>
+          </div>
+
+          {/* Commissions Section */}
+          <div className="mb-6">
+            <h4 className="text-sm font-semibold text-gray-700 mb-3">Commission Rates</h4>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <div className="text-sm font-medium text-blue-900">🛺 Auto Commission</div>
+                <div className="text-2xl font-bold text-blue-600">
+                  {currentPricing.autoCommissionPercent != null ? currentPricing.autoCommissionPercent : "N/A"}%
+                </div>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <div className="text-sm font-medium text-green-900">🏍️ Bike Commission</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {currentPricing.bikeCommissionPercent != null ? currentPricing.bikeCommissionPercent : "N/A"}%
+                </div>
+              </div>
+              <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                <div className="text-sm font-medium text-purple-900">🚗 Car Commission</div>
+                <div className="text-2xl font-bold text-purple-600">
+                  {currentPricing.carCommissionPercent != null ? currentPricing.carCommissionPercent : "N/A"}%
+                </div>
+              </div>
+              <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                <div className="text-sm font-medium text-orange-900">📊 GST</div>
+                <div className="text-2xl font-bold text-orange-600">
+                  {currentPricing.gstPercent != null ? currentPricing.gstPercent : "N/A"}%
+                </div>
+              </div>
             </div>
-            <div className="bg-yellow-50 p-4 rounded-lg">
-              <div className="text-sm font-medium text-yellow-900">Bike Commission</div>
-              <div className="text-2xl font-bold text-yellow-600">{currentPricing.bikeCommissionPercent || "N/A"}%</div>
+          </div>
+
+          {/* Night Surcharge Section */}
+          <div className="mb-6">
+            <h4 className="text-sm font-semibold text-gray-700 mb-3">Night Surcharge Rates</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <div className="text-sm font-medium text-blue-900">🛺 Auto Night Surcharge</div>
+                <div className="text-2xl font-bold text-blue-600">
+                  {currentPricing.autoNightSurchargePercent != null ? currentPricing.autoNightSurchargePercent : "N/A"}%
+                </div>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <div className="text-sm font-medium text-green-900">🏍️ Bike Night Surcharge</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {currentPricing.bikeNightSurchargePercent != null ? currentPricing.bikeNightSurchargePercent : "N/A"}%
+                </div>
+              </div>
+              <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                <div className="text-sm font-medium text-purple-900">🚗 Car Night Surcharge</div>
+                <div className="text-2xl font-bold text-purple-600">
+                  {currentPricing.carNightSurchargePercent != null ? currentPricing.carNightSurchargePercent : "N/A"}%
+                </div>
+              </div>
             </div>
-            <div className="bg-purple-50 p-4 rounded-lg">
-              <div className="text-sm font-medium text-purple-900">Car Commission</div>
-              <div className="text-2xl font-bold text-purple-600">{currentPricing.carCommissionPercent || "N/A"}%</div>
+          </div>
+
+          {/* Platform Fees Section */}
+          <div>
+            <h4 className="text-sm font-semibold text-gray-700 mb-3">Platform Fees</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <div className="text-sm font-medium text-blue-900">🛺 Auto Platform Fee</div>
+                <div className="text-2xl font-bold text-blue-600">
+                  ₹{currentPricing.autoPlatformFeeFlat != null ? currentPricing.autoPlatformFeeFlat : "N/A"}
+                </div>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <div className="text-sm font-medium text-green-900">🏍️ Bike Platform Fee</div>
+                <div className="text-2xl font-bold text-green-600">
+                  ₹{currentPricing.bikePlatformFeeFlat != null ? currentPricing.bikePlatformFeeFlat : "N/A"}
+                </div>
+              </div>
+              <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                <div className="text-sm font-medium text-purple-900">🚗 Car Platform Fee</div>
+                <div className="text-2xl font-bold text-purple-600">
+                  ₹{currentPricing.carPlatformFeeFlat != null ? currentPricing.carPlatformFeeFlat : "N/A"}
+                </div>
+              </div>
             </div>
           </div>
         </div>
