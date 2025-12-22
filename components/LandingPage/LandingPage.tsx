@@ -68,7 +68,7 @@ export default function LandingPage() {
             {/* Auth Buttons */}
             <div className="flex items-center space-x-4">
               <Link
-                href="/login"
+                href="/admin/login"
                 className="text-gray-700 hover:text-black font-medium hidden md:block"
               >
                 Sign in
