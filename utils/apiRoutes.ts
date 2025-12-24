@@ -32,6 +32,12 @@ export const adminPricingTiersUrl = getApiUrl(config.ENDPOINTS.ADMIN.PRICING_TIE
 export const adminPricingTiersByServiceUrl = (serviceType: string) => getApiUrl(config.ENDPOINTS.ADMIN.PRICING_TIERS_BY_SERVICE.replace(':serviceType', serviceType));
 export const adminPricingTiersBulkUpdateUrl = (serviceType: string) => getApiUrl(config.ENDPOINTS.ADMIN.PRICING_TIERS_BULK_UPDATE.replace(':serviceType', serviceType));
 export const adminUsersUrl = getApiUrl(config.ENDPOINTS.ADMIN.USERS);
+// Admin Notifications
+export const adminNotificationsUrl = getApiUrl(config.ENDPOINTS.ADMIN.NOTIFICATIONS);
+export const adminNotificationsUnreadUrl = getApiUrl(config.ENDPOINTS.ADMIN.NOTIFICATIONS_UNREAD);
+export const adminNotificationsUnreadCountUrl = getApiUrl(config.ENDPOINTS.ADMIN.NOTIFICATIONS_UNREAD_COUNT);
+export const adminNotificationMarkReadUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.NOTIFICATION_MARK_READ.replace(':id', id));
+export const adminNotificationsMarkAllReadUrl = getApiUrl(config.ENDPOINTS.ADMIN.NOTIFICATIONS_MARK_ALL_READ);
 export const adminUserByIdUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.USER_BY_ID.replace(':id', id));
 export const adminDriversUrl = getApiUrl(config.ENDPOINTS.ADMIN.DRIVERS);
 export const adminDriverByIdUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.DRIVER_BY_ID.replace(':id', id));

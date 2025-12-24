@@ -1,12 +1,19 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useFormik } from "formik";
 import * as yup from "yup";
 import { useAppDispatch, useAppSelector } from "@/utils/store/store";
 import { createVehicle } from "@/utils/reducers/adminReducers";
-import { getVehicleBrands, getVehicleCategories } from "@/utils/reducers/adminReducers";
+import { getVehicleBrands, getVehicleCategories, getDrivers } from "@/utils/reducers/adminReducers";
 import { clearVehicleError } from "@/utils/slices/vehicleSlice";
 import { useRouter } from "next/navigation";
+import { 
+  loadVehicleReferenceData, 
+  getBrandsForServiceType, 
+  getModelsForBrandAndServiceType,
+  getVehicleReferenceData,
+  getServiceTypes
+} from "@/utils/vehicleReference";
 
 const vehicleSchema = yup.object({
   vehicleBrand: yup.string().required("Vehicle Brand is required"),
@@ -19,6 +26,31 @@ const vehicleSchema = yup.object({
   driverId: yup.string().required("Driver is required"),
 });
 
+// Fuel type options
+const FUEL_TYPES = [
+  { value: "Petrol", label: "Petrol" },
+  { value: "Diesel", label: "Diesel" },
+  { value: "Electric", label: "Electric" },
+  { value: "CNG", label: "CNG" },
+  { value: "Hybrid", label: "Hybrid" },
+  { value: "LPG", label: "LPG" }
+];
+
+// Ownership options
+const OWNERSHIP_TYPES = [
+  { value: "Driver", label: "Driver Owned" },
+  { value: "Company", label: "Company Owned" }
+];
+
+// Transmission options
+const TRANSMISSION_TYPES = [
+  { value: "Manual", label: "Manual" },
+  { value: "Automatic", label: "Automatic" },
+  { value: "AMT", label: "AMT (Automated Manual Transmission)" },
+  { value: "CVT", label: "CVT (Continuously Variable Transmission)" },
+  { value: "DCT", label: "DCT (Dual Clutch Transmission)" }
+];
+
 export default function AddNewVehicle() {
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -28,32 +60,103 @@ export default function AddNewVehicle() {
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const [documents, setDocuments] = useState<File[]>([]);
   const [dataFetchError, setDataFetchError] = useState<string | null>(null);
+  const [vehicleReferenceData, setVehicleReferenceData] = useState<any>(null);
+  const [drivers, setDrivers] = useState<Array<{id: string, name: string}>>([]);
+  const [driversLoading, setDriversLoading] = useState(false);
 
+  // Load vehicle reference data on mount (client-side only)
+  useEffect(() => {
+    const loadReferenceData = async () => {
+      if (typeof window !== 'undefined') {
+        try {
+          const data = await loadVehicleReferenceData();
+          setVehicleReferenceData(data);
+        } catch (error) {
+          console.warn("Failed to load vehicle reference data:", error);
+          // Try to use static data if available
+          try {
+            const staticData = getVehicleReferenceData();
+            if (staticData) {
+              setVehicleReferenceData(staticData);
+            }
+          } catch (e) {
+            // No static data available either
+          }
+        }
+      } else {
+        // Server-side: try to get static data
+        try {
+          const staticData = getVehicleReferenceData();
+          if (staticData) {
+            setVehicleReferenceData(staticData);
+          }
+        } catch (e) {
+          // No static data available
+        }
+      }
+    };
+    loadReferenceData();
+  }, []);
+
+  // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
       setDataFetchError(null);
-      // Clear any previous errors
       dispatch(clearVehicleError());
       
+      // Fetch vehicle brands from API
       try {
         await dispatch(getVehicleBrands()).unwrap();
       } catch (error: any) {
-        // Silently handle error - brands dropdown will just be empty
-        console.warn("Failed to fetch vehicle brands:", error?.message || error);
-        setDataFetchError("Failed to load vehicle brands. Please refresh the page.");
-        // Clear Redux error state
+        console.warn("Failed to fetch vehicle brands from API:", error?.message || error);
+        setDataFetchError("Vehicle brands API unavailable. Using reference data.");
+        // Will use reference data as fallback
         dispatch(clearVehicleError());
       }
+      
+      // Fetch vehicle categories from API
       try {
         await dispatch(getVehicleCategories()).unwrap();
       } catch (error: any) {
-        // Silently handle error - categories dropdown will just be empty
-        console.warn("Failed to fetch vehicle categories:", error?.message || error);
+        console.warn("Failed to fetch vehicle categories from API:", error?.message || error);
         if (!dataFetchError) {
-          setDataFetchError("Failed to load vehicle categories. Please refresh the page.");
+          setDataFetchError("Vehicle categories API unavailable. Using reference data.");
         }
-        // Clear Redux error state
+        // Will use reference data as fallback
         dispatch(clearVehicleError());
+      }
+      
+      // Fetch drivers
+      try {
+        setDriversLoading(true);
+        const response = await dispatch(getDrivers({ page: 0, size: 500 })).unwrap();
+        let driverList: any[] = [];
+        
+        // Handle different response formats
+        if (Array.isArray(response)) {
+          driverList = response;
+        } else if (response?.content && Array.isArray(response.content)) {
+          driverList = response.content;
+        } else if (response?.data && Array.isArray(response.data)) {
+          driverList = response.data;
+        }
+        
+        // Map drivers to simple format
+        const mappedDrivers = driverList.map((driver: any) => ({
+          id: driver.id?.toString() || driver.driverId?.toString() || "",
+          name: driver.name || 
+                driver.fullName || 
+                `${driver.firstName || ""} ${driver.lastName || ""}`.trim() ||
+                driver.email ||
+                driver.username ||
+                "Unknown Driver"
+        })).filter((d: any) => d.id && d.name !== "Unknown Driver");
+        
+        setDrivers(mappedDrivers);
+      } catch (error: any) {
+        console.warn("Failed to fetch drivers:", error?.message || error);
+      } finally {
+        setDriversLoading(false);
       }
     };
     fetchData();
@@ -113,6 +216,83 @@ export default function AddNewVehicle() {
     setDocuments(files);
   };
 
+  // Get available brands (from API or reference data fallback)
+  const availableBrands = useMemo(() => {
+    if (brands && brands.length > 0) {
+      return brands.map((b: any) => ({
+        id: b.id || b._id || "",
+        name: b.brandName || b.name || ""
+      })).filter((b: any) => b.name);
+    }
+    // Fallback to reference data
+    if (vehicleReferenceData?.vehicleBrands) {
+      return vehicleReferenceData.vehicleBrands
+        .filter((b: any) => b.isActive !== false)
+        .map((b: any, idx: number) => ({
+          id: `ref-${idx}`,
+          name: b.name
+        }));
+    }
+    return [];
+  }, [brands, vehicleReferenceData]);
+
+  // Get available categories (from API or reference data fallback)
+  const availableCategories = useMemo(() => {
+    if (categories && categories.length > 0) {
+      return categories.map((c: any) => ({
+        id: c.id || c._id || "",
+        name: c.categoryName || c.name || "",
+        type: c.type || ""
+      })).filter((c: any) => c.name);
+    }
+    // Fallback to reference data
+    if (vehicleReferenceData?.vehicleCategories) {
+      return vehicleReferenceData.vehicleCategories.map((c: any, idx: number) => ({
+        id: `ref-${idx}`,
+        name: c.name,
+        type: c.type || c.serviceTypeId || ""
+      }));
+    }
+    return [];
+  }, [categories, vehicleReferenceData]);
+
+  // Get available models based on selected brand and category
+  const availableModels = useMemo(() => {
+    const selectedBrand = formik.values.vehicleBrand;
+    const selectedCategory = formik.values.vehicleCategory;
+    
+    if (!selectedBrand || !selectedCategory) {
+      return [];
+    }
+
+    // Get service type from category
+    const category = availableCategories.find(c => c.name === selectedCategory);
+    if (!category?.type) return [];
+
+    // Get models from reference data
+    if (vehicleReferenceData?.vehicleModels) {
+      try {
+        const brandData = vehicleReferenceData.vehicleModels.find((bm: any) => bm.brand === selectedBrand);
+        if (brandData) {
+          const models = brandData.models
+            .filter((m: any) => m.categoryTypes && m.categoryTypes.includes(category.type))
+            .map((m: any) => ({ name: m.name }));
+          return models;
+        }
+      } catch (error) {
+        console.warn("Failed to get models:", error);
+      }
+    }
+    return [];
+  }, [formik.values.vehicleBrand, formik.values.vehicleCategory, availableCategories, vehicleReferenceData]);
+
+  // Reset model when brand or category changes
+  useEffect(() => {
+    if (formik.values.vehicleModel) {
+      formik.setFieldValue("vehicleModel", "");
+    }
+  }, [formik.values.vehicleBrand, formik.values.vehicleCategory]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -126,10 +306,10 @@ export default function AddNewVehicle() {
       {submitError && (
         <div className="bg-red-50 border border-red-200 rounded p-4 text-red-800 text-sm">{submitError}</div>
       )}
-      {/* Only show data fetching errors as a warning, not blocking */}
-      {dataFetchError && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded p-4 text-yellow-800 text-sm">
-          ⚠️ {dataFetchError} You can still fill the form manually.
+      {/* Show info if using fallback reference data */}
+      {dataFetchError && availableBrands.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded p-4 text-blue-800 text-sm">
+          ℹ️ Using reference data. Some options may be limited. {dataFetchError}
         </div>
       )}
 
@@ -150,9 +330,9 @@ export default function AddNewVehicle() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-teal-500 outline-none"
               >
                 <option value="">Select Brand</option>
-                {brands.map((brand) => (
-                  <option key={brand.id} value={brand.brandName}>
-                    {brand.brandName}
+                {availableBrands.map((brand) => (
+                  <option key={brand.id} value={brand.name}>
+                    {brand.name}
                   </option>
                 ))}
               </select>
@@ -164,17 +344,37 @@ export default function AddNewVehicle() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Vehicle Model <span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
-                name="vehicleModel"
-                value={formik.values.vehicleModel}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                placeholder="Ex: Model"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none"
-              />
+              {availableModels.length > 0 && formik.values.vehicleBrand && formik.values.vehicleCategory ? (
+                <select
+                  name="vehicleModel"
+                  value={formik.values.vehicleModel}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-teal-500 outline-none"
+                >
+                  <option value="">Select Model</option>
+                  {availableModels.map((model, idx) => (
+                    <option key={idx} value={model.name}>
+                      {model.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  name="vehicleModel"
+                  value={formik.values.vehicleModel}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  placeholder={formik.values.vehicleBrand && formik.values.vehicleCategory ? "Select brand and category to see models" : "Ex: Model"}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none"
+                />
+              )}
               {formik.touched.vehicleModel && formik.errors.vehicleModel && (
                 <p className="text-sm text-red-600 mt-1">{formik.errors.vehicleModel}</p>
+              )}
+              {formik.values.vehicleBrand && formik.values.vehicleCategory && availableModels.length === 0 && (
+                <p className="text-xs text-gray-500 mt-1">No models found. Please enter manually.</p>
               )}
             </div>
             <div>
@@ -189,16 +389,11 @@ export default function AddNewVehicle() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-teal-500 outline-none"
               >
                 <option value="">Select Vehicle Category</option>
-                {categories.map((category) => {
-                  // Handle both categoryName and name fields for compatibility
-                  const categoryName = (category as any).categoryName || (category as any).name || "Unknown";
-                  const categoryId = category.id || (category as any)._id;
-                  return (
-                    <option key={categoryId} value={categoryName}>
-                      {categoryName}
-                    </option>
-                  );
-                })}
+                {availableCategories.map((category) => (
+                  <option key={category.id} value={category.name}>
+                    {category.name}
+                  </option>
+                ))}
               </select>
               {formik.touched.vehicleCategory && formik.errors.vehicleCategory && (
                 <p className="text-sm text-red-600 mt-1">{formik.errors.vehicleCategory}</p>
@@ -262,15 +457,20 @@ export default function AddNewVehicle() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Transmission</label>
-              <input
-                type="text"
+              <select
                 name="transmission"
                 value={formik.values.transmission}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                placeholder="Ex: AMT"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none"
-              />
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-teal-500 outline-none"
+              >
+                <option value="">Select Transmission (Optional)</option>
+                {TRANSMISSION_TYPES.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Parcel Weight Capacity (Kg)</label>
@@ -296,10 +496,11 @@ export default function AddNewVehicle() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-teal-500 outline-none"
               >
                 <option value="">Select Fuel Type</option>
-                <option value="Petrol">Petrol</option>
-                <option value="Diesel">Diesel</option>
-                <option value="Electric">Electric</option>
-                <option value="CNG">CNG</option>
+                {FUEL_TYPES.map((fuel) => (
+                  <option key={fuel.value} value={fuel.value}>
+                    {fuel.label}
+                  </option>
+                ))}
               </select>
               {formik.touched.fuelType && formik.errors.fuelType && (
                 <p className="text-sm text-red-600 mt-1">{formik.errors.fuelType}</p>
@@ -317,8 +518,11 @@ export default function AddNewVehicle() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-teal-500 outline-none"
               >
                 <option value="">Select Owner</option>
-                <option value="Driver">Driver</option>
-                <option value="Company">Company</option>
+                {OWNERSHIP_TYPES.map((owner) => (
+                  <option key={owner.value} value={owner.value}>
+                    {owner.label}
+                  </option>
+                ))}
               </select>
               {formik.touched.ownership && formik.errors.ownership && (
                 <p className="text-sm text-red-600 mt-1">{formik.errors.ownership}</p>
@@ -333,12 +537,17 @@ export default function AddNewVehicle() {
                 value={formik.values.driverId}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-teal-500 outline-none"
+                disabled={driversLoading}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-teal-500 outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
-                <option value="">Select Driver</option>
-                {/* Drivers would come from a drivers API - placeholder for now */}
-                <option value="driver1">Driver 1</option>
-                <option value="driver2">Driver 2</option>
+                <option value="">
+                  {driversLoading ? "Loading drivers..." : "Select Driver"}
+                </option>
+                {drivers.map((driver) => (
+                  <option key={driver.id} value={driver.id}>
+                    {driver.name}
+                  </option>
+                ))}
               </select>
               {formik.touched.driverId && formik.errors.driverId && (
                 <p className="text-sm text-red-600 mt-1">{formik.errors.driverId}</p>

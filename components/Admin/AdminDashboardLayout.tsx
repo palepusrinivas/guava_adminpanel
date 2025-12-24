@@ -3,7 +3,10 @@ import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/utils/store/store";
 import { adminLogout } from "@/utils/slices/adminSlice";
+import { getUnreadAdminNotificationsCount } from "@/utils/reducers/adminReducers";
 import Link from "next/link";
+import { Badge } from "@mui/material";
+import { Notifications as NotificationsIcon } from "@mui/icons-material";
 
 interface AdminDashboardLayoutProps {
   children: React.ReactNode;
@@ -16,10 +19,23 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
   const [mounted, setMounted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { admin, token } = useAppSelector((state) => state.admin);
+  const { unreadCount } = useAppSelector((state) => state.adminNotifications);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Fetch unread notification count on mount and periodically
+  useEffect(() => {
+    if (token && admin) {
+      dispatch(getUnreadAdminNotificationsCount()).unwrap().catch(() => {});
+      // Refresh count every 30 seconds
+      const interval = setInterval(() => {
+        dispatch(getUnreadAdminNotificationsCount()).unwrap().catch(() => {});
+      }, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [token, admin, dispatch]);
 
   useEffect(() => {
     // Check if admin is authenticated
@@ -47,6 +63,7 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
         { name: "Dashboard", href: "/admin/dashboard", icon: "📊" },
         { name: "Heat Map", href: "/admin/heat-map", icon: "🗺️" },
         { name: "Fleet View", href: "/admin/fleet-map", icon: "🚗" },
+        { name: "Notifications", href: "/admin/notifications", icon: "🔔" },
         {
           name: "Pricing",
           icon: "💰",
@@ -510,6 +527,15 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
             </div>
 
             <div className="flex items-center space-x-4">
+              <Link
+                href="/admin/notifications"
+                className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
+                title="Notifications"
+              >
+                <Badge badgeContent={unreadCount} color="error" max={99}>
+                  <NotificationsIcon />
+                </Badge>
+              </Link>
               <div className="hidden sm:flex items-center space-x-2">
                 <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
                   <span className="text-white font-medium text-sm">

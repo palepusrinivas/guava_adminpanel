@@ -14,6 +14,14 @@ import { Autocomplete, TextField } from "@mui/material";
 import * as Yup from "yup";
 import { useFormik } from "formik";
 import type { TripFarePayload } from "@/types/pricing";
+import {
+  ArrowBack as ArrowBackIcon,
+  Add as PlusIcon,
+  Edit as PencilIcon,
+  Delete as TrashIcon,
+  AccessTime as ClockIcon,
+  Close as XMarkIcon,
+} from "@mui/icons-material";
 
 interface TripFare {
   id: string;
@@ -133,9 +141,7 @@ export default function ZoneFareSetupPage() {
       try {
         await dispatch(getVehicleCategories()).unwrap();
       } catch (error: any) {
-        // Silently handle error - categories dropdown will just be empty
         console.warn("Failed to fetch vehicle categories:", error?.message || error);
-        // Don't show toast error as this is not critical for the form to work
       } finally {
         setCategoriesLoading(false);
       }
@@ -149,7 +155,6 @@ export default function ZoneFareSetupPage() {
     }
   }, [zoneId, dispatch]);
 
-  // Update formik zoneName when zoneName state changes
   useEffect(() => {
     if (zoneName) {
       formik.setFieldValue("zoneName", zoneName);
@@ -189,11 +194,30 @@ export default function ZoneFareSetupPage() {
       if (getTripFares.fulfilled.match(response)) {
         const data: any = response.payload;
         const allFares = Array.isArray(data) ? data : data?.content || [];
+        
         // Filter fares for this zone
-        const zoneFares = allFares.filter((fare: any) => 
-          fare.zone?.id?.toString() === zoneId || 
-          fare.zoneId?.toString() === zoneId
-        );
+        // Note: Operation zones use numeric IDs (old Zone table), but TripFare uses ZoneV2 (UUID strings)
+        // So we match by zone name instead, and also check zone IDs as fallback
+        const zoneFares = allFares.filter((fare: any) => {
+          // Match by zone name (primary method since zone IDs don't match between old Zone and ZoneV2)
+          if (fare.zone?.name && zone.name && fare.zone.name.toLowerCase() === zone.name.toLowerCase()) {
+            return true;
+          }
+          
+          // Match by zone ID (fallback for UUID strings or if zones match)
+          if (fare.zone?.id?.toString() === zoneId?.toString() || 
+              fare.zoneId?.toString() === zoneId?.toString()) {
+            return true;
+          }
+          
+          return false;
+        });
+        
+        console.log(`[Zone Fare Setup] Zone: ${fetchedZoneName} (ID: ${zoneId}), Found ${zoneFares.length} fare(s) out of ${allFares.length} total`);
+        if (zoneFares.length === 0 && allFares.length > 0) {
+          console.log(`[Zone Fare Setup] Sample fare structure:`, allFares[0]);
+        }
+        
         setFares(zoneFares);
       }
     } catch (err: any) {
@@ -224,7 +248,7 @@ export default function ZoneFareSetupPage() {
   const formik = useFormik<TripFarePayload>({
     initialValues: {
       zoneId: zoneId,
-      zoneName: zoneName || "", // Will be updated when zone is fetched
+      zoneName: zoneName || "",
       vehicleCategoryId: "",
       categoryType: "",
       categoryName: "",
@@ -243,26 +267,19 @@ export default function ZoneFareSetupPage() {
     enableReinitialize: true,
     onSubmit: async (values, { resetForm }) => {
       try {
-        // Clean the payload: remove numeric zoneId (old Zone model uses numeric IDs)
-        // TripFare uses ZoneV2 which requires UUID strings or zoneName
         const payload: TripFarePayload = { ...values };
         
-        // If zoneId is numeric (not a UUID), remove it and rely on zoneName
         if (payload.zoneId) {
           const zoneIdStr = payload.zoneId.toString();
-          // UUID format: 36 characters with hyphens (e.g., "550e8400-e29b-41d4-a716-446655440000")
           const isUuid = zoneIdStr.length === 36 && zoneIdStr.includes('-');
           if (!isUuid) {
-            // Numeric ID from old Zone model - remove it, use zoneName instead
             delete payload.zoneId;
-            // Ensure zoneName is set
             if (!payload.zoneName && zoneName) {
               payload.zoneName = zoneName;
             }
           }
         }
         
-        // Ensure zoneName is set if zoneId was removed or not provided
         if (!payload.zoneId && !payload.zoneName) {
           if (zoneName) {
             payload.zoneName = zoneName;
@@ -296,7 +313,6 @@ export default function ZoneFareSetupPage() {
     setEditingFare(fare);
     setShowAddForm(true);
     
-    // Determine zoneName from fare or state
     const fareZoneName = fare.zone?.name || zoneName || "";
     
     formik.setValues({
@@ -347,56 +363,81 @@ export default function ZoneFareSetupPage() {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-800">{error}</p>
-        <button
-          onClick={() => router.back()}
-          className="mt-2 text-blue-600 hover:underline"
-        >
-          Go Back
-        </button>
+      <div className="bg-red-50 border-l-4 border-red-400 rounded-lg p-6">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="ml-3 flex-1">
+            <p className="text-red-800 font-medium">{error}</p>
+            <button
+              onClick={() => router.back()}
+              className="mt-2 text-red-600 hover:text-red-800 underline text-sm"
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
+      {/* Modern Header */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-teal-600 via-teal-500 to-emerald-500 rounded-2xl shadow-xl">
+        <div className="absolute inset-0 bg-black/5"></div>
+        <div className="relative px-8 py-6">
           <button
             onClick={() => router.back()}
-            className="text-blue-600 hover:underline mb-2"
+            className="mb-4 inline-flex items-center gap-2 text-white/90 hover:text-white transition-colors"
           >
-            ← Back to Fare Setup
+            <ArrowBackIcon className="w-5 h-5" />
+            <span className="font-medium">Back to Fare Setup</span>
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Fare Setup - {zoneName || `Zone ${zoneId}`}
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            Zone Fare Prices - {zoneName || `Zone ${zoneId}`}
           </h1>
+          <p className="text-teal-50 text-lg">Manage pricing for all vehicle categories in this zone</p>
         </div>
       </div>
 
       {/* Zone Info Card */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-lg font-semibold mb-4">Zone Information</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="text-gray-500 text-sm">Zone ID</label>
-            <p className="font-medium">{zoneId}</p>
+      <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <span className="text-2xl">₹</span>
+            <span>Zone Information</span>
+          </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-teal-100 rounded-lg">
+              <span className="text-xl font-bold text-teal-600">₹</span>
+            </div>
+            <div>
+              <label className="text-gray-500 text-sm font-medium">Zone ID</label>
+              <p className="font-semibold text-gray-900 text-lg">{zoneId}</p>
+            </div>
           </div>
-          <div>
-            <label className="text-gray-500 text-sm">Zone Name</label>
-            <p className="font-medium">{zoneName || "N/A"}</p>
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-emerald-100 rounded-lg">
+              <span className="text-xl font-bold text-emerald-600">📍</span>
+            </div>
+            <div>
+              <label className="text-gray-500 text-sm font-medium">Zone Name</label>
+              <p className="font-semibold text-gray-900 text-lg">{zoneName || "N/A"}</p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Add/Edit Fare Form */}
       {showAddForm && (
-        <div className="bg-white shadow rounded-lg p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">
-              {editingFare ? "Edit Fare" : "Add New Fare"}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold text-gray-900">
+              {editingFare ? "Edit Fare Configuration" : "Add New Fare Configuration"}
             </h2>
             <button
               onClick={() => {
@@ -404,16 +445,16 @@ export default function ZoneFareSetupPage() {
                 setEditingFare(null);
                 formik.resetForm();
               }}
-              className="text-gray-500 hover:text-gray-700"
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              ✕
+              <XMarkIcon className="w-6 h-6" />
             </button>
           </div>
-          <form onSubmit={formik.handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={formik.handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Vehicle Category
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Vehicle Category *
                 </label>
                 <Autocomplete
                   options={categoryOptions}
@@ -453,8 +494,8 @@ export default function ZoneFareSetupPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Base Fare (₹)
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Base Fare (₹) *
                 </label>
                 <input
                   type="number"
@@ -462,7 +503,7 @@ export default function ZoneFareSetupPage() {
                   value={formik.values.baseFare}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
                 />
                 {formik.touched.baseFare && formik.errors.baseFare && (
                   <p className="mt-1 text-sm text-red-600">{formik.errors.baseFare}</p>
@@ -470,8 +511,8 @@ export default function ZoneFareSetupPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Per KM Rate (₹)
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Per KM Rate (₹) *
                 </label>
                 <input
                   type="number"
@@ -479,7 +520,7 @@ export default function ZoneFareSetupPage() {
                   value={formik.values.baseFarePerKm}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
                 />
                 {formik.touched.baseFarePerKm && formik.errors.baseFarePerKm && (
                   <p className="mt-1 text-sm text-red-600">{formik.errors.baseFarePerKm}</p>
@@ -487,7 +528,7 @@ export default function ZoneFareSetupPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Time Rate (₹/min)
                 </label>
                 <input
@@ -496,12 +537,12 @@ export default function ZoneFareSetupPage() {
                   value={formik.values.timeRatePerMinOverride ?? ""}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Cancellation Fee (%)
                 </label>
                 <input
@@ -510,12 +551,12 @@ export default function ZoneFareSetupPage() {
                   value={formik.values.cancellationFeePercent ?? ""}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
                 />
               </div>
             </div>
 
-            <div className="flex justify-end space-x-3 pt-4">
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
               <button
                 type="button"
                 onClick={() => {
@@ -523,13 +564,13 @@ export default function ZoneFareSetupPage() {
                   setEditingFare(null);
                   formik.resetForm();
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                className="px-6 py-2.5 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700"
+                className="px-6 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 text-white font-semibold rounded-lg hover:from-teal-700 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all"
               >
                 {editingFare ? "Update Fare" : "Add Fare"}
               </button>
@@ -538,94 +579,155 @@ export default function ZoneFareSetupPage() {
         </div>
       )}
 
-      {/* Fare Rules */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Fare Rules</h2>
-          <button
-            onClick={() => {
-              setEditingFare(null);
-              formik.resetForm();
-              formik.setFieldValue("zoneId", zoneId);
-              setShowAddForm(true);
-            }}
-            className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
-          >
-            + Add Fare
-          </button>
-        </div>
-
-        {fares.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 mb-4">No fare rules have been set up for this zone yet.</p>
+      {/* Fare Prices List */}
+      <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+        <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <span className="text-2xl">₹</span>
+                <span>Zone Fare Prices List</span>
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                {fares.length} {fares.length === 1 ? "fare configuration" : "fare configurations"} for this zone
+              </p>
+            </div>
             <button
               onClick={() => {
                 setEditingFare(null);
                 formik.resetForm();
                 formik.setFieldValue("zoneId", zoneId);
+                formik.setFieldValue("zoneName", zoneName);
                 setShowAddForm(true);
               }}
-              className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 text-white font-semibold rounded-lg hover:from-teal-700 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all"
             >
-              Add First Fare Rule
+              <PlusIcon className="w-5 h-5" />
+              <span>Add New Fare</span>
+            </button>
+          </div>
+        </div>
+
+        {fares.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+              <span className="text-3xl text-gray-400">₹</span>
+            </div>
+            <p className="text-gray-500 text-lg font-medium mb-2">No fare configurations found for this zone</p>
+            <p className="text-gray-400 text-sm mb-2">
+              Zone: <span className="font-semibold text-gray-600">{zoneName || zoneId}</span>
+            </p>
+            <p className="text-gray-400 text-sm mb-6">
+              Get started by adding your first fare configuration for this zone. 
+              Fares are matched by zone name, so make sure the zone name matches when creating fares.
+            </p>
+            <button
+              onClick={() => {
+                setEditingFare(null);
+                formik.resetForm();
+                formik.setFieldValue("zoneId", zoneId);
+                formik.setFieldValue("zoneName", zoneName);
+                setShowAddForm(true);
+              }}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 text-white font-semibold rounded-lg hover:from-teal-700 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all"
+            >
+              <PlusIcon className="w-5 h-5" />
+              <span>Add First Fare Configuration</span>
             </button>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Vehicle Category
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Base Fare (₹)
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    Base Fare
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Per Km (₹)
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    Per Km
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Per Min (₹)
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    Per Min
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Cancellation Fee (%)
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    Cancellation Fee
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {fares.map((fare) => (
-                  <tr key={fare.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {fare.vehicleCategory?.type || fare.vehicleCategory?.name || "N/A"}
+                {fares.map((fare, index) => (
+                  <tr key={fare.id} className={`hover:bg-gray-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-teal-100 to-emerald-100 rounded-lg flex items-center justify-center mr-3">
+                          <span className="text-teal-600 font-bold text-sm">
+                            {(fare.vehicleCategory?.type || fare.vehicleCategory?.name || "N/A")[0]}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-gray-900">
+                            {fare.vehicleCategory?.type || fare.vehicleCategory?.name || "N/A"}
+                          </div>
+                          {fare.vehicleCategory?.name && fare.vehicleCategory?.type && (
+                            <div className="text-xs text-gray-500">{fare.vehicleCategory.name}</div>
+                          )}
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ₹{fare.baseFare?.toFixed(2) || "0.00"}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm font-semibold text-gray-900">
+                        ₹{fare.baseFare?.toFixed(2) || "0.00"}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ₹{fare.baseFarePerKm?.toFixed(2) || "0.00"}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm font-semibold text-gray-900">
+                        ₹{fare.baseFarePerKm?.toFixed(2) || "0.00"}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {fare.timeRatePerMinOverride ? `₹${fare.timeRatePerMinOverride.toFixed(2)}` : "-"}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {fare.timeRatePerMinOverride ? (
+                        <div className="flex items-center gap-1">
+                          <ClockIcon className="w-4 h-4 text-purple-600" />
+                          <span className="text-sm font-semibold text-gray-900">
+                            ₹{fare.timeRatePerMinOverride.toFixed(2)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">-</span>
+                      )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {fare.cancellationFeePercent ? `${fare.cancellationFeePercent}%` : "-"}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {fare.cancellationFeePercent ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                          {fare.cancellationFeePercent}%
+                        </span>
+                      ) : (
+                        <span className="text-sm text-gray-400">-</span>
+                      )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                      <button
-                        onClick={() => handleEdit(fare)}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(fare.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleEdit(fare)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                        >
+                          <PencilIcon className="w-4 h-4" />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          onClick={() => handleDelete(fare.id)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                          <span>Delete</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -637,4 +739,3 @@ export default function ZoneFareSetupPage() {
     </div>
   );
 }
-

@@ -199,7 +199,14 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Pricing Management</h1>
-          <p className="text-gray-600">Configure ride pricing, fees, and commissions</p>
+          <p className="text-gray-600">Configure additional fees, commissions, and surcharges</p>
+          <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+            <p className="text-sm text-yellow-800">
+              <strong>⚠️ Important:</strong> This page configures <strong>additional fees</strong> (Platform Fee, GST, Night Surcharge, Commission). 
+              Base fare rates are configured in <strong>"Tiered Pricing Rates"</strong> tab above. 
+              Zone-specific overrides are in <strong>"Trip Fares"</strong> tab.
+            </p>
+          </div>
         </div>
         {!isEditing && (
           <button
@@ -217,11 +224,23 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
           <form onSubmit={formik.handleSubmit} className="space-y-8">
             {/* Auto/Rickshaw Settings */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">🛺 Auto/Rickshaw Settings</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2 border-b pb-2">🛺 Auto/Rickshaw Settings</h3>
+              <p className="text-xs text-gray-500 mb-4">
+                💡 <strong>Note:</strong> Base fare and per-km rates are set in "Tiered Pricing Rates" tab. 
+                These settings only configure additional fees that are added on top.
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-sm text-blue-800">
+                    <strong>ℹ️ Base Fare Rates:</strong> Base fare and per-km rates for Auto are configured in the 
+                    <strong> "Tiered Pricing Rates"</strong> tab (above). These fields below are legacy and may not be actively used 
+                    for fare calculation.
+                  </p>
+                </div>
+                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Auto Base Fare (₹)
+                    Auto Base Fare (₹) <span className="text-gray-400 text-xs">(Legacy - check Tiered Pricing)</span>
                   </label>
                   <input
                     type="number"
@@ -238,12 +257,12 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
                   {formik.touched.autoBaseFare && formik.errors.autoBaseFare && (
                     <p className="mt-1 text-sm text-red-600">{formik.errors.autoBaseFare}</p>
                   )}
-                  <p className="mt-1 text-sm text-gray-500">Fixed base fare for auto rides</p>
+                  <p className="mt-1 text-sm text-gray-500">⚠️ Not used for fare calculation. Configure in "Tiered Pricing Rates" tab.</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Auto Per KM Fare (₹)
+                    Auto Per KM Fare (₹) <span className="text-gray-400 text-xs">(Legacy - check Tiered Pricing)</span>
                   </label>
                   <input
                     type="number"
@@ -261,7 +280,7 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
                   {formik.touched.autoPerKmFare && formik.errors.autoPerKmFare && (
                     <p className="mt-1 text-sm text-red-600">{formik.errors.autoPerKmFare}</p>
                   )}
-                  <p className="mt-1 text-sm text-gray-500">Rate per kilometer for auto rides</p>
+                  <p className="mt-1 text-sm text-gray-500">⚠️ Not used for fare calculation. Configure in "Tiered Pricing Rates" tab.</p>
                 </div>
 
                 <div>
@@ -337,11 +356,23 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
 
             {/* Bike Settings */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">🏍️ Bike Settings</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2 border-b pb-2">🏍️ Bike Settings</h3>
+              <p className="text-xs text-gray-500 mb-4">
+                💡 <strong>Note:</strong> Base fare and per-km rates are set in "Tiered Pricing Rates" tab. 
+                These settings only configure additional fees that are added on top.
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-sm text-blue-800">
+                    <strong>ℹ️ Base Fare Rates:</strong> Base fare and per-km rates for Bike are configured in the 
+                    <strong> "Tiered Pricing Rates"</strong> tab (above). These fields below are legacy and may not be actively used 
+                    for fare calculation.
+                  </p>
+                </div>
+                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Bike Base Fare (₹)
+                    Bike Base Fare (₹) <span className="text-gray-400 text-xs">(Legacy - check Tiered Pricing)</span>
                   </label>
                   <input
                     type="number"
@@ -358,12 +389,12 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
                   {formik.touched.bikeBaseFare && formik.errors.bikeBaseFare && (
                     <p className="mt-1 text-sm text-red-600">{formik.errors.bikeBaseFare}</p>
                   )}
-                  <p className="mt-1 text-sm text-gray-500">Fixed base fare for bike rides</p>
+                  <p className="mt-1 text-sm text-gray-500">⚠️ Not used for fare calculation. Configure in "Tiered Pricing Rates" tab.</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Bike Per KM Fare (₹)
+                    Bike Per KM Fare (₹) <span className="text-gray-400 text-xs">(Legacy - check Tiered Pricing)</span>
                   </label>
                   <input
                     type="number"
@@ -381,7 +412,7 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
                   {formik.touched.bikePerKmFare && formik.errors.bikePerKmFare && (
                     <p className="mt-1 text-sm text-red-600">{formik.errors.bikePerKmFare}</p>
                   )}
-                  <p className="mt-1 text-sm text-gray-500">Rate per kilometer for bike rides</p>
+                  <p className="mt-1 text-sm text-gray-500">⚠️ Not used for fare calculation. Configure in "Tiered Pricing Rates" tab.</p>
                 </div>
 
                 <div>
@@ -457,11 +488,23 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
 
             {/* Car Settings */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">🚗 Car Settings</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2 border-b pb-2">🚗 Car Settings</h3>
+              <p className="text-xs text-gray-500 mb-4">
+                💡 <strong>Note:</strong> Base fare and per-km rates are set in "Tiered Pricing Rates" tab. 
+                These settings only configure additional fees that are added on top.
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-sm text-blue-800">
+                    <strong>ℹ️ Base Fare Rates:</strong> Base fare and per-km rates for Car are configured in the 
+                    <strong> "Tiered Pricing Rates"</strong> tab (above). These fields below are legacy and may not be actively used 
+                    for fare calculation.
+                  </p>
+                </div>
+                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Car Base Fare (₹)
+                    Car Base Fare (₹) <span className="text-gray-400 text-xs">(Legacy - check Tiered Pricing)</span>
                   </label>
                   <input
                     type="number"
@@ -478,12 +521,12 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
                   {formik.touched.carBaseFare && formik.errors.carBaseFare && (
                     <p className="mt-1 text-sm text-red-600">{formik.errors.carBaseFare}</p>
                   )}
-                  <p className="mt-1 text-sm text-gray-500">Fixed base fare for car rides</p>
+                  <p className="mt-1 text-sm text-gray-500">⚠️ Not used for fare calculation. Configure in "Tiered Pricing Rates" tab.</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Car Per KM Fare (₹)
+                    Car Per KM Fare (₹) <span className="text-gray-400 text-xs">(Legacy - check Tiered Pricing)</span>
                   </label>
                   <input
                     type="number"
@@ -501,7 +544,7 @@ function PricingManagement({ onUpdatePricing }: PricingManagementProps) {
                   {formik.touched.carPerKmFare && formik.errors.carPerKmFare && (
                     <p className="mt-1 text-sm text-red-600">{formik.errors.carPerKmFare}</p>
                   )}
-                  <p className="mt-1 text-sm text-gray-500">Rate per kilometer for car rides</p>
+                  <p className="mt-1 text-sm text-gray-500">⚠️ Not used for fare calculation. Configure in "Tiered Pricing Rates" tab.</p>
                 </div>
 
                 <div>

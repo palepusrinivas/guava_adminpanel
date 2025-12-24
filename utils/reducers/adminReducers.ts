@@ -158,6 +158,11 @@ import {
   adminNotificationOtherUrl,
   adminFirebaseConfigurationUrl,
   adminThirdPartyConfigurationUrl,
+  adminNotificationsUrl,
+  adminNotificationsUnreadUrl,
+  adminNotificationsUnreadCountUrl,
+  adminNotificationMarkReadUrl,
+  adminNotificationsMarkAllReadUrl,
 } from "../apiRoutes";
 
 // Pricing Management
@@ -2754,6 +2759,72 @@ export const testMailServerConnectionDirect = createAsyncThunk(
   async (data: any, { rejectWithValue }) => {
     try {
       const response = await adminAxios.post(adminMailServerTestConnectionDirectUrl, data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+// Admin Notifications Management
+export const getAdminNotifications = createAsyncThunk(
+  "admin/getAdminNotifications",
+  async (params: { page?: number; size?: number; type?: string } = {}, { rejectWithValue }) => {
+    try {
+      const { page = 0, size = 20, type } = params;
+      const url = type 
+        ? `${adminNotificationsUrl}?page=${page}&size=${size}&type=${type}`
+        : `${adminNotificationsUrl}?page=${page}&size=${size}`;
+      const response = await adminAxios.get(url);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const getUnreadAdminNotifications = createAsyncThunk(
+  "admin/getUnreadAdminNotifications",
+  async (params: { page?: number; size?: number } = {}, { rejectWithValue }) => {
+    try {
+      const { page = 0, size = 20 } = params;
+      const response = await adminAxios.get(`${adminNotificationsUnreadUrl}?page=${page}&size=${size}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const getUnreadAdminNotificationsCount = createAsyncThunk(
+  "admin/getUnreadAdminNotificationsCount",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.get(adminNotificationsUnreadCountUrl);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const markNotificationAsRead = createAsyncThunk(
+  "admin/markNotificationAsRead",
+  async (notificationId: number, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.put(adminNotificationMarkReadUrl(notificationId.toString()));
+      return { id: notificationId, ...response.data };
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const markAllNotificationsAsRead = createAsyncThunk(
+  "admin/markAllNotificationsAsRead",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.put(adminNotificationsMarkAllReadUrl);
       return response.data;
     } catch (error) {
       return rejectWithValue(extractErrorMessage(error));

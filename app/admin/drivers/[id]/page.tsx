@@ -25,6 +25,8 @@ interface DriverDetails {
       model: string;
       licensePlate: string;
       color: string;
+      serviceType?: string; // BIKE, MEGA, CAR, etc.
+      vehicleType?: string; // two_wheeler, three_wheeler, four_wheeler
     };
     license?: {
       id: number;
@@ -240,7 +242,17 @@ export default function DriverDetailsPage() {
         {driver.vehicle && (
           <>
             <h3 className="text-lg font-semibold mt-6 mb-4">Vehicle Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label className="text-gray-500 text-sm">Vehicle Type</label>
+                <p className="font-medium">
+                  {driver.vehicle.serviceType 
+                    ? driver.vehicle.serviceType.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())
+                    : driver.vehicle.vehicleType 
+                      ? driver.vehicle.vehicleType.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())
+                      : "N/A"}
+                </p>
+              </div>
               <div>
                 <label className="text-gray-500 text-sm">Model</label>
                 <p className="font-medium">{driver.vehicle.model || "N/A"}</p>

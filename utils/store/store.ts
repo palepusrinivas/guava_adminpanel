@@ -30,6 +30,7 @@ import schoolReducer from "@/utils/slices/schoolSlice";
 import walletReducer from "@/utils/slices/walletSlice";
 import intercityReducer from "@/utils/slices/intercitySlice";
 import cashbackReducer from "@/utils/slices/cashbackSlice";
+import adminNotificationsReducer from "@/utils/slices/adminNotificationsSlice";
 const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -62,6 +63,7 @@ const store = configureStore({
     wallet: walletReducer,
     intercity: intercityReducer,
     cashback: cashbackReducer,
+    adminNotifications: adminNotificationsReducer,
   },
 });
 

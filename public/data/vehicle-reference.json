@@ -1,0 +1,369 @@
+{
+  "serviceTypes": [
+    {
+      "id": "BIKE",
+      "name": "Bike",
+      "displayName": "Bike Taxi",
+      "description": "Two-wheeler bike taxi service",
+      "icon": "🏍️",
+      "vehicleType": "two_wheeler",
+      "capacity": 1,
+      "isActive": true
+    },
+    {
+      "id": "MEGA",
+      "name": "Auto Rickshaw",
+      "displayName": "Auto Rickshaw",
+      "description": "Three-wheeler auto/rickshaw service",
+      "icon": "🛺",
+      "vehicleType": "three_wheeler",
+      "capacity": 3,
+      "isActive": true,
+      "note": "Also referred to as 'Auto' in UI, but enum value is MEGA"
+    },
+    {
+      "id": "SMALL_SEDAN",
+      "name": "Small Sedan",
+      "displayName": "Small Sedan",
+      "description": "Compact sedan car service",
+      "icon": "🚙",
+      "vehicleType": "four_wheeler",
+      "capacity": 4,
+      "isActive": true
+    },
+    {
+      "id": "CAR",
+      "name": "Car",
+      "displayName": "Car",
+      "description": "Standard four-wheeler car service",
+      "icon": "🚗",
+      "vehicleType": "four_wheeler",
+      "capacity": 4,
+      "isActive": true
+    }
+  ],
+  "vehicleCategories": [
+    {
+      "type": "BIKE",
+      "name": "Two Wheeler",
+      "description": "Motorcycles and scooters for bike taxi service",
+      "serviceTypeId": "BIKE",
+      "vehicleType": "two_wheeler"
+    },
+    {
+      "type": "MEGA",
+      "name": "Three Wheeler",
+      "description": "Auto rickshaws and three-wheeled vehicles",
+      "serviceTypeId": "MEGA",
+      "vehicleType": "three_wheeler"
+    },
+    {
+      "type": "SMALL_SEDAN",
+      "name": "Small Sedan",
+      "description": "Compact sedan cars",
+      "serviceTypeId": "SMALL_SEDAN",
+      "vehicleType": "four_wheeler"
+    },
+    {
+      "type": "CAR",
+      "name": "Four Wheeler",
+      "description": "Standard four-wheeler cars",
+      "serviceTypeId": "CAR",
+      "vehicleType": "four_wheeler"
+    }
+  ],
+  "vehicleBrands": [
+    {
+      "name": "Hero",
+      "categoryTypes": ["BIKE"],
+      "isActive": true
+    },
+    {
+      "name": "Honda",
+      "categoryTypes": ["BIKE", "CAR"],
+      "isActive": true
+    },
+    {
+      "name": "Bajaj",
+      "categoryTypes": ["BIKE", "MEGA"],
+      "isActive": true
+    },
+    {
+      "name": "TVS",
+      "categoryTypes": ["BIKE"],
+      "isActive": true
+    },
+    {
+      "name": "Yamaha",
+      "categoryTypes": ["BIKE"],
+      "isActive": true
+    },
+    {
+      "name": "Suzuki",
+      "categoryTypes": ["BIKE", "CAR"],
+      "isActive": true
+    },
+    {
+      "name": "Royal Enfield",
+      "categoryTypes": ["BIKE"],
+      "isActive": true
+    },
+    {
+      "name": "Maruti Suzuki",
+      "categoryTypes": ["CAR", "SMALL_SEDAN"],
+      "isActive": true
+    },
+    {
+      "name": "Hyundai",
+      "categoryTypes": ["CAR", "SMALL_SEDAN"],
+      "isActive": true
+    },
+    {
+      "name": "Tata",
+      "categoryTypes": ["CAR", "SMALL_SEDAN"],
+      "isActive": true
+    },
+    {
+      "name": "Mahindra",
+      "categoryTypes": ["CAR"],
+      "isActive": true
+    },
+    {
+      "name": "Toyota",
+      "categoryTypes": ["CAR", "SMALL_SEDAN"],
+      "isActive": true
+    },
+    {
+      "name": "Ford",
+      "categoryTypes": ["CAR"],
+      "isActive": true
+    },
+    {
+      "name": "Nissan",
+      "categoryTypes": ["CAR", "SMALL_SEDAN"],
+      "isActive": true
+    },
+    {
+      "name": "Volkswagen",
+      "categoryTypes": ["CAR"],
+      "isActive": true
+    },
+    {
+      "name": "Skoda",
+      "categoryTypes": ["CAR"],
+      "isActive": true
+    },
+    {
+      "name": "MG",
+      "categoryTypes": ["CAR"],
+      "isActive": true
+    },
+    {
+      "name": "Kia",
+      "categoryTypes": ["CAR", "SMALL_SEDAN"],
+      "isActive": true
+    },
+    {
+      "name": "Renault",
+      "categoryTypes": ["CAR", "SMALL_SEDAN"],
+      "isActive": true
+    }
+  ],
+  "vehicleModels": [
+    {
+      "brand": "Hero",
+      "models": [
+        { "name": "Splendor", "categoryTypes": ["BIKE"] },
+        { "name": "Passion Pro", "categoryTypes": ["BIKE"] },
+        { "name": "HF Deluxe", "categoryTypes": ["BIKE"] },
+        { "name": "Glamour", "categoryTypes": ["BIKE"] },
+        { "name": "Xtreme", "categoryTypes": ["BIKE"] },
+        { "name": "Xpulse", "categoryTypes": ["BIKE"] }
+      ]
+    },
+    {
+      "brand": "Honda",
+      "models": [
+        { "name": "Activa", "categoryTypes": ["BIKE"] },
+        { "name": "Shine", "categoryTypes": ["BIKE"] },
+        { "name": "Unicorn", "categoryTypes": ["BIKE"] },
+        { "name": "CB350", "categoryTypes": ["BIKE"] },
+        { "name": "City", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Amaze", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Civic", "categoryTypes": ["CAR"] },
+        { "name": "CR-V", "categoryTypes": ["CAR"] }
+      ]
+    },
+    {
+      "brand": "Bajaj",
+      "models": [
+        { "name": "Pulsar", "categoryTypes": ["BIKE"] },
+        { "name": "Platina", "categoryTypes": ["BIKE"] },
+        { "name": "CT 100", "categoryTypes": ["BIKE"] },
+        { "name": "Dominar", "categoryTypes": ["BIKE"] },
+        { "name": "RE Auto", "categoryTypes": ["MEGA"] },
+        { "name": "Maxima C", "categoryTypes": ["MEGA"] },
+        { "name": "RE Compact", "categoryTypes": ["MEGA"] }
+      ]
+    },
+    {
+      "brand": "TVS",
+      "models": [
+        { "name": "Jupiter", "categoryTypes": ["BIKE"] },
+        { "name": "Apache", "categoryTypes": ["BIKE"] },
+        { "name": "NTorq", "categoryTypes": ["BIKE"] },
+        { "name": "Radeon", "categoryTypes": ["BIKE"] },
+        { "name": "Star City", "categoryTypes": ["BIKE"] }
+      ]
+    },
+    {
+      "brand": "Yamaha",
+      "models": [
+        { "name": "Fascino", "categoryTypes": ["BIKE"] },
+        { "name": "Ray ZR", "categoryTypes": ["BIKE"] },
+        { "name": "FZ", "categoryTypes": ["BIKE"] },
+        { "name": "MT", "categoryTypes": ["BIKE"] },
+        { "name": "R15", "categoryTypes": ["BIKE"] }
+      ]
+    },
+    {
+      "brand": "Suzuki",
+      "models": [
+        { "name": "Access", "categoryTypes": ["BIKE"] },
+        { "name": "Burgman", "categoryTypes": ["BIKE"] },
+        { "name": "Gixxer", "categoryTypes": ["BIKE"] },
+        { "name": "Swift", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Dzire", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Vitara Brezza", "categoryTypes": ["CAR"] }
+      ]
+    },
+    {
+      "brand": "Royal Enfield",
+      "models": [
+        { "name": "Classic 350", "categoryTypes": ["BIKE"] },
+        { "name": "Bullet 350", "categoryTypes": ["BIKE"] },
+        { "name": "Hunter 350", "categoryTypes": ["BIKE"] },
+        { "name": "Meteor 350", "categoryTypes": ["BIKE"] },
+        { "name": "Himalayan", "categoryTypes": ["BIKE"] }
+      ]
+    },
+    {
+      "brand": "Maruti Suzuki",
+      "models": [
+        { "name": "Swift", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Dzire", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Baleno", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Ciaz", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "S-Presso", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Wagon R", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Vitara Brezza", "categoryTypes": ["CAR"] },
+        { "name": "Ertiga", "categoryTypes": ["CAR"] },
+        { "name": "XL6", "categoryTypes": ["CAR"] }
+      ]
+    },
+    {
+      "brand": "Hyundai",
+      "models": [
+        { "name": "i20", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Verna", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Aura", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Grand i10", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Creta", "categoryTypes": ["CAR"] },
+        { "name": "Venue", "categoryTypes": ["CAR"] },
+        { "name": "Alcazar", "categoryTypes": ["CAR"] },
+        { "name": "Tucson", "categoryTypes": ["CAR"] }
+      ]
+    },
+    {
+      "brand": "Tata",
+      "models": [
+        { "name": "Tiago", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Tigor", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Altroz", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Nexon", "categoryTypes": ["CAR"] },
+        { "name": "Harrier", "categoryTypes": ["CAR"] },
+        { "name": "Safari", "categoryTypes": ["CAR"] },
+        { "name": "Punch", "categoryTypes": ["CAR"] }
+      ]
+    },
+    {
+      "brand": "Mahindra",
+      "models": [
+        { "name": "XUV300", "categoryTypes": ["CAR"] },
+        { "name": "XUV700", "categoryTypes": ["CAR"] },
+        { "name": "Thar", "categoryTypes": ["CAR"] },
+        { "name": "Scorpio", "categoryTypes": ["CAR"] },
+        { "name": "Bolero", "categoryTypes": ["CAR"] }
+      ]
+    },
+    {
+      "brand": "Toyota",
+      "models": [
+        { "name": "Innova Crysta", "categoryTypes": ["CAR"] },
+        { "name": "Fortuner", "categoryTypes": ["CAR"] },
+        { "name": "Glanza", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Urban Cruiser", "categoryTypes": ["CAR"] },
+        { "name": "Camry", "categoryTypes": ["CAR"] }
+      ]
+    },
+    {
+      "brand": "Ford",
+      "models": [
+        { "name": "EcoSport", "categoryTypes": ["CAR"] },
+        { "name": "Endeavour", "categoryTypes": ["CAR"] },
+        { "name": "Freestyle", "categoryTypes": ["CAR"] }
+      ]
+    },
+    {
+      "brand": "Nissan",
+      "models": [
+        { "name": "Magnite", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Kicks", "categoryTypes": ["CAR"] }
+      ]
+    },
+    {
+      "brand": "Volkswagen",
+      "models": [
+        { "name": "Polo", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Vento", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Tiguan", "categoryTypes": ["CAR"] },
+        { "name": "Taigun", "categoryTypes": ["CAR"] }
+      ]
+    },
+    {
+      "brand": "Skoda",
+      "models": [
+        { "name": "Rapid", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Kushaq", "categoryTypes": ["CAR"] },
+        { "name": "Slavia", "categoryTypes": ["CAR", "SMALL_SEDAN"] }
+      ]
+    },
+    {
+      "brand": "MG",
+      "models": [
+        { "name": "Hector", "categoryTypes": ["CAR"] },
+        { "name": "Astor", "categoryTypes": ["CAR"] },
+        { "name": "Gloster", "categoryTypes": ["CAR"] },
+        { "name": "ZS EV", "categoryTypes": ["CAR"] }
+      ]
+    },
+    {
+      "brand": "Kia",
+      "models": [
+        { "name": "Seltos", "categoryTypes": ["CAR"] },
+        { "name": "Sonet", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Carens", "categoryTypes": ["CAR"] },
+        { "name": "Carnival", "categoryTypes": ["CAR"] }
+      ]
+    },
+    {
+      "brand": "Renault",
+      "models": [
+        { "name": "Kwid", "categoryTypes": ["CAR", "SMALL_SEDAN"] },
+        { "name": "Triber", "categoryTypes": ["CAR"] },
+        { "name": "Duster", "categoryTypes": ["CAR"] },
+        { "name": "Kiger", "categoryTypes": ["CAR", "SMALL_SEDAN"] }
+      ]
+    }
+  ]
+}
