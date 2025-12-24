@@ -266,7 +266,7 @@ export default function AddNewVehicle() {
     }
 
     // Get service type from category
-    const category = availableCategories.find(c => c.name === selectedCategory);
+    const category = availableCategories.find((c: { id: string; name: string; type: string }) => c.name === selectedCategory);
     if (!category?.type) return [];
 
     // Get models from reference data
