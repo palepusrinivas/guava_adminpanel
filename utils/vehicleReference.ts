@@ -59,7 +59,11 @@ export async function loadVehicleReferenceData(): Promise<VehicleReferenceData> 
       if (!response.ok) {
         throw new Error(`Failed to load vehicle reference data: ${response.statusText}`);
       }
-      data = await response.json();
+      const loadedData = await response.json() as VehicleReferenceData;
+      if (!loadedData) {
+        throw new Error('Vehicle reference data is null or invalid');
+      }
+      data = loadedData;
       return data;
     } catch (error) {
       console.error('Error loading vehicle reference data:', error);
