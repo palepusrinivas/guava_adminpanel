@@ -330,7 +330,7 @@ export default function AddNewVehicle() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-teal-500 outline-none"
               >
                 <option value="">Select Brand</option>
-                {availableBrands.map((brand) => (
+                {availableBrands.map((brand: { id: string; name: string }) => (
                   <option key={brand.id} value={brand.name}>
                     {brand.name}
                   </option>
@@ -353,7 +353,7 @@ export default function AddNewVehicle() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-teal-500 outline-none"
                 >
                   <option value="">Select Model</option>
-                  {availableModels.map((model, idx) => (
+                  {availableModels.map((model: { name: string }, idx: number) => (
                     <option key={idx} value={model.name}>
                       {model.name}
                     </option>
@@ -389,7 +389,7 @@ export default function AddNewVehicle() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-teal-500 outline-none"
               >
                 <option value="">Select Vehicle Category</option>
-                {availableCategories.map((category) => (
+                {availableCategories.map((category: { id: string; name: string; type: string }) => (
                   <option key={category.id} value={category.name}>
                     {category.name}
                   </option>
