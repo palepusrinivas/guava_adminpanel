@@ -44,6 +44,9 @@ export const adminDriverByIdUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADM
 export const adminDriverKycUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.DRIVER_KYC.replace(':id', id));
 export const adminDriverKycFileUrl = (id: string, name: string) => getApiUrl(config.ENDPOINTS.ADMIN.DRIVER_KYC_FILE.replace(':id', id).replace(':name', name));
 export const adminDriverKycDownloadUrl = (id: string, name: string) => getApiUrl(config.ENDPOINTS.ADMIN.DRIVER_KYC_DOWNLOAD.replace(':id', id).replace(':name', name));
+export const adminDriverKycSearchUrl = (query: string, page: number = 0, size: number = 10) => 
+  getApiUrl(`${config.ENDPOINTS.ADMIN.DRIVER_KYC_SEARCH}?q=${encodeURIComponent(query)}&page=${page}&size=${size}`);
+export const adminDriverKycDetailsUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.DRIVER_KYC_DETAILS.replace(':id', id));
 export const adminWalletCreditUserUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.WALLET_CREDIT_USER.replace(':id', id));
 export const adminWalletCreditDriverUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.WALLET_CREDIT_DRIVER.replace(':id', id));
 export const adminWalletManualPaymentUserUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.WALLET_MANUAL_PAYMENT_USER.replace(':id', id));
