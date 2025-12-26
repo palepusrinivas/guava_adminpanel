@@ -67,7 +67,11 @@ export default function AdminDriversPage() {
           mobile: driver.mobile || driver.phone || "",
           rating: driver.rating || 0,
           latitude: driver.latitude || 0,
-          longitude: driver.longitude || 0
+          longitude: driver.longitude || 0,
+          vehicle: driver.vehicle ? {
+            serviceType: driver.vehicle.serviceType || driver.vehicle.service_type,
+            vehicleType: driver.vehicle.vehicleType || driver.vehicle.vehicle_type,
+          } : undefined
         })).filter((d: any) => d.id); // Filter out drivers without ID
         
         console.log("Cleaned drivers:", cleanedDrivers); // Debug log

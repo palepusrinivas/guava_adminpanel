@@ -91,6 +91,8 @@ export const config = {
       DRIVER_KYC_LEGACY: "/api/admin/kyc/drivers/:id",
       DRIVER_KYC_FILE: "/api/admin/kyc/drivers/:id/files/:name",
       DRIVER_KYC_DOWNLOAD: "/api/admin/kyc/drivers/:id/files/:name/download",
+      DRIVER_KYC_SEARCH: "/api/admin/kyc/search-drivers",
+      DRIVER_KYC_DETAILS: "/api/admin/kyc/drivers/:id/details",
       DRIVER_DETAILS: "/api/admin/drivers/:id/details",
       DRIVER_KYC: "/api/admin/drivers/:id/kyc",
       DRIVER_KYC_APPROVE: "/api/admin/drivers/:id/kyc/approve",
@@ -127,6 +129,7 @@ export const config = {
       SERVICES_SEED: "/api/admin/services/seed-defaults",
       COUPONS: "/api/admin/coupons",
       COUPON_BY_ID: "/api/admin/coupons/:id",
+      COUPON_SEND_EMAIL: "/api/admin/coupons/:id/send-email",
       DISCOUNTS: "/api/admin/discounts",
       DISCOUNT_BY_ID: "/api/admin/discounts/:id",
       DRIVER_LEVELS: "/api/admin/driver-levels",
@@ -283,8 +286,17 @@ export const getApiUrl = (endpoint: string): string => {
 };
 
 // Helper function to get LocationIQ API URL
+// DEPRECATED: Use backend endpoint /api/customer/location-search/autocomplete instead
+// This direct API call is kept for backward compatibility but should be migrated to backend endpoint
 export const getLocationIqUrl = (query: string, limit: number = 5): string => {
   return `https://us1.locationiq.com/v1/autocomplete.php?limit=${limit}&key=${config.LOCATIONIQ_API_KEY}&q=${query}`;
+};
+
+// Helper function to get location search autocomplete URL (backend endpoint)
+// This is the recommended approach - faster and more reliable
+export const getLocationSearchAutocompleteUrl = (query: string, limit: number = 5): string => {
+  const encodedQuery = encodeURIComponent(query);
+  return `${config.API_BASE_URL}/api/customer/location-search/autocomplete?q=${encodedQuery}&limit=${limit}`;
 };
 
 // Helper function to get admin token from localStorage

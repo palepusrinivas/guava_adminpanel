@@ -158,6 +158,7 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
         { name: "Users", href: "/admin/users", icon: "👥" },
         { name: "Drivers", href: "/admin/drivers", icon: "🚙" },
         { name: "Pending KYC", href: "/admin/drivers/pending-kyc", icon: "⏳" },
+        { name: "Upload KYC Documents", href: "/admin/drivers/upload-kyc", icon: "📤" },
         {
           name: "Driver Level Setup",
           icon: "🧭",

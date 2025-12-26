@@ -13,6 +13,10 @@ interface Driver {
   rating: number;
   latitude: number;
   longitude: number;
+  vehicle?: {
+    serviceType?: string;
+    vehicleType?: string;
+  };
 }
 
 interface DriverManagementProps {
@@ -30,16 +34,6 @@ interface DriverManagementProps {
   error: string | null;
 }
 
-interface Driver {
-  id: string;
-  name: string;
-  email: string;
-  mobile: string;
-  rating: number;
-  latitude: number;
-  longitude: number;
-}
-
 const driverValidationSchema = yup.object({
   name: yup.string().required("Name is required"),
   email: yup.string().email("Invalid email").required("Email is required"),
@@ -47,6 +41,7 @@ const driverValidationSchema = yup.object({
   latitude: yup.number().required("Latitude is required"),
   longitude: yup.number().required("Longitude is required"),
   rating: yup.number().min(0).max(5).required("Rating is required"),
+  vehicleType: yup.string(),
 });
 
 function DriverManagement({
@@ -97,11 +92,19 @@ function DriverManagement({
       latitude: selectedDriver?.latitude || 0,
       longitude: selectedDriver?.longitude || 0,
       rating: selectedDriver?.rating || 0,
+      vehicleType: selectedDriver?.vehicle?.serviceType || selectedDriver?.vehicle?.vehicleType || "",
     },
     validationSchema: driverValidationSchema,
     enableReinitialize: true,
     onSubmit: (values) => {
-      onUpdateDriver(selectedDriver.id, values);
+      // Format the update payload to include vehicle information
+      const updatePayload = {
+        ...values,
+        vehicle: values.vehicleType ? {
+          serviceType: values.vehicleType,
+        } : undefined,
+      };
+      onUpdateDriver(selectedDriver.id, updatePayload);
       setShowEditModal(false);
       setSelectedDriver(null);
     },
@@ -526,6 +529,27 @@ function DriverManagement({
                   />
                   {editFormik.touched.rating && typeof editFormik.errors.rating === 'string' && (
                     <p className="mt-1 text-sm text-red-600">{editFormik.errors.rating}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Vehicle Type</label>
+                  <select
+                    name="vehicleType"
+                    value={editFormik.values.vehicleType}
+                    onChange={editFormik.handleChange}
+                    onBlur={editFormik.handleBlur}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select Vehicle Type</option>
+                    <option value="BIKE">BIKE</option>
+                    <option value="MEGA">MEGA (Auto Rickshaw)</option>
+                    <option value="AUTO">AUTO</option>
+                    <option value="SMALL_SEDAN">SMALL_SEDAN</option>
+                    <option value="CAR">CAR</option>
+                  </select>
+                  {editFormik.touched.vehicleType && typeof editFormik.errors.vehicleType === 'string' && (
+                    <p className="mt-1 text-sm text-red-600">{editFormik.errors.vehicleType}</p>
                   )}
                 </div>
 

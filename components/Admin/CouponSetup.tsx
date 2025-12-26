@@ -6,6 +6,8 @@ import { getCoupons, deleteCoupon, updateCoupon, getCouponById } from "@/utils/r
 import { setCouponFilter, setCouponSearchQuery, setSelectedCoupon } from "@/utils/slices/couponSlice";
 import { toast } from "react-hot-toast";
 import type { Coupon } from "@/utils/slices/couponSlice";
+import adminAxios from "@/utils/axiosConfig";
+import { config, getApiUrl } from "@/utils/config";
 
 function StatCard({ label, value, icon }: { label: string; value: string | number; icon?: React.ReactNode }) {
   return (
@@ -304,6 +306,26 @@ export default function CouponSetup() {
     }
   };
 
+  const handleSendCouponEmail = async (coupon: Coupon) => {
+    const email = prompt("Enter user email address to send coupon:");
+    if (!email || email.trim() === "") {
+      return;
+    }
+
+    try {
+      const url = getApiUrl(config.ENDPOINTS.ADMIN.COUPON_SEND_EMAIL.replace(":id", String(coupon.id)));
+      const response = await adminAxios.post(url, { email: email.trim() });
+      
+      if (response.data.success) {
+        toast.success(`Coupon ${coupon.code} sent successfully to ${email}`);
+      } else {
+        toast.error(response.data.message || "Failed to send coupon email");
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || error.message || "Failed to send coupon email");
+    }
+  };
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return "-";
     try {
@@ -466,13 +488,20 @@ export default function CouponSetup() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 flex-wrap gap-1">
                         <button
                           onClick={() => handleEdit(c)}
                           className="px-2 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-700"
                           title="Edit"
                         >
                           ✏️ Edit
+                        </button>
+                        <button
+                          onClick={() => handleSendCouponEmail(c)}
+                          className="px-2 py-1 text-xs rounded bg-purple-600 text-white hover:bg-purple-700"
+                          title="Send Coupon via Email"
+                        >
+                          📧 Send Email
                         </button>
                         <button
                           onClick={() => handleToggleStatus(c)}

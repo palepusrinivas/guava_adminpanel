@@ -32,7 +32,7 @@ import { requestRide } from "@/utils/reducers/rideReducers";
 import { useAppDispatch, useAppSelector } from "@/utils/store/store";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { getLocationIqUrl, config, getApiUrl } from "@/utils/config";
+import { getLocationIqUrl, getLocationSearchAutocompleteUrl, config, getApiUrl } from "@/utils/config";
 
 const validationSchema = Yup.object().shape({
   pickupArea: Yup.string().required("Pickup location is required"),
@@ -82,16 +82,24 @@ function BookRide() {
       
       setIsLoadingSuggestions(true);
       try {
-        const response = await axios.get(getLocationIqUrl(input, 5));
-        setSuggestions(response.data);
-      } catch (error) {
-        console.error("Error fetching suggestions:", error);
-        toast.error("Failed to fetch location suggestions");
+        // Use backend endpoint instead of direct LocationIQ API call
+        // This is faster, has timeout control, and keeps API keys secure
+        const response = await axios.get(getLocationSearchAutocompleteUrl(input, 5), {
+          timeout: 8000 // 8 second timeout on frontend (backend has 10 second timeout)
+        });
+        setSuggestions(response.data || []);
+      } catch (error: any) {
+        console.error("Error fetching location suggestions:", error);
+        // Don't show error toast for timeout/cancellation - user might be typing
+        if (error.code !== 'ECONNABORTED' && !error.message?.includes('timeout')) {
+          toast.error("Failed to fetch location suggestions");
+        }
+        setSuggestions([]); // Clear suggestions on error
       } finally {
         setIsLoadingSuggestions(false);
       }
     },
-    300
+    300 // 300ms debounce delay
   );
 
   const handleInputChange = (event: any) => {
