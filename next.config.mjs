@@ -16,14 +16,17 @@ const nextConfig = {
     ],
   },
   // proxy for api requests
+  // NOTE: This rewrite is disabled for production because adminAxios uses absolute URLs from config.API_BASE_URL
+  // The rewrite would only be needed if using relative URLs (like /api/...)
+  // For production, axios makes direct requests to the backend, bypassing Next.js rewrites
   async rewrites() {
+    // Commented out for production - axios makes direct requests to backend
+    // Uncomment for local development if you want to proxy through Next.js
     return [
-      {
-        source: "/api/:path*",
-        destination: "https://gauva-b7gaf7bwcwhqa0c6.canadacentral-01.azurewebsites.net/api/:path*",
-        // Uncomment below to use production backend instead
-        // destination: "https://ride-fast-app-backend-latest.onrender.com/api/:path*",
-      },
+      // {
+      //   source: "/api/:path*",
+      //   destination: "https://gauva-f6f6d9ddagfqc9fw.southindia-01.azurewebsites.net/api/:path*",
+      // },
     ];
   },
 };
