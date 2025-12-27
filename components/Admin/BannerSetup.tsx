@@ -153,44 +153,18 @@ function BannerSetup() {
     return true;
   });
 
-  // Convert imageUrl to valid URL for Next.js Image component
+  // Backend now returns signed URLs directly, so we just need to validate and use them
   const getValidImageUrl = (imageUrl: string | null | undefined): string | null => {
     if (!imageUrl) return null;
     
-    // Already a valid URL
+    // Backend already returns signed URLs (https://storage.googleapis.com/...)
+    // Just validate it's a valid URL
     if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
       return imageUrl;
     }
     
-    // Convert gs:// path to Firebase Storage public URL
-    if (imageUrl.startsWith("gs://")) {
-      const match = imageUrl.match(/^gs:\/\/([^/]+)\/(.+)$/);
-      if (match) {
-        const [, bucket, path] = match;
-        // Firebase Storage public URL format: 
-        // https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{encodedPath}?alt=media
-        // Each path segment needs to be encoded separately
-        const pathSegments = path.split('/');
-        const encodedPath = pathSegments.map(segment => encodeURIComponent(segment)).join('%2F');
-        const url = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodedPath}?alt=media`;
-        console.log('Converted gs:// URL:', { original: imageUrl, converted: url });
-        return url;
-      }
-    }
-    
-    // Convert relative path to Firebase Storage URL (assuming default bucket)
-    // Path format: documents/banners/filename.jpg
-    if (imageUrl.includes("documents/") || imageUrl.includes("banners/")) {
-      const defaultBucket = "gauva-15d9a.appspot.com";
-      // Encode each path segment separately
-      const pathSegments = imageUrl.split('/');
-      const encodedPath = pathSegments.map(segment => encodeURIComponent(segment)).join('%2F');
-      const url = `https://firebasestorage.googleapis.com/v0/b/${defaultBucket}/o/${encodedPath}?alt=media`;
-      console.log('Converted relative path URL:', { original: imageUrl, converted: url });
-      return url;
-    }
-    
-    console.warn('Could not convert imageUrl:', imageUrl);
+    // Fallback: if it's a gs:// or relative path, log warning (shouldn't happen with new backend)
+    console.warn('Banner imageUrl is not a valid URL - backend should return signed URLs:', imageUrl);
     return null;
   };
 
@@ -500,30 +474,28 @@ function BannerSetup() {
                 return (
                   <div key={banner.id} className="bg-white rounded-lg shadow-md overflow-hidden">
                     {validImageUrl ? (
-                      <div className="relative w-full h-32">
-                        <Image
+                      <div className="relative w-full h-32 bg-gray-200 overflow-hidden">
+                        {/* Use regular img tag for Firebase Storage signed URLs */}
+                        <img
                           src={validImageUrl}
                           alt={banner.title}
-                          fill
-                          className="object-cover"
-                          unoptimized
+                          className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
                           onError={(e) => {
-                            console.error('Image failed to load:', validImageUrl, e);
-                            // Fallback to regular img tag if Next.js Image fails
+                            // Handle image load errors
                             const img = e.target as HTMLImageElement;
-                            if (img) {
+                            if (img && img.parentElement) {
                               img.style.display = 'none';
-                              const fallback = document.createElement('img');
-                              fallback.src = validImageUrl;
-                              fallback.alt = banner.title;
-                              fallback.className = 'w-full h-32 object-cover';
-                              fallback.onerror = () => {
-                                console.error('Fallback image also failed:', validImageUrl);
-                              };
-                              img.parentElement?.appendChild(fallback);
+                              // Show placeholder
+                              const placeholder = img.parentElement.querySelector('.image-placeholder') as HTMLElement;
+                              if (placeholder) {
+                                placeholder.style.display = 'flex';
+                              }
                             }
                           }}
                         />
+                        <div className="image-placeholder absolute inset-0 bg-gray-200 flex items-center justify-center" style={{ display: 'none' }}>
+                          <span className="text-gray-400 text-xs">Image unavailable</span>
+                        </div>
                       </div>
                     ) : (
                       <div className="w-full h-32 bg-gray-200 flex items-center justify-center">

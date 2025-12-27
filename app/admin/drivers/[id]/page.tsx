@@ -432,38 +432,57 @@ export default function DriverDetailsPage() {
 
 function DocumentCard({ label, url }: { label: string; url: string }) {
   const [showModal, setShowModal] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  // Backend returns signed URLs directly, so use them as-is
+  const isValidUrl = url && (url.startsWith('http://') || url.startsWith('https://'));
 
   return (
     <>
       <div
         className="border rounded-lg p-2 cursor-pointer hover:shadow-md transition"
-        onClick={() => setShowModal(true)}
+        onClick={() => isValidUrl && !imageError && setShowModal(true)}
       >
-        <div className="relative h-32 bg-gray-100 rounded">
-          <img
-            src={url}
-            alt={label}
-            className="w-full h-full object-cover rounded"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = "/placeholder-doc.png";
-            }}
-          />
+        <div className="relative h-32 bg-gray-100 rounded overflow-hidden">
+          {isValidUrl && !imageError ? (
+            <img
+              src={url}
+              alt={label}
+              className="w-full h-full object-cover rounded"
+              onError={() => setImageError(true)}
+              onLoad={() => setImageError(false)}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gray-200">
+              <span className="text-gray-400 text-xs text-center px-2">Image unavailable</span>
+            </div>
+          )}
         </div>
         <p className="text-sm text-center mt-2 font-medium">{label}</p>
       </div>
 
-      {showModal && (
+      {showModal && isValidUrl && !imageError && (
         <div
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
           onClick={() => setShowModal(false)}
         >
-          <div className="max-w-4xl max-h-[90vh] p-4">
+          <div className="max-w-4xl max-h-[90vh] p-4 relative">
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-4 right-4 text-white bg-black bg-opacity-50 hover:bg-opacity-75 rounded-full p-2 z-10"
+              aria-label="Close"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
             <img
               src={url}
               alt={label}
-              className="max-w-full max-h-full object-contain"
+              className="max-w-full max-h-[85vh] object-contain mx-auto rounded"
+              onError={() => setImageError(true)}
             />
-            <p className="text-white text-center mt-2">{label}</p>
+            <p className="text-white text-center mt-4">{label}</p>
           </div>
         </div>
       )}

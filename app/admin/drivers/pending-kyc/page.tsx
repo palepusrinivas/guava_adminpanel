@@ -207,16 +207,26 @@ export default function PendingKycPage() {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <div className="flex items-center gap-4 mb-4">
-                    {kyc.documents?.profilePhoto && (
+                    {kyc.documents?.profilePhoto ? (
                       <img
                         src={kyc.documents.profilePhoto}
                         alt={kyc.driver.name}
                         className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = "/placeholder-avatar.png";
+                          // Show placeholder on error
+                          const img = e.target as HTMLImageElement;
+                          img.style.display = 'none';
+                          const placeholder = img.nextElementSibling as HTMLElement;
+                          if (placeholder) placeholder.style.display = 'flex';
                         }}
                       />
-                    )}
+                    ) : null}
+                    <div 
+                      className="w-16 h-16 rounded-full bg-gray-200 border-2 border-gray-200 flex items-center justify-center text-gray-400 text-xs"
+                      style={{ display: kyc.documents?.profilePhoto ? 'none' : 'flex' }}
+                    >
+                      No Photo
+                    </div>
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">
                         {kyc.driver.name}
@@ -341,21 +351,38 @@ export default function PendingKycPage() {
 
 function DocumentViewer({ label, url }: { label: string; url: string }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  
+  // Backend returns signed URLs directly, so validate they're proper URLs
+  const isValidUrl = url && (url.startsWith('http://') || url.startsWith('https://'));
   
   return (
     <>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="relative group p-2 border border-gray-300 rounded-lg hover:border-blue-500 transition-colors"
+      <div
+        onClick={() => isValidUrl && !imageError && setIsOpen(true)}
+        className={`relative group border rounded-lg p-2 cursor-pointer hover:shadow-md transition ${
+          isValidUrl && !imageError ? 'border-gray-300 hover:border-blue-500' : 'border-gray-200'
+        }`}
       >
-        <div className="flex flex-col items-center gap-1">
-          <div className="text-2xl">📄</div>
-          <span className="text-xs text-gray-600">{label}</span>
+        <div className="relative h-24 bg-gray-100 rounded overflow-hidden">
+          {isValidUrl && !imageError ? (
+            <img
+              src={url}
+              alt={label}
+              className="w-full h-full object-cover rounded"
+              onError={() => setImageError(true)}
+              onLoad={() => setImageError(false)}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gray-200">
+              <span className="text-gray-400 text-xs text-center px-1">Unavailable</span>
+            </div>
+          )}
         </div>
-        <div className="absolute inset-0 bg-blue-500 bg-opacity-0 group-hover:bg-opacity-10 rounded-lg transition-opacity" />
-      </button>
+        <p className="text-xs text-center mt-1 font-medium text-gray-700">{label}</p>
+      </div>
       
-      {isOpen && (
+      {isOpen && isValidUrl && !imageError && (
         <div
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
           onClick={() => setIsOpen(false)}
@@ -363,18 +390,23 @@ function DocumentViewer({ label, url }: { label: string; url: string }) {
           <div className="relative max-w-4xl max-h-full">
             <button
               onClick={() => setIsOpen(false)}
-              className="absolute top-4 right-4 bg-white rounded-full p-2 text-gray-800 hover:bg-gray-200 z-10"
+              className="absolute top-4 right-4 bg-white rounded-full p-2 text-gray-800 hover:bg-gray-200 z-10 shadow-lg"
+              aria-label="Close"
             >
-              ✕
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
             <img
               src={url}
               alt={label}
-              className="max-w-full max-h-[90vh] object-contain rounded-lg"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = "/placeholder-document.png";
+              className="max-w-full max-h-[90vh] object-contain rounded-lg bg-white"
+              onError={() => {
+                setImageError(true);
+                setIsOpen(false);
               }}
             />
+            <p className="text-white text-center mt-4">{label}</p>
           </div>
         </div>
       )}

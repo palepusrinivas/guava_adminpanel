@@ -19,6 +19,7 @@ export default function AdminDriversPage() {
   const dispatch = useAppDispatch();
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
+  const [searchQuery, setSearchQuery] = useState("");
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [totalElements, setTotalElements] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -29,7 +30,11 @@ export default function AdminDriversPage() {
     setErrorMsg(null);
     try {
       // Backend expects 0-based page numbers
-      const response = await dispatch(getDrivers({ page: currentPage, size: pageSize }));
+      const params: { page: number; size: number; search?: string } = { page: currentPage, size: pageSize };
+      if (searchQuery && searchQuery.trim()) {
+        params.search = searchQuery.trim();
+      }
+      const response = await dispatch(getDrivers(params));
       if (getDrivers.fulfilled.match(response)) {
         const payload = response.payload;
         
@@ -98,7 +103,14 @@ export default function AdminDriversPage() {
 
   useEffect(() => {
     fetchDrivers();
-  }, [dispatch, currentPage, pageSize]);
+  }, [dispatch, currentPage, pageSize, searchQuery]);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    if (searchQuery) {
+      setCurrentPage(0);
+    }
+  }, [searchQuery]);
 
   const handleCreateDriver = async (driverData: any) => {
     try {
@@ -159,6 +171,8 @@ export default function AdminDriversPage() {
         totalElements={totalElements}
         loading={loading}
         error={errorMsg}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
     </div>
   );

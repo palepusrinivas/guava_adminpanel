@@ -30,6 +30,7 @@ export default function AdminUsersPage() {
   const dispatch = useAppDispatch();
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
+  const [searchQuery, setSearchQuery] = useState("");
   const [users, setUsers] = useState<any[]>([]);
   const [columns, setColumns] = useState<Array<{key: string; title: string; render?: (value: any, row: any) => React.ReactNode}>>([]);
   const [totalElements, setTotalElements] = useState<number | null>(null);
@@ -40,9 +41,13 @@ export default function AdminUsersPage() {
     setLoading(true);
     setErrorMsg(null);
     try {
-  // UI is 0-based, backend expects 1-based page index — send page = currentPage + 1
-  console.log("Fetching users (UI page):", currentPage, "pageSize:", pageSize);
-  const res = await dispatch(getUsers({ page: currentPage + 1, size: pageSize }));
+  // UI is 0-based, backend expects 0-based page index (backend uses PageRequest.of(page, size))
+  console.log("Fetching users (UI page):", currentPage, "pageSize:", pageSize, "search:", searchQuery);
+  const params: { page: number; size: number; search?: string } = { page: currentPage, size: pageSize };
+  if (searchQuery && searchQuery.trim()) {
+    params.search = searchQuery.trim();
+  }
+  const res = await dispatch(getUsers(params));
       console.log("Users API Response full:", res);
       if (getUsers.fulfilled.match(res)) {
         const payload = res.payload;
@@ -165,7 +170,14 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     fetchUsers();
-  }, [dispatch, currentPage, pageSize]);
+  }, [dispatch, currentPage, pageSize, searchQuery]);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    if (searchQuery) {
+      setCurrentPage(0);
+    }
+  }, [searchQuery]);
 
 
 
@@ -229,6 +241,8 @@ const handleCreateUser = async (userData: any) => {
         totalElements={totalElements}
         loading={loading}
         error={errorMsg}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
     </div>
   );

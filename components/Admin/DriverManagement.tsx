@@ -32,12 +32,15 @@ interface DriverManagementProps {
   totalElements: number | null;
   loading: boolean;
   error: string | null;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
 }
 
 const driverValidationSchema = yup.object({
   name: yup.string().required("Name is required"),
   email: yup.string().email("Invalid email").required("Email is required"),
   mobile: yup.string().required("Mobile number is required"),
+  password: yup.string().min(6, "Password must be at least 6 characters"),
   latitude: yup.number().required("Latitude is required"),
   longitude: yup.number().required("Longitude is required"),
   rating: yup.number().min(0).max(5).required("Rating is required"),
@@ -57,6 +60,8 @@ function DriverManagement({
   totalElements,
   loading,
   error,
+  searchQuery = "",
+  onSearchChange,
 }: DriverManagementProps) {
   const router = useRouter();
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -89,6 +94,7 @@ function DriverManagement({
       name: selectedDriver?.name || "",
       email: selectedDriver?.email || "",
       mobile: selectedDriver?.mobile || "",
+      password: "",
       latitude: selectedDriver?.latitude || 0,
       longitude: selectedDriver?.longitude || 0,
       rating: selectedDriver?.rating || 0,
@@ -133,6 +139,31 @@ function DriverManagement({
         >
           Add New Driver
         </button>
+      </div>
+
+      {/* Search Bar */}
+      <div className="bg-white shadow rounded-md p-4">
+        <div className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              if (onSearchChange) {
+                onSearchChange(e.target.value);
+              }
+            }}
+            placeholder="Search by email, phone number, or name..."
+            className="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          />
+          <svg
+            className="h-5 w-5 text-gray-400 absolute left-3 top-2.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
       </div>
 
       {/* Error Message */}
@@ -477,6 +508,21 @@ function DriverManagement({
                   />
                   {editFormik.touched.mobile && typeof editFormik.errors.mobile === 'string' && (
                     <p className="mt-1 text-sm text-red-600">{editFormik.errors.mobile}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Password (leave blank to keep current)</label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={editFormik.values.password}
+                    onChange={editFormik.handleChange}
+                    onBlur={editFormik.handleBlur}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  {editFormik.touched.password && typeof editFormik.errors.password === 'string' && (
+                    <p className="mt-1 text-sm text-red-600">{editFormik.errors.password}</p>
                   )}
                 </div>
 

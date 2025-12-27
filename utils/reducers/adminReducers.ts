@@ -199,7 +199,7 @@ export const updatePricing = createAsyncThunk(
 // User Management
 export const getUsers = createAsyncThunk(
   "admin/getUsers",
-  async (params: { page?: number; size?: number } = {}, { rejectWithValue }) => {
+  async (params: { page?: number; size?: number; search?: string } = {}, { rejectWithValue }) => {
     try {
       console.log("[adminReducers] Calling getUsers with params:", params);
       console.log("[adminReducers] URL:", adminUsersUrl);
@@ -284,7 +284,7 @@ export const deleteUser = createAsyncThunk(
 // Driver Management
 export const getDrivers = createAsyncThunk(
   "admin/getDrivers",
-  async (params: { page?: number; size?: number } = {}, { rejectWithValue }) => {
+  async (params: { page?: number; size?: number; search?: string } = {}, { rejectWithValue }) => {
     try {
       const response = await adminAxios.get(adminDriversUrl, { params });
       return response.data;
@@ -885,7 +885,8 @@ export const getBanners = createAsyncThunk(
   "admin/getBanners",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await adminAxios.get(adminBannersUrl);
+      // Use /list endpoint to get all banners as simple array (not paginated)
+      const response = await adminAxios.get(`${adminBannersUrl}/list`);
       return response.data;
     } catch (error) {
       return rejectWithValue(extractErrorMessage(error));
