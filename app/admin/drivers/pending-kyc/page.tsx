@@ -261,7 +261,6 @@ export default function PendingKycPage() {
                       <label className="text-gray-500 text-xs">Submitted</label>
                       <p className="font-medium text-sm">
                         {formatDateIST(kyc.submittedAt)}
-                        })()}
                       </p>
                     </div>
                   </div>
