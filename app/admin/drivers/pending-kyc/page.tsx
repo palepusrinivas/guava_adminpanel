@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "react-hot-toast";
 import { getApiUrl, getAuthToken } from "@/utils/config";
+import { formatDateIST } from "@/utils/dateUtils";
 
 interface PendingKycDriver {
   id: number;
@@ -259,9 +260,7 @@ export default function PendingKycPage() {
                     <div>
                       <label className="text-gray-500 text-xs">Submitted</label>
                       <p className="font-medium text-sm">
-                        {(() => {
-                          const { formatDateIST } = require("@/utils/dateUtils");
-                          return formatDateIST(kyc.submittedAt);
+                        {formatDateIST(kyc.submittedAt)}
                         })()}
                       </p>
                     </div>

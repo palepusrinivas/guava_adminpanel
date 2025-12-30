@@ -25,6 +25,7 @@ import {
   Switch,
   FormControlLabel,
 } from "@mui/material";
+import { formatDateTimeIST } from "@/utils/dateUtils";
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -393,10 +394,7 @@ function MailServerManagement() {
                           Last Tested
                         </Typography>
                         <Typography variant="body2">
-                          {(() => {
-                            const { formatDateTimeIST } = require("@/utils/dateUtils");
-                            return formatDateTimeIST(config.lastTestedAt);
-                          })()}
+                          {formatDateTimeIST(config.lastTestedAt)}
                         </Typography>
                         {config.lastTestResult && (
                           <Alert

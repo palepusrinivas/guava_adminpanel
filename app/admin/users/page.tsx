@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from "@/utils/store/store";
 import { getUsers, createUser, updateUser, deleteUser } from "@/utils/reducers/adminReducers";
 import { toast } from "react-hot-toast";
 import UserManagement from "@/components/Admin/UserManagement";
+import { formatDateIST } from "@/utils/dateUtils";
 
 interface ErrorResponse {
   status?: number;
@@ -146,7 +147,6 @@ export default function AdminUsersPage() {
               key: 'createdAt',
               title: 'Created',
               render: (value: string) => {
-                const { formatDateIST } = require("@/utils/dateUtils");
                 return formatDateIST(value);
               }
             }

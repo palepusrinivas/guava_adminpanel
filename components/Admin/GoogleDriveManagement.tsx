@@ -21,6 +21,7 @@ import {
   Switch,
   FormControlLabel,
 } from "@mui/material";
+import { formatDateTimeIST } from "@/utils/dateUtils";
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -278,10 +279,7 @@ function GoogleDriveManagement() {
                 {config.lastTestedAt && (
                   <Box mt={2}>
                     <Typography variant="caption" color="text.secondary">
-                      Last tested: {(() => {
-                        const { formatDateTimeIST } = require("@/utils/dateUtils");
-                        return formatDateTimeIST(config.lastTestedAt);
-                      })()}
+                      Last tested: {formatDateTimeIST(config.lastTestedAt)}
                     </Typography>
                     {config.lastTestResult && (
                       <Typography

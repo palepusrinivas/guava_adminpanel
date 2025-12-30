@@ -27,6 +27,7 @@ import {
   DialogActions,
   Tooltip,
 } from "@mui/material";
+import { formatDateTimeIST } from "@/utils/dateUtils";
 import {
   Download as DownloadIcon,
   Delete as DeleteIcon,
@@ -174,7 +175,6 @@ function InvoiceManagement() {
   };
 
   const formatDate = (dateString: string) => {
-    const { formatDateTimeIST } = require("@/utils/dateUtils");
     return formatDateTimeIST(dateString, {
       year: "numeric",
       month: "short",

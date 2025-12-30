@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from "@/utils/store/store";
 import { getDashboardStats, getRecentActivities, getLeaderboardData } from "@/utils/reducers/adminReducers";
 import Link from "next/link";
 import type { Driver, Transaction, Trip } from "@/types/dashboard";
+import { formatDateTimeIST } from "@/utils/dateUtils";
 
 interface DashboardState {
   stats: {
@@ -383,10 +384,7 @@ export default function AdminDashboard() {
                         {activity.description}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {(() => {
-                          const { formatDateTimeIST } = require("@/utils/dateUtils");
-                          return formatDateTimeIST(activity.time);
-                        })()}
+                        {formatDateTimeIST(activity.time)}
                       </p>
                     </div>
                   </div>

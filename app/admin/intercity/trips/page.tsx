@@ -133,7 +133,6 @@ export default function IntercityTripsPage() {
   };
 
   const formatDateTime = (dateString: string) => {
-    const { formatDateTimeIST } = require("@/utils/dateUtils");
     return formatDateTimeIST(dateString, {
       dateStyle: "medium",
       timeStyle: "short",

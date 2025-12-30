@@ -32,6 +32,7 @@ import {
   Slider,
   InputAdornment,
 } from "@mui/material";
+import { formatDateTimeIST } from "@/utils/dateUtils";
 import {
   Savings as CashbackIcon,
   TrendingUp,
@@ -565,10 +566,7 @@ export default function CashbackManagementPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {(() => {
-                          const { formatDateTimeIST } = require("@/utils/dateUtils");
-                          return formatDateTimeIST(entry.expiresAt);
-                        })()}
+                        {formatDateTimeIST(entry.expiresAt)}
                         {entry.isExpiringSoon && (
                           <Chip label="⚠️ Soon" size="small" color="warning" sx={{ ml: 1 }} />
                         )}

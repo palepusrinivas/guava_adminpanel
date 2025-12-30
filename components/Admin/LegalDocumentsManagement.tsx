@@ -25,6 +25,7 @@ import {
   CircularProgress,
   Divider,
 } from "@mui/material";
+import { formatDateIST, formatDateTimeIST } from "@/utils/dateUtils";
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -373,10 +374,7 @@ function LegalDocumentsManagement() {
                           </Box>
                           
                           <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-                            Updated: {(() => {
-                              const { formatDateIST } = require("@/utils/dateUtils");
-                              return formatDateIST(doc.updatedAt);
-                            })()}
+                            Updated: {formatDateIST(doc.updatedAt)}
                           </Typography>
                           
                           <Box display="flex" gap={0.5} flexWrap="wrap">
@@ -534,10 +532,7 @@ function LegalDocumentsManagement() {
               </Typography>
               <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
                 Version {viewingDocument.version} | 
-                Updated: {(() => {
-                  const { formatDateTimeIST } = require("@/utils/dateUtils");
-                  return formatDateTimeIST(viewingDocument.updatedAt);
-                })()}
+                Updated: {formatDateTimeIST(viewingDocument.updatedAt)}
                 {viewingDocument.updatedBy && ` | By: ${viewingDocument.updatedBy}`}
               </Typography>
               <Divider sx={{ my: 2 }} />
