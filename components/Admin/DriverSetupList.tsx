@@ -19,7 +19,11 @@ interface Driver {
     id: string | number;
     licensePlate?: string;
     vehicleCategory?: string;
+    vehicleType?: string;
+    serviceType?: string;
     model?: string;
+    company?: string;
+    year?: number;
   };
   kyc?: {
     status: "PENDING" | "APPROVED" | "REJECTED";
@@ -31,6 +35,146 @@ interface Driver {
   totalEarnings?: number;
   driverLevel?: string;
 }
+
+// Comprehensive vehicle type icon mapping
+const vehicleTypeIcons: Record<string, string> = {
+  // Old format (legacy)
+  Auto: "🛺",
+  Mega: "🛺",
+  "Small Car / Sedan": "🚗",
+  "Bike.": "🏍️",
+  "Mahila Ride": "🛵",
+  "Car (XL SUV)-(MUV)": "🚙",
+  
+  // New format - Vehicle Types
+  "two_wheeler": "🏍️",
+  "two-wheeler": "🏍️",
+  "TWO_WHEELER": "🏍️",
+  "Two Wheeler": "🏍️",
+  "two wheeler": "🏍️",
+  
+  "three_wheeler": "🛺",
+  "three-wheeler": "🛺",
+  "THREE_WHEELER": "🛺",
+  "Three Wheeler": "🛺",
+  "three wheeler": "🛺",
+  
+  "four_wheeler": "🚗",
+  "four-wheeler": "🚗",
+  "FOUR_WHEELER": "🚗",
+  "Four Wheeler": "🚗",
+  "four wheeler": "🚗",
+  
+  "four_wheeler_premium": "🚙",
+  "four-wheeler-premium": "🚙",
+  "FOUR_WHEELER_PREMIUM": "🚙",
+  "Four Wheeler Premium": "🚙",
+  "four wheeler premium": "🚙",
+  
+  // Service Types
+  "BIKE": "🏍️",
+  "bike": "🏍️",
+  "Bike": "🏍️",
+  
+  "MEGA": "🛺",
+  "mega": "🛺",
+  
+  "AUTO": "🛺",
+  "auto": "🛺",
+  
+  "CAR": "🚗",
+  "car": "🚗",
+  "Car": "🚗",
+  
+  "SMALL_SEDAN": "🚗",
+  "small_sedan": "🚗",
+  "SMALL-SEDAN": "🚗",
+  "small-sedan": "🚗",
+  "Small Sedan": "🚗",
+  "small sedan": "🚗",
+  "Sedan": "🚗",
+  "sedan": "🚗",
+  
+  // Additional variations
+  "SUV": "🚙",
+  "suv": "🚙",
+  "XL": "🚙",
+  "xl": "🚙",
+  "Premium": "🚙",
+  "premium": "🚙",
+  "Luxury": "🚙",
+};
+
+// Helper function to get vehicle icon from multiple possible fields
+const getVehicleIcon = (vehicle: any): string => {
+  if (!vehicle) return "🚗"; // Default to car
+  
+  // Check multiple fields in order of preference
+  const typeValue = 
+    vehicle?.serviceType || 
+    vehicle?.vehicleType || 
+    vehicle?.vehicleCategory || 
+    vehicle?.type || 
+    "";
+  
+  if (!typeValue) return "🚗"; // Default to car
+  
+  // Normalize the value (trim, lowercase for matching)
+  const normalized = typeValue.toString().trim();
+  const lowerNormalized = normalized.toLowerCase();
+  
+  // Try exact match first
+  if (vehicleTypeIcons[normalized]) {
+    return vehicleTypeIcons[normalized];
+  }
+  
+  // Try case-insensitive match
+  if (vehicleTypeIcons[lowerNormalized]) {
+    return vehicleTypeIcons[lowerNormalized];
+  }
+  
+  // Try partial matching for common patterns
+  if (lowerNormalized.includes("bike") || lowerNormalized.includes("two")) {
+    return "🏍️";
+  }
+  if (lowerNormalized.includes("auto") || lowerNormalized.includes("three") || lowerNormalized.includes("mega") || lowerNormalized.includes("rickshaw")) {
+    return "🛺";
+  }
+  if (lowerNormalized.includes("suv") || lowerNormalized.includes("xl") || lowerNormalized.includes("premium") || lowerNormalized.includes("luxury")) {
+    return "🚙";
+  }
+  if (lowerNormalized.includes("car") || lowerNormalized.includes("four") || lowerNormalized.includes("sedan")) {
+    return "🚗";
+  }
+  
+  // Default fallback
+  return "🚗";
+};
+
+// Helper function to check if vehicle is a car
+const isCar = (vehicle: any): boolean => {
+  if (!vehicle) return false;
+  const typeValue = (vehicle?.serviceType || vehicle?.vehicleType || vehicle?.vehicleCategory || "").toString().toLowerCase();
+  return typeValue.includes("car") || 
+         typeValue.includes("four") || 
+         typeValue.includes("sedan") ||
+         typeValue.includes("suv") ||
+         typeValue === "car" ||
+         typeValue === "small_sedan" ||
+         typeValue === "four_wheeler" ||
+         typeValue === "four-wheeler";
+};
+
+// Helper function to check if vehicle is a motorbike
+const isMotorbike = (vehicle: any): boolean => {
+  if (!vehicle) return false;
+  const typeValue = (vehicle?.serviceType || vehicle?.vehicleType || vehicle?.vehicleCategory || "").toString().toLowerCase();
+  return typeValue.includes("bike") || 
+         typeValue.includes("two") ||
+         typeValue === "bike" ||
+         typeValue === "two_wheeler" ||
+         typeValue === "two-wheeler";
+};
 
 export default function DriverSetupList() {
   const dispatch = useAppDispatch();
@@ -64,22 +208,34 @@ export default function DriverSetupList() {
 
         // Use the driver data as-is, it should already include vehicle and basic info
         // If we need full KYC details, we can fetch them on-demand when viewing
-        const driversWithDetails = list.map((driver: any) => ({
-          id: driver.id,
-          name: driver.name || driver.username,
-          username: driver.username,
-          email: driver.email,
-          mobile: driver.mobile || driver.phone,
-          phone: driver.phone || driver.mobile,
-          shortCode: driver.shortCode,
-          rating: driver.rating,
-          active: driver.active !== false,
-          vehicle: driver.vehicle || (driver.vehicles && driver.vehicles[0]) || null,
-          kyc: driver.kyc || (driver.kycStatus ? { status: driver.kycStatus } : null),
-          totalTrips: driver.totalTrips || driver.totalRides || 0,
-          totalEarnings: driver.totalEarnings || 0,
-          driverLevel: driver.driverLevel || driver.level,
-        }));
+        const driversWithDetails = list.map((driver: any) => {
+          const vehicle = driver.vehicle || (driver.vehicles && driver.vehicles[0]) || null;
+          return {
+            id: driver.id,
+            name: driver.name || driver.username,
+            username: driver.username,
+            email: driver.email,
+            mobile: driver.mobile || driver.phone,
+            phone: driver.phone || driver.mobile,
+            shortCode: driver.shortCode,
+            rating: driver.rating,
+            active: driver.active !== false,
+            vehicle: vehicle ? {
+              id: vehicle.id,
+              licensePlate: vehicle.licensePlate || vehicle.licencePlateNumber,
+              vehicleCategory: vehicle.vehicleCategory,
+              vehicleType: vehicle.vehicleType,
+              serviceType: vehicle.serviceType,
+              model: vehicle.model,
+              company: vehicle.company,
+              year: vehicle.year,
+            } : undefined,
+            kyc: driver.kyc || (driver.kycStatus ? { status: driver.kycStatus } : null),
+            totalTrips: driver.totalTrips || driver.totalRides || 0,
+            totalEarnings: driver.totalEarnings || 0,
+            driverLevel: driver.driverLevel || driver.level,
+          };
+        });
 
         setDrivers(driversWithDetails);
       } else {
@@ -122,8 +278,8 @@ export default function DriverSetupList() {
   const total = drivers.length;
   const active = drivers.filter((d) => d.active !== false).length;
   const inactive = total - active;
-  const carDriver = drivers.filter((d) => d.vehicle?.vehicleCategory?.toLowerCase().includes("car") || d.vehicle?.vehicleCategory?.toLowerCase().includes("sedan")).length;
-  const motorbikeDriver = drivers.filter((d) => d.vehicle?.vehicleCategory?.toLowerCase().includes("bike") || d.vehicle?.vehicleCategory?.toLowerCase().includes("motor")).length;
+  const carDriver = drivers.filter((d) => isCar(d.vehicle)).length;
+  const motorbikeDriver = drivers.filter((d) => isMotorbike(d.vehicle)).length;
 
   return (
     <div className="space-y-6">
@@ -259,9 +415,18 @@ export default function DriverSetupList() {
                     </td>
                     <td className="px-4 py-3">
                       {d.vehicle ? (
-                        <div className="text-xs text-gray-700">
-                          <div className="font-medium">{d.vehicle.licensePlate || "N/A"}</div>
-                          <div className="text-gray-500">{d.vehicle.vehicleCategory || d.vehicle.model || "N/A"}</div>
+                        <div className="flex items-center gap-2 text-xs text-gray-700">
+                          <span className="text-lg" title={d.vehicle.serviceType || d.vehicle.vehicleType || d.vehicle.vehicleCategory || "Vehicle"}>
+                            {getVehicleIcon(d.vehicle)}
+                          </span>
+                          <div>
+                            <div className="font-medium">{d.vehicle.licensePlate || "N/A"}</div>
+                            <div className="text-gray-500">
+                              {d.vehicle.serviceType || d.vehicle.vehicleType || d.vehicle.vehicleCategory || d.vehicle.model || "N/A"}
+                              {d.vehicle.company && d.vehicle.model && ` - ${d.vehicle.company} ${d.vehicle.model}`}
+                              {d.vehicle.year && ` (${d.vehicle.year})`}
+                            </div>
+                          </div>
                         </div>
                       ) : (
                         <span className="text-xs text-gray-400">No vehicle</span>
@@ -304,7 +469,7 @@ export default function DriverSetupList() {
               })}
               {!isLoading && filtered.length === 0 && (
                 <tr>
-                  <td className="px-4 py-10" colSpan={9}>
+                  <td className="px-4 py-10" colSpan={10}>
                     <div className="mx-auto max-w-md text-center">
                       <div className="mx-auto h-14 w-14 rounded-full bg-gray-100 flex items-center justify-center shadow-sm"><span className="text-gray-400 text-2xl">📁</span></div>
                       <p className="mt-3 text-gray-700 font-medium">No data available</p>

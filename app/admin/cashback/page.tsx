@@ -565,7 +565,10 @@ export default function CashbackManagementPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {new Date(entry.expiresAt).toLocaleString()}
+                        {(() => {
+                          const { formatDateTimeIST } = require("@/utils/dateUtils");
+                          return formatDateTimeIST(entry.expiresAt);
+                        })()}
                         {entry.isExpiringSoon && (
                           <Chip label="⚠️ Soon" size="small" color="warning" sx={{ ml: 1 }} />
                         )}

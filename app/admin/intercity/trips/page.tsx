@@ -9,6 +9,7 @@ import {
 } from "@/utils/reducers/intercityReducers";
 import { toast } from "react-hot-toast";
 import type { IntercityTripStatus } from "@/utils/slices/intercitySlice";
+import { formatDateTimeIST } from "@/utils/dateUtils";
 
 const TRIP_STATUSES: { value: IntercityTripStatus | "ALL"; label: string; color: string }[] = [
   { value: "ALL", label: "All Trips", color: "bg-gray-100 text-gray-700" },
@@ -132,7 +133,8 @@ export default function IntercityTripsPage() {
   };
 
   const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString("en-IN", {
+    const { formatDateTimeIST } = require("@/utils/dateUtils");
+    return formatDateTimeIST(dateString, {
       dateStyle: "medium",
       timeStyle: "short",
     });

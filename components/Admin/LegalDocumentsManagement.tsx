@@ -373,7 +373,10 @@ function LegalDocumentsManagement() {
                           </Box>
                           
                           <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-                            Updated: {doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString() : "N/A"}
+                            Updated: {(() => {
+                              const { formatDateIST } = require("@/utils/dateUtils");
+                              return formatDateIST(doc.updatedAt);
+                            })()}
                           </Typography>
                           
                           <Box display="flex" gap={0.5} flexWrap="wrap">
@@ -531,7 +534,10 @@ function LegalDocumentsManagement() {
               </Typography>
               <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
                 Version {viewingDocument.version} | 
-                Updated: {viewingDocument.updatedAt ? new Date(viewingDocument.updatedAt).toLocaleString() : "N/A"}
+                Updated: {(() => {
+                  const { formatDateTimeIST } = require("@/utils/dateUtils");
+                  return formatDateTimeIST(viewingDocument.updatedAt);
+                })()}
                 {viewingDocument.updatedBy && ` | By: ${viewingDocument.updatedBy}`}
               </Typography>
               <Divider sx={{ my: 2 }} />

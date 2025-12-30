@@ -145,7 +145,10 @@ export default function AdminUsersPage() {
             {
               key: 'createdAt',
               title: 'Created',
-              render: (value: string) => new Date(value).toLocaleDateString()
+              render: (value: string) => {
+                const { formatDateIST } = require("@/utils/dateUtils");
+                return formatDateIST(value);
+              }
             }
           ];
           

@@ -141,8 +141,7 @@ export default function AdminNotifications() {
 
   const formatDate = (dateString: string) => {
     try {
-      const date = new Date(dateString);
-      return date.toLocaleString("en-IN", {
+      return formatDateTimeIST(dateString, {
         year: "numeric",
         month: "short",
         day: "numeric",

@@ -259,9 +259,10 @@ export default function PendingKycPage() {
                     <div>
                       <label className="text-gray-500 text-xs">Submitted</label>
                       <p className="font-medium text-sm">
-                        {kyc.submittedAt
-                          ? new Date(kyc.submittedAt).toLocaleDateString()
-                          : "N/A"}
+                        {(() => {
+                          const { formatDateIST } = require("@/utils/dateUtils");
+                          return formatDateIST(kyc.submittedAt);
+                        })()}
                       </p>
                     </div>
                   </div>

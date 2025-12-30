@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Trip, TripStatistics, TripStatus } from "@/utils/slices/tripManagementSlice";
 import { useAppDispatch, useAppSelector } from "@/utils/store/store";
 import { getTripById } from "@/utils/reducers/adminReducers";
+import { formatDateTimeIST } from "@/utils/dateUtils";
 import {
   Dialog,
   DialogTitle,
@@ -111,8 +112,7 @@ const TripManagement: React.FC<TripManagementProps> = ({
 
   const formatDate = (dateString: string): string => {
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("en-US", {
+      return formatDateTimeIST(dateString, {
         day: "numeric",
         month: "long",
         year: "numeric",

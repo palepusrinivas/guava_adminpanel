@@ -393,7 +393,10 @@ function MailServerManagement() {
                           Last Tested
                         </Typography>
                         <Typography variant="body2">
-                          {new Date(config.lastTestedAt).toLocaleString()}
+                          {(() => {
+                            const { formatDateTimeIST } = require("@/utils/dateUtils");
+                            return formatDateTimeIST(config.lastTestedAt);
+                          })()}
                         </Typography>
                         {config.lastTestResult && (
                           <Alert

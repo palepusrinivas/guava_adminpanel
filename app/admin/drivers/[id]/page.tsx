@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "react-hot-toast";
 import { getApiUrl, getAuthToken } from "@/utils/config";
+import { formatDateTimeIST } from "@/utils/dateUtils";
 
 interface DriverDetails {
   driver: {
@@ -65,6 +66,12 @@ export default function DriverDetailsPage() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editValues, setEditValues] = useState({
+    aadhaarNumber: "",
+    licenseNumber: "",
+    rcNumber: "",
+  });
 
   const fetchDriverDetails = async () => {
     setLoading(true);
@@ -144,6 +151,89 @@ export default function DriverDetailsPage() {
       fetchDriverDetails();
     } catch (err: any) {
       toast.error(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleEditField = (field: string) => {
+    if (!kyc) return;
+    setEditingField(field);
+    setEditValues({
+      aadhaarNumber: kyc.aadhaarNumber || "",
+      licenseNumber: kyc.licenseNumber || "",
+      rcNumber: kyc.rcNumber || "",
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingField(null);
+    setEditValues({
+      aadhaarNumber: "",
+      licenseNumber: "",
+      rcNumber: "",
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingField) return;
+    
+    // Basic validation
+    if (editingField === "aadhaarNumber") {
+      const aadhaar = editValues.aadhaarNumber.trim().replace(/\s/g, "");
+      if (!/^[0-9]{12}$/.test(aadhaar)) {
+        toast.error("Aadhaar number must be exactly 12 digits");
+        return;
+      }
+    } else if (editingField === "licenseNumber") {
+      const license = editValues.licenseNumber.trim();
+      if (license.length < 6) {
+        toast.error("License number must be at least 6 characters");
+        return;
+      }
+    } else if (editingField === "rcNumber") {
+      const rc = editValues.rcNumber.trim();
+      if (rc.length < 6) {
+        toast.error("RC number must be at least 6 characters");
+        return;
+      }
+    }
+    
+    setActionLoading(true);
+    try {
+      const token = getAuthToken();
+      const updateData: any = {};
+      
+      if (editingField === "aadhaarNumber") {
+        updateData.aadhaarNumber = editValues.aadhaarNumber.trim().replace(/\s/g, "");
+      } else if (editingField === "licenseNumber") {
+        updateData.licenseNumber = editValues.licenseNumber.trim().toUpperCase();
+      } else if (editingField === "rcNumber") {
+        updateData.rcNumber = editValues.rcNumber.trim().toUpperCase();
+      }
+
+      const response = await fetch(
+        getApiUrl(`/api/admin/kyc/drivers/${driverId}/details`),
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updateData),
+        }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to update KYC details");
+      }
+      
+      toast.success(`${editingField === "aadhaarNumber" ? "Aadhaar" : editingField === "licenseNumber" ? "License" : "RC"} number updated successfully!`);
+      setEditingField(null);
+      fetchDriverDetails();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update KYC details");
     } finally {
       setActionLoading(false);
     }
@@ -316,28 +406,161 @@ export default function DriverDetailsPage() {
           <>
             {/* KYC Info */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div>
-                <label className="text-gray-500 text-sm">Aadhaar Number</label>
-                <p className="font-medium">{kyc.aadhaarNumber || "N/A"}</p>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <label className="text-gray-500 text-sm font-medium flex-1">Aadhaar Number</label>
+                  {kyc && editingField !== "aadhaarNumber" && (
+                    <button
+                      onClick={() => {
+                        console.log("Edit button clicked for Aadhaar, current editingField:", editingField);
+                        handleEditField("aadhaarNumber");
+                      }}
+                      className="text-blue-600 hover:text-blue-800 text-xs font-semibold px-3 py-1.5 hover:bg-blue-100 rounded transition-colors whitespace-nowrap flex-shrink-0 border-2 border-blue-400 bg-blue-50 shadow-sm"
+                      title="Edit Aadhaar Number"
+                      type="button"
+                      style={{ minWidth: "75px", visibility: "visible", opacity: 1 }}
+                    >
+                      ✏️ Edit
+                    </button>
+                  )}
+                </div>
+                {editingField === "aadhaarNumber" ? (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={editValues.aadhaarNumber}
+                      onChange={(e) => setEditValues({ ...editValues, aadhaarNumber: e.target.value.replace(/\D/g, "") })}
+                      placeholder="Enter 12-digit Aadhaar"
+                      className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      maxLength={12}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveEdit}
+                        disabled={actionLoading || !editValues.aadhaarNumber.trim() || editValues.aadhaarNumber.length !== 12}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {actionLoading ? "Saving..." : "Save"}
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        disabled={actionLoading}
+                        className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded text-xs font-medium disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="font-medium text-gray-900">{kyc.aadhaarNumber || "N/A"}</p>
+                )}
               </div>
-              <div>
-                <label className="text-gray-500 text-sm">License Number</label>
-                <p className="font-medium">{kyc.licenseNumber || "N/A"}</p>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <label className="text-gray-500 text-sm font-medium flex-1">License Number</label>
+                  {editingField !== "licenseNumber" && kyc && (
+                    <button
+                      onClick={() => handleEditField("licenseNumber")}
+                      className="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-1 hover:bg-blue-50 rounded transition-colors whitespace-nowrap flex-shrink-0"
+                      title="Edit License Number"
+                      type="button"
+                    >
+                      <span className="inline-flex items-center gap-1">
+                        <span>✏️</span>
+                        <span>Edit</span>
+                      </span>
+                    </button>
+                  )}
+                </div>
+                {editingField === "licenseNumber" ? (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={editValues.licenseNumber}
+                      onChange={(e) => setEditValues({ ...editValues, licenseNumber: e.target.value.toUpperCase() })}
+                      placeholder="Enter License Number"
+                      className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      maxLength={20}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveEdit}
+                        disabled={actionLoading || !editValues.licenseNumber.trim()}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {actionLoading ? "Saving..." : "Save"}
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        disabled={actionLoading}
+                        className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded text-xs font-medium disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="font-medium text-gray-900">{kyc.licenseNumber || "N/A"}</p>
+                )}
               </div>
-              <div>
-                <label className="text-gray-500 text-sm">RC Number</label>
-                <p className="font-medium">{kyc.rcNumber || "N/A"}</p>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <label className="text-gray-500 text-sm font-medium flex-1">RC Number</label>
+                  {editingField !== "rcNumber" && kyc && (
+                    <button
+                      onClick={() => handleEditField("rcNumber")}
+                      className="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-1 hover:bg-blue-50 rounded transition-colors whitespace-nowrap flex-shrink-0"
+                      title="Edit RC Number"
+                      type="button"
+                    >
+                      <span className="inline-flex items-center gap-1">
+                        <span>✏️</span>
+                        <span>Edit</span>
+                      </span>
+                    </button>
+                  )}
+                </div>
+                {editingField === "rcNumber" ? (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={editValues.rcNumber}
+                      onChange={(e) => setEditValues({ ...editValues, rcNumber: e.target.value.toUpperCase() })}
+                      placeholder="Enter RC Number"
+                      className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      maxLength={20}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveEdit}
+                        disabled={actionLoading || !editValues.rcNumber.trim()}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {actionLoading ? "Saving..." : "Save"}
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        disabled={actionLoading}
+                        className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded text-xs font-medium disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="font-medium text-gray-900">{kyc.rcNumber || "N/A"}</p>
+                )}
               </div>
               <div>
                 <label className="text-gray-500 text-sm">Submitted At</label>
                 <p className="font-medium">
-                  {kyc.submittedAt ? new Date(kyc.submittedAt).toLocaleString() : "N/A"}
+                  {formatDateTimeIST(kyc.submittedAt)}
                 </p>
               </div>
               {kyc.reviewedAt && (
                 <div>
                   <label className="text-gray-500 text-sm">Reviewed At</label>
-                  <p className="font-medium">{new Date(kyc.reviewedAt).toLocaleString()}</p>
+                  <p className="font-medium">{formatDateTimeIST(kyc.reviewedAt)}</p>
                 </div>
               )}
               {kyc.rejectionReason && (

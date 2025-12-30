@@ -383,7 +383,10 @@ export default function AdminDashboard() {
                         {activity.description}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {new Date(activity.time).toUTCString()}
+                        {(() => {
+                          const { formatDateTimeIST } = require("@/utils/dateUtils");
+                          return formatDateTimeIST(activity.time);
+                        })()}
                       </p>
                     </div>
                   </div>

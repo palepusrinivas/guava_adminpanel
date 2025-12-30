@@ -8,6 +8,7 @@ import { toast } from "react-hot-toast";
 import type { Coupon } from "@/utils/slices/couponSlice";
 import adminAxios from "@/utils/axiosConfig";
 import { config, getApiUrl } from "@/utils/config";
+import { formatDateTimeIST } from "@/utils/dateUtils";
 
 function StatCard({ label, value, icon }: { label: string; value: string | number; icon?: React.ReactNode }) {
   return (
@@ -329,7 +330,7 @@ export default function CouponSetup() {
   const formatDate = (dateString?: string) => {
     if (!dateString) return "-";
     try {
-      return new Date(dateString).toLocaleDateString("en-IN", {
+      return formatDateTimeIST(dateString, {
         year: "numeric",
         month: "short",
         day: "numeric",

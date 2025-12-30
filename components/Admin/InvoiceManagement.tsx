@@ -174,7 +174,8 @@ function InvoiceManagement() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString("en-IN", {
+    const { formatDateTimeIST } = require("@/utils/dateUtils");
+    return formatDateTimeIST(dateString, {
       year: "numeric",
       month: "short",
       day: "numeric",

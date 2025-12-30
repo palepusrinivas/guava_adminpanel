@@ -278,7 +278,10 @@ function GoogleDriveManagement() {
                 {config.lastTestedAt && (
                   <Box mt={2}>
                     <Typography variant="caption" color="text.secondary">
-                      Last tested: {new Date(config.lastTestedAt).toLocaleString()}
+                      Last tested: {(() => {
+                        const { formatDateTimeIST } = require("@/utils/dateUtils");
+                        return formatDateTimeIST(config.lastTestedAt);
+                      })()}
                     </Typography>
                     {config.lastTestResult && (
                       <Typography
