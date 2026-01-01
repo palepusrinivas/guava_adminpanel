@@ -39,7 +39,7 @@ interface TripFare {
   feeAddToNext?: number;
 }
 
-const fareValidationSchema: Yup.ObjectSchema<TripFarePayload> = Yup.object({
+const fareValidationSchema = Yup.object({
   zoneId: Yup.string()
     .transform((v) => v?.trim())
     .test(

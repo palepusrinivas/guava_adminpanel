@@ -15,7 +15,7 @@ import type { TripFare, TripFarePayload } from "@/types/pricing";
 import { Autocomplete, TextField } from "@mui/material";
 
 // ✅ Validation schema
-const fareValidationSchema: Yup.ObjectSchema<TripFarePayload> = Yup.object({
+const fareValidationSchema = Yup.object({
   zoneName: Yup.string()
     .transform((v) => v?.trim())
     .test(
