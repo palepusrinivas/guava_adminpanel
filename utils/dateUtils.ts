@@ -22,17 +22,26 @@ export function formatDateTimeIST(
   
   if (isNaN(date.getTime())) return "Invalid Date";
   
-  const defaultOptions: Intl.DateTimeFormatOptions = {
-    timeZone: IST_TIMEZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-    ...options,
-  };
+  // If dateStyle or timeStyle is provided, don't include individual formatting options
+  // They are mutually exclusive
+  const hasDateOrTimeStyle = options?.dateStyle || options?.timeStyle;
+  
+  const defaultOptions: Intl.DateTimeFormatOptions = hasDateOrTimeStyle
+    ? {
+        timeZone: IST_TIMEZONE,
+        ...options,
+      }
+    : {
+        timeZone: IST_TIMEZONE,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+        ...options,
+      };
   
   return date.toLocaleString(LOCALE, defaultOptions);
 }
@@ -53,13 +62,22 @@ export function formatDateIST(
   
   if (isNaN(date.getTime())) return "Invalid Date";
   
-  const defaultOptions: Intl.DateTimeFormatOptions = {
-    timeZone: IST_TIMEZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    ...options,
-  };
+  // If dateStyle is provided, don't include individual formatting options
+  // They are mutually exclusive
+  const hasDateStyle = options?.dateStyle;
+  
+  const defaultOptions: Intl.DateTimeFormatOptions = hasDateStyle
+    ? {
+        timeZone: IST_TIMEZONE,
+        ...options,
+      }
+    : {
+        timeZone: IST_TIMEZONE,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        ...options,
+      };
   
   return date.toLocaleDateString(LOCALE, defaultOptions);
 }
@@ -80,14 +98,23 @@ export function formatTimeIST(
   
   if (isNaN(date.getTime())) return "Invalid Date";
   
-  const defaultOptions: Intl.DateTimeFormatOptions = {
-    timeZone: IST_TIMEZONE,
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-    ...options,
-  };
+  // If timeStyle is provided, don't include individual formatting options
+  // They are mutually exclusive
+  const hasTimeStyle = options?.timeStyle;
+  
+  const defaultOptions: Intl.DateTimeFormatOptions = hasTimeStyle
+    ? {
+        timeZone: IST_TIMEZONE,
+        ...options,
+      }
+    : {
+        timeZone: IST_TIMEZONE,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+        ...options,
+      };
   
   return date.toLocaleTimeString(LOCALE, defaultOptions);
 }

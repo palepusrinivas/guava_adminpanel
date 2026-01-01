@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import SimplifiedPricingManagement from "@/components/Admin/SimplifiedPricingManagement";
 import TripFares from "@/components/Admin/TripFares";
+import PricingStatus from "@/components/Admin/PricingStatus";
 import { Tabs, Tab, Box, Alert } from "@mui/material";
 
 // Dynamically import TieredPricingManagement to avoid SSR issues
@@ -26,24 +27,38 @@ export default function AdminPricingPage() {
 
       <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
         <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)}>
+          <Tab label="🎯 Tiered Pricing (Primary)" />
           <Tab label="💰 Base Fares & Fees" />
           <Tab label="🚗 Zone Overrides (Advanced)" />
+          <Tab label="📊 Pricing Status" />
         </Tabs>
       </Box>
       
       <Alert severity="info" sx={{ mb: 3 }}>
-        <strong>Pricing Structure:</strong> Base fare rates are calculated using distance tiers. Additional fees (platform fee, GST, night surcharge) are added on top. Zone overrides can replace default rates for specific zones.
+        <strong>Pricing Structure:</strong> Tiered Pricing Management is now the primary pricing source. Configure distance-based pricing tiers for each service type. Zone overrides can replace tiered pricing for specific zones. Additional fees (platform fee, GST, night surcharge) are added on top.
       </Alert>
 
       {activeTab === 0 && (
         <div>
-          <SimplifiedPricingManagement />
+          <TieredPricingManagement />
         </div>
       )}
 
       {activeTab === 1 && (
         <div>
+          <SimplifiedPricingManagement />
+        </div>
+      )}
+
+      {activeTab === 2 && (
+        <div>
           <TripFares />
+        </div>
+      )}
+
+      {activeTab === 3 && (
+        <div>
+          <PricingStatus />
         </div>
       )}
     </div>

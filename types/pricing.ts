@@ -13,6 +13,7 @@ export interface VehicleCategory {
 // Trip Fare types
 export interface TripFare {
   id: string;
+  zoneId?: string;  // Zone ID stored as string
   zone?: Zone;
   vehicleCategory?: VehicleCategory;
   baseFare: number;
@@ -31,6 +32,9 @@ export interface TripFare {
 
 // Request payload for creating/updating trip fares
 export interface TripFarePayload {
+  // ID for editing existing fare
+  id?: string;
+  
   // Zone identifier (one of)
   zoneId?: string;
   zoneName?: string;

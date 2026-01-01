@@ -109,6 +109,7 @@ function TripFares() {
   const [loading, setLoading] = useState(false);
   const [zonesLoading, setZonesLoading] = useState(false);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [editingFare, setEditingFare] = useState<TripFare | null>(null);
 
   const fetchFares = async () => {
     setLoading(true);
@@ -230,6 +231,11 @@ function TripFares() {
         // TripFare uses ZoneV2 which requires UUID strings or zoneName
         const payload: TripFarePayload = { ...values };
         
+        // If editing, include the ID
+        if (editingFare) {
+          payload.id = editingFare.id;
+        }
+        
         // If zoneId is numeric (not a UUID), remove it and rely on zoneName
         if (payload.zoneId) {
           const zoneIdStr = payload.zoneId.toString();
@@ -249,21 +255,60 @@ function TripFares() {
         
         const response = await dispatch(createTripFare(payload));
         if (createTripFare.fulfilled.match(response)) {
-          toast.success("Trip fare created");
+          toast.success(editingFare ? "Trip fare updated" : "Trip fare created");
           resetForm();
+          setEditingFare(null);
           fetchFares();
         } else {
           toast.error(
             typeof response.payload === "string"
               ? response.payload
-              : "Failed to create fare"
+              : "Failed to save fare"
           );
         }
       } catch (error) {
-        toast.error("Error creating fare");
+        toast.error("Error saving fare");
       }
     },
   });
+
+  const handleEdit = (fare: TripFare) => {
+    setEditingFare(fare);
+    
+    // Find zone option
+    const zoneOption = zoneOptions.find(
+      (z) => z.name === (fare.zone?.name || "") || z.id === fare.zoneId
+    );
+    
+    // Find category option
+    const categoryOption = categoryOptions.find(
+      (c) => c.id === fare.vehicleCategory?.id || 
+             c.type === fare.vehicleCategory?.type ||
+             c.name === fare.vehicleCategory?.name
+    );
+    
+    // Set form values
+    formik.setValues({
+      zoneName: zoneOption?.name || fare.zone?.name || "",
+      zoneId: zoneOption?.id || fare.zoneId || "",
+      vehicleCategoryId: fare.vehicleCategory?.id || "",
+      categoryType: categoryOption?.type || fare.vehicleCategory?.type || "",
+      categoryName: categoryOption?.name || fare.vehicleCategory?.name || "",
+      baseFare: fare.baseFare ? Number(fare.baseFare) : 0,
+      baseFarePerKm: fare.baseFarePerKm ? Number(fare.baseFarePerKm) : 0,
+      timeRatePerMinOverride: fare.timeRatePerMinOverride ? Number(fare.timeRatePerMinOverride) : undefined,
+      waitingFeePerMin: fare.waitingFeePerMin ? Number(fare.waitingFeePerMin) : undefined,
+      cancellationFeePercent: fare.cancellationFeePercent ? Number(fare.cancellationFeePercent) : undefined,
+      minCancellationFee: fare.minCancellationFee ? Number(fare.minCancellationFee) : undefined,
+      idleFeePerMin: fare.idleFeePerMin ? Number(fare.idleFeePerMin) : undefined,
+      tripDelayFeePerMin: fare.tripDelayFeePerMin ? Number(fare.tripDelayFeePerMin) : undefined,
+      penaltyFeeForCancel: fare.penaltyFeeForCancel ? Number(fare.penaltyFeeForCancel) : undefined,
+      feeAddToNext: fare.feeAddToNext ? Number(fare.feeAddToNext) : undefined,
+    });
+    
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this fare?")) return;
@@ -282,6 +327,11 @@ function TripFares() {
     } catch (err) {
       toast.error("Error deleting fare");
     }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingFare(null);
+    formik.resetForm();
   };
 
   return (
@@ -463,12 +513,21 @@ function TripFares() {
               </div>
             </div>
 
-            <div className="flex justify-end pt-4">
+            <div className="flex justify-end space-x-2 pt-4">
+              {editingFare && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+              )}
               <button
                 type="submit"
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
-                Add Fare
+                {editingFare ? "Update Fare" : "Add Fare"}
               </button>
             </div>
           </form>
@@ -489,10 +548,13 @@ function TripFares() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Zone
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Vehicle
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Base
+                      Base Fare
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Per KM
@@ -509,18 +571,19 @@ function TripFares() {
                   {fares.map((f) => (
                     <tr key={f.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {f.zone?.name || f.zone?.id || "-"}
+                        {f.zone?.name || f.zoneId || "-"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {f.vehicleCategory?.type ||
                           f.vehicleCategory?.name ||
+                          f.vehicleCategory?.categoryName ||
                           "-"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ₹{f.baseFare}
+                        ₹{f.baseFare || 0}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ₹{f.baseFarePerKm}
+                        ₹{f.baseFarePerKm || 0}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {f.timeRatePerMinOverride
@@ -528,12 +591,20 @@ function TripFares() {
                           : "-"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleDelete(f.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Delete
-                        </button>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEdit(f)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(f.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

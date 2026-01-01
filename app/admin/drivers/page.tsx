@@ -13,6 +13,12 @@ interface Driver {
   rating: number;
   latitude: number;
   longitude: number;
+  subscriptionActive?: boolean;
+  subscriptionType?: string;
+  vehicle?: {
+    serviceType?: string;
+    vehicleType?: string;
+  };
 }
 
 export default function AdminDriversPage() {
@@ -73,6 +79,8 @@ export default function AdminDriversPage() {
           rating: driver.rating || 0,
           latitude: driver.latitude || 0,
           longitude: driver.longitude || 0,
+          subscriptionActive: driver.subscriptionActive || false,
+          subscriptionType: driver.subscriptionType || null,
           vehicle: driver.vehicle ? {
             serviceType: driver.vehicle.serviceType || driver.vehicle.service_type,
             vehicleType: driver.vehicle.vehicleType || driver.vehicle.vehicle_type,

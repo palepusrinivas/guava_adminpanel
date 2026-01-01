@@ -50,6 +50,13 @@ export default function IntercityDashboardPage() {
       href: "/admin/intercity/routes",
     },
     {
+      name: "Driver-Published Trips",
+      value: dashboard?.driverPublishedTripsCount || 0,
+      icon: "🚌",
+      color: "bg-purple-100 text-purple-600",
+      href: "/admin/intercity/trips?filter=driver-published",
+    },
+    {
       name: "Pending Bookings",
       value: bookingStats["PENDING"] || 0,
       icon: "📋",
@@ -270,6 +277,61 @@ export default function IntercityDashboardPage() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Driver-Published Trips Section */}
+      <div className="bg-white shadow rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Driver-Published Trips</h2>
+          <Link
+            href="/admin/intercity/trips?filter=driver-published"
+            className="text-sm text-teal-600 hover:text-teal-700 font-medium"
+          >
+            View All →
+          </Link>
+        </div>
+        
+        <div className="mb-4">
+          <div className="flex items-center space-x-4">
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 flex-1">
+              <p className="text-xs font-medium text-indigo-600 uppercase tracking-wide mb-1">
+                Total Driver-Published Trips
+              </p>
+              <p className="text-3xl font-bold text-indigo-900">
+                {dashboard?.driverPublishedTripsCount || 0}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {dashboard?.driverPublishedTripsByStatus && Object.keys(dashboard.driverPublishedTripsByStatus).length > 0 ? (
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 mb-3">By Status</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              {tripStatusCards.map((item) => {
+                const count = dashboard.driverPublishedTripsByStatus?.[item.status] || 0;
+                return (
+                  <div
+                    key={item.status}
+                    className={`p-3 rounded-lg ${item.color} ${count === 0 ? "opacity-50" : ""}`}
+                  >
+                    <p className="text-xs font-medium uppercase tracking-wide opacity-75">
+                      {item.label}
+                    </p>
+                    <p className="text-xl font-bold mt-1">
+                      {count}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p className="text-sm">No driver-published trips found</p>
+            <p className="text-xs mt-1">Drivers can publish trips from their app</p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -153,6 +153,12 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
       ],
     },
     {
+      title: "SUBSCRIPTION MANAGEMENT",
+      items: [
+        { name: "Subscription Plans", href: "/admin/subscription-plans", icon: "💳" },
+      ],
+    },
+    {
       title: "USER MANAGEMENT",
       items: [
         { name: "Users", href: "/admin/users", icon: "👥" },
@@ -304,7 +310,14 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
         { name: "Legal Documents", href: "/admin/legal-documents", icon: "📄" },
         { name: "Mail Server", href: "/admin/mail-server", icon: "📧" },
         { name: "Google Drive", href: "/admin/google-drive", icon: "📁" },
-        { name: "Invoices", href: "/admin/invoices", icon: "📄" },
+        {
+          name: "Invoices",
+          icon: "📄",
+          children: [
+            { name: "Invoice List", href: "/admin/invoices" },
+            { name: "Invoice Settings", href: "/admin/invoices/settings" },
+          ],
+        },
       ],
     },
     {
@@ -334,6 +347,7 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
     "Business Setup": true,
     "Configurations": true,
     "Pricing": true,
+    "Invoices": true,
   });
   const toggleGroup = (name: string) => setOpenGroups((s) => ({ ...s, [name]: !s[name] }));
 

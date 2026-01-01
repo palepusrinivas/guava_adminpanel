@@ -147,12 +147,50 @@ export default function VehicleList() {
     );
   }, [vehicles, vehicleFilter, vehicleSearchQuery]);
 
+  // Helper function to get a readable vehicle type name
+  const getVehicleTypeName = (vehicle: any): string => {
+    // Priority: serviceType > vehicleCategory > vehicleType > type
+    if (vehicle.serviceType) {
+      // Map service types to readable names
+      const serviceTypeMap: Record<string, string> = {
+        "BIKE": "Bike",
+        "MEGA": "Auto (Three Wheeler)",
+        "AUTO": "Auto (Three Wheeler)",
+        "CAR": "Car",
+        "SMALL_SEDAN": "Small Sedan",
+      };
+      return serviceTypeMap[vehicle.serviceType] || vehicle.serviceType;
+    }
+    
+    if (vehicle.vehicleCategory && vehicle.vehicleCategory !== "N/A") {
+      return vehicle.vehicleCategory;
+    }
+    
+    if (vehicle.vehicleType) {
+      // Map vehicle types to readable names
+      const vehicleTypeMap: Record<string, string> = {
+        "two_wheeler": "Bike",
+        "TWO_WHEELER": "Bike",
+        "three_wheeler": "Auto (Three Wheeler)",
+        "THREE_WHEELER": "Auto (Three Wheeler)",
+        "four_wheeler": "Car",
+        "FOUR_WHEELER": "Car",
+      };
+      return vehicleTypeMap[vehicle.vehicleType] || vehicle.vehicleType;
+    }
+    
+    if (vehicle.type) {
+      return vehicle.type;
+    }
+    
+    return "Other";
+  };
+
   const vehicleTypeSummary = useMemo(() => {
     const summary: Record<string, number> = {};
     vehicles.forEach((v) => {
-      // Get the type from multiple possible fields
-      const type = v.vehicleCategory || v.vehicleType || v.serviceType || v.type || "Other";
-      summary[type] = (summary[type] || 0) + 1;
+      const typeName = getVehicleTypeName(v);
+      summary[typeName] = (summary[typeName] || 0) + 1;
     });
     return summary;
   }, [vehicles]);
@@ -176,15 +214,26 @@ export default function VehicleList() {
 
       {/* Vehicle Type Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {Object.entries(vehicleTypeSummary).map(([type, count]) => (
-          <div key={type} className="bg-white rounded-xl p-4 flex items-center justify-between shadow">
-            <div>
-              <div className="text-sm text-gray-600 mb-1">{type}</div>
-              <div className="text-2xl font-bold text-gray-900">{count}</div>
+        {Object.entries(vehicleTypeSummary)
+          .sort(([a], [b]) => {
+            // Sort by type: Bike, Auto, Car, Small Sedan, then Others
+            const order: Record<string, number> = {
+              "Bike": 1,
+              "Auto (Three Wheeler)": 2,
+              "Car": 3,
+              "Small Sedan": 4,
+            };
+            return (order[a] || 99) - (order[b] || 99);
+          })
+          .map(([type, count]) => (
+            <div key={type} className="bg-white rounded-xl p-4 flex items-center justify-between shadow">
+              <div>
+                <div className="text-sm text-gray-600 mb-1">{type}</div>
+                <div className="text-2xl font-bold text-gray-900">{count}</div>
+              </div>
+              <div className="text-4xl">{getVehicleIcon({ vehicleCategory: type, vehicleType: type, serviceType: type })}</div>
             </div>
-            <div className="text-4xl">{getVehicleIcon({ vehicleCategory: type, vehicleType: type, serviceType: type })}</div>
-          </div>
-        ))}
+          ))}
         {/* Fallback for empty state */}
         {Object.keys(vehicleTypeSummary).length === 0 && (
           <>

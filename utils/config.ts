@@ -5,9 +5,9 @@ export const config = {
   // Production (Netlify): Use Azure backend
   //API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://gauva-f6f6d9ddagfqc9fw.canadacentral-01.azurewebsites.net",
   //azure prod url
-  API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://gauva-f6f6d9ddagfqc9fw.southindia-01.azurewebsites.net",
+API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://gauva-f6f6d9ddagfqc9fw.southindia-01.azurewebsites.net",
   // Uncomment below for local development:
-    //API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080",
+  //API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080",
   LOCATIONIQ_API_KEY: process.env.NEXT_PUBLIC_LOCATIONIQ_API_KEY || "pk.1dca78a113a7c45533e83e6c9f2196ae",
   GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyA4l8wJ5bYRj_iPcaWF1TTuPt5KVDGMFpo", // Temporary hardcoded key
 
@@ -254,6 +254,11 @@ export const config = {
       INVOICES_DOWNLOAD: "/api/admin/invoices/:id/download",
       INVOICES_DATE_RANGE: "/api/admin/invoices/date-range",
       INVOICES_RETRY_UPLOADS: "/api/admin/invoices/retry-uploads",
+      // Subscription Plans Management
+      SUBSCRIPTION_PLANS: "/api/admin/subscription-plans",
+      SUBSCRIPTION_PLAN_BY_ID: "/api/admin/subscription-plans/:id",
+      SUBSCRIPTION_PLAN_ENABLE: "/api/admin/subscription-plans/:id/enable",
+      SUBSCRIPTION_PLAN_DISABLE: "/api/admin/subscription-plans/:id/disable",
     } as Record<string, string>,
   },
 } as {

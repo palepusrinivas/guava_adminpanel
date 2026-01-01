@@ -61,11 +61,10 @@ import { getVehicleCategories } from "@/utils/reducers/adminReducers";
 import { config } from "@/utils/config";
 import adminAxios from "@/utils/axiosConfig";
 
-// ServiceType enum values from backend
+// ServiceType enum values from backend (MEGA = AUTO/Three Wheeler)
 const SERVICE_TYPES = [
   { value: "BIKE", label: "BIKE" },
-  { value: "MEGA", label: "MEGA" },
-  { value: "AUTO", label: "AUTO" },
+  { value: "MEGA", label: "MEGA (Auto)" }, // MEGA represents AUTO/Three Wheeler
   { value: "SMALL_SEDAN", label: "SMALL_SEDAN" },
   { value: "CAR", label: "CAR" },
 ];
@@ -112,11 +111,7 @@ const initialFormState: Partial<ServiceConfig> = {
   isIntercity: false,
   vehicleType: "four_wheeler",
   estimatedArrival: "5-10 mins",
-  baseFare: 50,
-  perKmRate: 15,
-  perMinRate: 2,
-  minimumFare: 60,
-  cancellationFee: 25,
+  // Pricing fields removed - pricing is now managed through PricingTiers (Tiered Pricing Management)
   maxDistance: 50,
   maxWaitTime: 10,
   category: "standard",
@@ -424,8 +419,6 @@ export default function ServicesPage() {
               <TableCell>Name</TableCell>
               <TableCell>Vehicle Type</TableCell>
               <TableCell>Capacity</TableCell>
-              <TableCell>Base Fare</TableCell>
-              <TableCell>Per KM</TableCell>
               <TableCell>Intercity</TableCell>
               <TableCell>Status</TableCell>
               <TableCell align="right">Actions</TableCell>
@@ -434,7 +427,7 @@ export default function ServicesPage() {
           <TableBody>
             {safeServices.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
                   <CarIcon sx={{ fontSize: 48, color: "grey.400", mb: 1 }} />
                   <Typography color="text.secondary">
                     No services found. Click "Seed Defaults" to add default services.
@@ -472,8 +465,6 @@ export default function ServicesPage() {
                     />
                   </TableCell>
                   <TableCell>{service.capacity} persons</TableCell>
-                  <TableCell>₹{service.baseFare}</TableCell>
-                  <TableCell>₹{service.perKmRate}/km</TableCell>
                   <TableCell>
                     <Chip
                       label={service.isIntercity ? "Intercity" : "City"}
@@ -799,45 +790,13 @@ export default function ServicesPage() {
                 Fare Configuration
               </Typography>
             </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                type="number"
-                label="Base Fare"
-                value={formData.baseFare}
-                onChange={(e) => setFormData({ ...formData, baseFare: parseFloat(e.target.value) })}
-                InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                type="number"
-                label="Per KM Rate"
-                value={formData.perKmRate}
-                onChange={(e) => setFormData({ ...formData, perKmRate: parseFloat(e.target.value) })}
-                InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                type="number"
-                label="Per Minute Rate"
-                value={formData.perMinRate}
-                onChange={(e) => setFormData({ ...formData, perMinRate: parseFloat(e.target.value) })}
-                InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                type="number"
-                label="Minimum Fare"
-                value={formData.minimumFare}
-                onChange={(e) => setFormData({ ...formData, minimumFare: parseFloat(e.target.value) })}
-                InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
-              />
+            <Grid item xs={12}>
+              <Alert severity="info" sx={{ mb: 2 }}>
+                <Typography variant="body2">
+                  <strong>Note:</strong> Pricing is now managed through <strong>Tiered Pricing Management</strong> in the Pricing section. 
+                  Configure distance-based pricing tiers for each service type there.
+                </Typography>
+              </Alert>
             </Grid>
 
             {/* Additional Settings */}
@@ -853,16 +812,6 @@ export default function ServicesPage() {
                 value={formData.estimatedArrival}
                 onChange={(e) => setFormData({ ...formData, estimatedArrival: e.target.value })}
                 placeholder="e.g., 5-10 mins"
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                type="number"
-                label="Cancellation Fee"
-                value={formData.cancellationFee}
-                onChange={(e) => setFormData({ ...formData, cancellationFee: parseFloat(e.target.value) })}
-                InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
               />
             </Grid>
             <Grid item xs={12} md={4}>

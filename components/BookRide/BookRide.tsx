@@ -27,6 +27,7 @@ import {
 import AvailableCab from "./AvailableCabs";
 import SearchResult from "./SearchResult";
 import PricingBreakdown from "@/components/Admin/PricingBreakdown";
+import NearbyDriversMap from "./NearbyDriversMap";
 import axios from "axios";
 import { requestRide } from "@/utils/reducers/rideReducers";
 import { useAppDispatch, useAppSelector } from "@/utils/store/store";
@@ -482,6 +483,20 @@ function BookRide() {
                     </Typography>
                   )}
                 </div>
+
+                {/* Nearby Drivers Map - Show when pickup location is set */}
+                {formik.values.pickupLatitude && formik.values.pickupLongitude && (
+                  <Card className="mt-6">
+                    <CardContent className="p-4">
+                      <NearbyDriversMap
+                        center={{
+                          lat: parseFloat(formik.values.pickupLatitude),
+                          lng: parseFloat(formik.values.pickupLongitude),
+                        }}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Estimated Fare, Distance, and Time */}
                 {(estimatedFare || estimatedTime || estimatedDistance) && (

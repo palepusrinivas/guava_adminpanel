@@ -39,7 +39,7 @@ import { adminPricingTiersByServiceUrl, adminPricingTiersUrl, adminPricingTiersB
 
 interface PricingTier {
   id?: number;
-  serviceType: "BIKE" | "MEGA" | "AUTO" | "SMALL_SEDAN" | "CAR";
+  serviceType: "BIKE" | "MEGA" | "SMALL_SEDAN" | "CAR";
   distanceFromKm: number;
   distanceToKm: number | null; // null means "above this"
   ratePerKm: number;
@@ -50,13 +50,12 @@ interface PricingTier {
 
 const SERVICE_TYPES = [
   { value: "BIKE", label: "🏍️ Bike" },
-  { value: "MEGA", label: "🛺 Mega (Three Wheeler)" },
-  { value: "AUTO", label: "🛺 Auto (Three Wheeler)" },
+  { value: "MEGA", label: "🛺 Auto (Three Wheeler)" }, // MEGA = AUTO in backend
   { value: "SMALL_SEDAN", label: "🚙 Small Sedan" },
   { value: "CAR", label: "🚗 Car" },
 ];
 
-type ServiceTypeValue = "BIKE" | "MEGA" | "AUTO" | "SMALL_SEDAN" | "CAR";
+type ServiceTypeValue = "BIKE" | "MEGA" | "SMALL_SEDAN" | "CAR";
 
 export default function TieredPricingManagement() {
   const [selectedServiceType, setSelectedServiceType] = useState<ServiceTypeValue>("BIKE");
@@ -70,18 +69,16 @@ export default function TieredPricingManagement() {
   const [allTiers, setAllTiers] = useState<{
     BIKE: PricingTier[];
     MEGA: PricingTier[];
-    AUTO: PricingTier[];
     SMALL_SEDAN: PricingTier[];
     CAR: PricingTier[];
   }>({
     BIKE: [],
     MEGA: [],
-    AUTO: [],
     SMALL_SEDAN: [],
     CAR: [],
   });
 
-  // Default tiers based on PDF (MEGA = AUTO from PDF)
+  // Default tiers (MEGA = AUTO/Three Wheeler in backend)
   const defaultTiers: Record<ServiceTypeValue, PricingTier[]> = {
     BIKE: [
       { serviceType: "BIKE", distanceFromKm: 0, distanceToKm: 2, ratePerKm: 0, baseFare: 25, displayOrder: 1, isActive: true },
@@ -89,19 +86,13 @@ export default function TieredPricingManagement() {
       { serviceType: "BIKE", distanceFromKm: 6, distanceToKm: 8, ratePerKm: 9, baseFare: null, displayOrder: 3, isActive: true },
       { serviceType: "BIKE", distanceFromKm: 8, distanceToKm: null, ratePerKm: 10, baseFare: null, displayOrder: 4, isActive: true },
     ],
-    MEGA: [ // MEGA = AUTO (Three Wheeler) from PDF
+    MEGA: [ // MEGA = AUTO (Three Wheeler) - backend uses MEGA enum
       { serviceType: "MEGA", distanceFromKm: 0, distanceToKm: 2, ratePerKm: 0, baseFare: 45, displayOrder: 1, isActive: true },
       { serviceType: "MEGA", distanceFromKm: 2, distanceToKm: 6, ratePerKm: 15, baseFare: null, displayOrder: 2, isActive: true },
       { serviceType: "MEGA", distanceFromKm: 6, distanceToKm: 8, ratePerKm: 16, baseFare: null, displayOrder: 3, isActive: true },
       { serviceType: "MEGA", distanceFromKm: 8, distanceToKm: null, ratePerKm: 18, baseFare: null, displayOrder: 4, isActive: true },
     ],
-    AUTO: [ // AUTO (Three Wheeler) - same as MEGA
-      { serviceType: "AUTO", distanceFromKm: 0, distanceToKm: 2, ratePerKm: 0, baseFare: 45, displayOrder: 1, isActive: true },
-      { serviceType: "AUTO", distanceFromKm: 2, distanceToKm: 6, ratePerKm: 15, baseFare: null, displayOrder: 2, isActive: true },
-      { serviceType: "AUTO", distanceFromKm: 6, distanceToKm: 8, ratePerKm: 16, baseFare: null, displayOrder: 3, isActive: true },
-      { serviceType: "AUTO", distanceFromKm: 8, distanceToKm: null, ratePerKm: 18, baseFare: null, displayOrder: 4, isActive: true },
-    ],
-    SMALL_SEDAN: [ // Small Sedan - can use CAR rates as default or customize
+    SMALL_SEDAN: [
       { serviceType: "SMALL_SEDAN", distanceFromKm: 0, distanceToKm: 2, ratePerKm: 0, baseFare: 75, displayOrder: 1, isActive: true },
       { serviceType: "SMALL_SEDAN", distanceFromKm: 2, distanceToKm: 6, ratePerKm: 18, baseFare: null, displayOrder: 2, isActive: true },
       { serviceType: "SMALL_SEDAN", distanceFromKm: 6, distanceToKm: 8, ratePerKm: 20, baseFare: null, displayOrder: 3, isActive: true },
@@ -128,11 +119,10 @@ export default function TieredPricingManagement() {
   const fetchAllTiers = async () => {
     setLoading(true);
     try {
-      // Fetch tiers for all service types
-      const [bikeResponse, megaResponse, autoResponse, sedanResponse, carResponse] = await Promise.all([
+      // Fetch tiers for all service types (MEGA = AUTO in backend)
+      const [bikeResponse, megaResponse, sedanResponse, carResponse] = await Promise.all([
         adminAxios.get(adminPricingTiersByServiceUrl("BIKE")).catch(() => ({ data: [] })),
         adminAxios.get(adminPricingTiersByServiceUrl("MEGA")).catch(() => ({ data: [] })),
-        adminAxios.get(adminPricingTiersByServiceUrl("AUTO")).catch(() => ({ data: [] })),
         adminAxios.get(adminPricingTiersByServiceUrl("SMALL_SEDAN")).catch(() => ({ data: [] })),
         adminAxios.get(adminPricingTiersByServiceUrl("CAR")).catch(() => ({ data: [] })),
       ]);
@@ -140,13 +130,11 @@ export default function TieredPricingManagement() {
       const updatedTiers: {
         BIKE: PricingTier[];
         MEGA: PricingTier[];
-        AUTO: PricingTier[];
         SMALL_SEDAN: PricingTier[];
         CAR: PricingTier[];
       } = {
         BIKE: bikeResponse.data && bikeResponse.data.length > 0 ? bikeResponse.data : defaultTiers.BIKE,
         MEGA: megaResponse.data && megaResponse.data.length > 0 ? megaResponse.data : defaultTiers.MEGA,
-        AUTO: autoResponse.data && autoResponse.data.length > 0 ? autoResponse.data : defaultTiers.AUTO,
         SMALL_SEDAN: sedanResponse.data && sedanResponse.data.length > 0 ? sedanResponse.data : defaultTiers.SMALL_SEDAN,
         CAR: carResponse.data && carResponse.data.length > 0 ? carResponse.data : defaultTiers.CAR,
       };
@@ -346,7 +334,7 @@ export default function TieredPricingManagement() {
             Configure distance-based rates for <strong>{selectedServiceType}</strong> rides. Base fare applies to 0-2km range.
             <br />
             <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-              💡 <strong>All service types available:</strong> Click on the tabs above (🏍️ Bike, 🛺 Auto/Mega, 🚙 Small Sedan, 🚗 Car) to switch between and configure pricing for each service type.
+              💡 <strong>All service types available:</strong> Click on the tabs above (🏍️ Bike, 🛺 Auto, 🚙 Small Sedan, 🚗 Car) to switch between and configure pricing for each service type.
             </Typography>
           </Alert>
         </CardContent>

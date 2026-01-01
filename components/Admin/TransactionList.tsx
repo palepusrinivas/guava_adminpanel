@@ -53,6 +53,7 @@ export default function TransactionList() {
       credit: 2,
       debit: 0,
       balance: 1947,
+      status: "PAID",
     },
     {
       id: 2,
@@ -64,6 +65,7 @@ export default function TransactionList() {
       credit: 33,
       debit: 0,
       balance: 1255,
+      status: "PAID",
     },
     {
       id: 3,
@@ -75,6 +77,7 @@ export default function TransactionList() {
       credit: 2,
       debit: 0,
       balance: 95,
+      status: "PENDING",
     },
     {
       id: 4,
@@ -86,6 +89,7 @@ export default function TransactionList() {
       credit: 50,
       debit: 0,
       balance: 50,
+      status: "COMPLETED",
     },
   ];
 
@@ -162,6 +166,7 @@ export default function TransactionList() {
                 <th className="px-4 py-3 text-left">Credit</th>
                 <th className="px-4 py-3 text-left">Debit</th>
                 <th className="px-4 py-3 text-left">Balance</th>
+                <th className="px-4 py-3 text-left">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -184,11 +189,32 @@ export default function TransactionList() {
                   <td className="px-4 py-3">₹{transaction.credit}</td>
                   <td className="px-4 py-3">₹{transaction.debit}</td>
                   <td className="px-4 py-3 font-medium">₹{transaction.balance.toLocaleString()}</td>
+                  <td className="px-4 py-3">
+                    {transaction.status ? (
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          transaction.status === "PAID" || transaction.status === "COMPLETED"
+                            ? "bg-green-100 text-green-800"
+                            : transaction.status === "PENDING" || transaction.status === "CREATED" || transaction.status === "PROCESSING"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : transaction.status === "FAILED"
+                            ? "bg-red-100 text-red-800"
+                            : transaction.status === "REFUNDED" || transaction.status === "PARTIAL_REFUNDED"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {transaction.status}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 text-xs">-</span>
+                    )}
+                  </td>
                 </tr>
               ))}
               {!isLoading && transactionsToDisplay.length === 0 && (
                 <tr>
-                  <td className="px-4 py-6 text-center text-gray-500" colSpan={8}>
+                  <td className="px-4 py-6 text-center text-gray-500" colSpan={9}>
                     No transactions found.
                   </td>
                 </tr>

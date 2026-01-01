@@ -1,4 +1,5 @@
 import { config } from './config';
+import adminAxios from './axiosConfig';
 
 const base = config.API_BASE_URL;
 
@@ -29,26 +30,23 @@ export async function fetchRecentTransactions(limit = 20) {
 
 // Pricing API
 export async function listTripFares(page = 0, size = 20) {
-  const r = await fetch(`${base}/api/admin/pricing/trip-fares?page=${page}&size=${size}`);
-  if (!r.ok) throw new Error('Failed to load trip fares');
-  return r.json();
+  const response = await adminAxios.get('/api/admin/pricing/trip-fares', {
+    params: { page, size }
+  });
+  return response.data;
 }
 
 export async function upsertTripFare(payload: any) {
-  const r = await fetch(`${base}/api/admin/pricing/trip-fares`, {
-    method: 'POST',
+  const response = await adminAxios.post('/api/admin/pricing/trip-fares', payload, {
     headers: {
       'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(payload),
+    }
   });
-  if (!r.ok) throw new Error('Failed to upsert trip fare');
-  return r.json();
+  return response.data;
 }
 
 export async function deleteTripFare(id: string) {
-  const r = await fetch(`${base}/api/admin/pricing/trip-fares?id=${encodeURIComponent(id)}`, {
-    method: 'DELETE',
+  await adminAxios.delete('/api/admin/pricing/trip-fares', {
+    params: { id }
   });
-  if (!r.ok) throw new Error('Failed to delete trip fare');
 }

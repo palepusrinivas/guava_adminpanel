@@ -34,7 +34,7 @@ export default function IntercityPricingPage() {
         minCommissionAmount: pricingConfig.minCommissionAmount,
         maxCommissionAmount: pricingConfig.maxCommissionAmount,
         nightFareMultiplier: pricingConfig.nightFareMultiplier,
-        defaultRoutePriceMultiplier: pricingConfig.defaultRoutePriceMultiplier,
+        // defaultRoutePriceMultiplier removed - now managed per route via manualFare
         commissionEnabled: pricingConfig.commissionEnabled,
         nightFareEnabled: pricingConfig.nightFareEnabled,
         nightFareStartHour: pricingConfig.nightFareStartHour,
@@ -281,22 +281,11 @@ export default function IntercityPricingPage() {
             <div className="pb-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Route Pricing</h2>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Default Route Price Multiplier
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0.1"
-                  max="10.0"
-                  value={formData.defaultRoutePriceMultiplier ?? ""}
-                  onChange={(e) => handleChange("defaultRoutePriceMultiplier", parseFloat(e.target.value) || 1.0)}
-                  className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-teal-500 focus:border-teal-500"
-                  required
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Default multiplier for routes (1.0 = use base vehicle price, 1.2 = 20% increase)
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                <p className="text-sm text-blue-800">
+                  <strong>Note:</strong> Route pricing is now managed per route. You can set a manual fare for each route in the{" "}
+                  <a href="/admin/intercity/routes" className="underline font-semibold">Routes Management</a> page.
+                  If no manual fare is set for a route, the vehicle base price will be used.
                 </p>
               </div>
             </div>
@@ -314,7 +303,7 @@ export default function IntercityPricingPage() {
                       minCommissionAmount: pricingConfig.minCommissionAmount,
                       maxCommissionAmount: pricingConfig.maxCommissionAmount,
                       nightFareMultiplier: pricingConfig.nightFareMultiplier,
-                      defaultRoutePriceMultiplier: pricingConfig.defaultRoutePriceMultiplier,
+                      // defaultRoutePriceMultiplier removed - now managed per route
                       commissionEnabled: pricingConfig.commissionEnabled,
                       nightFareEnabled: pricingConfig.nightFareEnabled,
                       nightFareStartHour: pricingConfig.nightFareStartHour,

@@ -72,7 +72,8 @@ export interface IntercityRoute {
   destinationLongitude: number;
   distanceKm: number;
   durationMinutes: number;
-  priceMultiplier: number;
+  manualFare?: number; // Manual fare set by admin (if set, overrides vehicle base price)
+  priceMultiplier?: number; // @deprecated - Use manualFare instead. Kept for backward compatibility.
   isActive: boolean;
   bidirectional: boolean;
 }
@@ -215,6 +216,8 @@ export interface IntercityBooking {
 }
 
 export interface IntercityDashboardStats {
+  driverPublishedTripsCount?: number;
+  driverPublishedTripsByStatus?: Record<string, number>;
   bookingsByStatus: Record<string, number>;
   tripsByStatus: Record<string, number>;
   activeVehicleTypes: number;

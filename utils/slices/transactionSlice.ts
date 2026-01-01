@@ -11,6 +11,7 @@ export interface Transaction {
   credit: number;
   debit: number;
   balance: number;
+  status?: string; // Transaction status: CREATED, PENDING, PAID, FAILED, REFUNDED, PARTIAL_REFUNDED
 }
 
 interface TransactionState {

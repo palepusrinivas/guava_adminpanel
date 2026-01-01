@@ -15,11 +15,12 @@ export interface ServiceConfig {
   isActive: boolean;
   vehicleType: string;
   estimatedArrival: string;
-  baseFare: number;
-  perKmRate: number;
-  perMinRate: number;
-  minimumFare: number;
-  cancellationFee: number;
+  // Pricing fields deprecated - pricing is now managed through PricingTiers (Tiered Pricing Management)
+  baseFare?: number; // Deprecated - use PricingTiers instead
+  perKmRate?: number; // Deprecated - use PricingTiers instead
+  perMinRate?: number; // Deprecated - use PricingTiers instead
+  minimumFare?: number; // Deprecated - use PricingTiers instead
+  cancellationFee?: number; // Deprecated - use PricingTiers instead
   maxDistance: number;
   maxWaitTime: number;
   category: string;

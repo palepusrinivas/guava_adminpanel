@@ -23,7 +23,7 @@ const emptyRoute: Omit<IntercityRoute, "id"> = {
   destinationLongitude: 0,
   distanceKm: 0,
   durationMinutes: 0,
-  priceMultiplier: 1.0,
+  manualFare: undefined,
   isActive: true,
   bidirectional: true,
 };
@@ -185,7 +185,8 @@ export default function IntercityRoutesPage() {
       destinationLongitude: route.destinationLongitude,
       distanceKm: route.distanceKm,
       durationMinutes: route.durationMinutes,
-      priceMultiplier: route.priceMultiplier,
+      manualFare: route.manualFare,
+      priceMultiplier: route.priceMultiplier, // Keep for backward compatibility
       isActive: route.isActive,
       bidirectional: route.bidirectional,
     });
@@ -356,7 +357,7 @@ export default function IntercityRoutesPage() {
                     Duration
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Price Factor
+                    Fare
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
@@ -394,7 +395,7 @@ export default function IntercityRoutesPage() {
                       {Math.floor(route.durationMinutes / 60)}h {route.durationMinutes % 60}m
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {route.priceMultiplier}x
+                      {route.manualFare ? `₹${route.manualFare.toFixed(2)}` : route.priceMultiplier ? `${route.priceMultiplier}x` : "Base Price"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
@@ -652,16 +653,19 @@ export default function IntercityRoutesPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Price Multiplier</label>
+                    <label className="block text-sm font-medium text-gray-700">Manual Fare (₹)</label>
                     <input
                       type="number"
                       step="0.01"
-                      value={formData.priceMultiplier}
-                      onChange={(e) => setFormData({ ...formData, priceMultiplier: parseFloat(e.target.value) || 1 })}
+                      min="0"
+                      value={formData.manualFare ?? ""}
+                      onChange={(e) => setFormData({ ...formData, manualFare: e.target.value ? parseFloat(e.target.value) : undefined })}
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-teal-500 focus:border-teal-500"
-                      required
-                      min="0.01"
+                      placeholder="Leave empty to use vehicle base price"
                     />
+                    <p className="mt-1 text-xs text-gray-500">
+                      Set a manual fare for this route. If left empty, vehicle base price will be used.
+                    </p>
                   </div>
                 </div>
                 <div className="mt-2 text-xs text-gray-500">
