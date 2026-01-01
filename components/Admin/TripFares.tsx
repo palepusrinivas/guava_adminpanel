@@ -576,7 +576,6 @@ function TripFares() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {f.vehicleCategory?.type ||
                           f.vehicleCategory?.name ||
-                          f.vehicleCategory?.categoryName ||
                           "-"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
