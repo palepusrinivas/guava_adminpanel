@@ -141,6 +141,13 @@ const SETTING_CONFIGS: SettingConfig[] = [
 
   // General Settings
   {
+    key: "driver_search_radius_km",
+    label: "Driver Search Radius (km)",
+    description: "Maximum distance (km) to search for drivers from pickup location. Recommended: 10-20 km for city rides. Maximum allowed: 50 km.",
+    type: "number",
+    category: "general",
+  },
+  {
     key: "app_name",
     label: "App Name",
     description: "Application display name",
