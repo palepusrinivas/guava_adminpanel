@@ -9,6 +9,8 @@ import {
   addFundToCustomerWallet,
 } from "@/utils/reducers/adminReducers";
 import { useRouter } from "next/navigation";
+import { exportToExcel } from "@/utils/excelExport";
+import toast from "react-hot-toast";
 
 const schema = yup.object({
   customerId: yup.string().required("Customer is required"),
@@ -96,6 +98,40 @@ export default function CustomerWallet() {
       console.error("Error fetching transactions:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDownloadExcel = async () => {
+    try {
+      const excelData = filteredTransactions.map((tx, idx) => ({
+        sl: idx + 1,
+        customerName: tx.customerName || '',
+        customerPhone: tx.customerPhone || '',
+        transactionId: tx.transactionId || '',
+        reference: tx.reference || '',
+        transactionDate: tx.transactionDate || '',
+        debit: tx.debit || 0,
+        credit: tx.credit || 0,
+        balance: tx.balance || 0,
+      }));
+      
+      const columns = [
+        { header: 'SL', key: 'sl', width: 5 },
+        { header: 'Customer Name', key: 'customerName', width: 25 },
+        { header: 'Customer Phone', key: 'customerPhone', width: 15 },
+        { header: 'Transaction ID', key: 'transactionId', width: 35 },
+        { header: 'Reference', key: 'reference', width: 30 },
+        { header: 'Transaction Date', key: 'transactionDate', width: 20 },
+        { header: 'Debit', key: 'debit', width: 12 },
+        { header: 'Credit', key: 'credit', width: 12 },
+        { header: 'Balance', key: 'balance', width: 12 },
+      ];
+      
+      await exportToExcel(excelData, columns, `customer-wallet-transactions-${new Date().toISOString().split('T')[0]}`);
+      toast.success('Excel file downloaded successfully');
+    } catch (error: any) {
+      console.error('Error downloading Excel:', error);
+      toast.error(error.message || 'Failed to download Excel file. Please install xlsx: npm install xlsx');
     }
   };
 
@@ -268,14 +304,14 @@ export default function CustomerWallet() {
               <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Search</button>
             </div>
             <div>
-              <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center space-x-1">
+              <button 
+                onClick={handleDownloadExcel}
+                className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center space-x-1"
+              >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <span>Download</span>
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                <span>Download Excel</span>
               </button>
             </div>
           </div>

@@ -1,8 +1,10 @@
 "use client";
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/utils/store/store";
 import { getTransactions } from "@/utils/reducers/adminReducers";
 import { setSearchQuery } from "@/utils/slices/transactionSlice";
+import { exportToExcel } from "@/utils/excelExport";
+import toast from "react-hot-toast";
 
 const formatDate = (dateString: string) => {
   try {
@@ -101,9 +103,40 @@ export default function TransactionList() {
     dispatch(getTransactions({ searchQuery })).catch(() => {});
   };
 
-  const handleDownload = () => {
-    // Implement download functionality
-    console.log("Download transactions");
+  const handleDownload = async () => {
+    try {
+      const excelData = transactionsToDisplay.map((tx, idx) => ({
+        sl: idx + 1,
+        transactionId: tx.transactionId || '',
+        reference: tx.reference || '',
+        transactionDate: tx.transactionDate || '',
+        transactionTo: tx.transactionTo || '',
+        transactionToType: tx.transactionToType || '',
+        credit: tx.credit || 0,
+        debit: tx.debit || 0,
+        balance: tx.balance || 0,
+        status: tx.status || '',
+      }));
+      
+      const columns = [
+        { header: 'SL', key: 'sl', width: 5 },
+        { header: 'Transaction ID', key: 'transactionId', width: 35 },
+        { header: 'Reference', key: 'reference', width: 35 },
+        { header: 'Transaction Date', key: 'transactionDate', width: 20 },
+        { header: 'Transaction To', key: 'transactionTo', width: 25 },
+        { header: 'Transaction To Type', key: 'transactionToType', width: 20 },
+        { header: 'Credit', key: 'credit', width: 12 },
+        { header: 'Debit', key: 'debit', width: 12 },
+        { header: 'Balance', key: 'balance', width: 12 },
+        { header: 'Status', key: 'status', width: 15 },
+      ];
+      
+      await exportToExcel(excelData, columns, `transactions-${new Date().toISOString().split('T')[0]}`);
+      toast.success('Excel file downloaded successfully');
+    } catch (error: any) {
+      console.error('Error downloading Excel:', error);
+      toast.error(error.message || 'Failed to download Excel file. Please install xlsx: npm install xlsx');
+    }
   };
 
   return (

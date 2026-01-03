@@ -53,6 +53,9 @@ import {
 } from "@/utils/slices/walletSlice";
 import toast from "react-hot-toast";
 import { getApiUrl, getAuthToken } from "@/utils/config";
+import { exportToExcel } from "@/utils/excelExport";
+import { formatDateTimeIST } from "@/utils/dateUtils";
+import { FileDownload as FileDownloadIcon } from "@mui/icons-material";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -1205,6 +1208,85 @@ const RazorpayTransactionsPanel = () => {
     fetchStats();
   }, [page, statusFilter]);
 
+  const handleDownloadExcel = async () => {
+    try {
+      setLoading(true);
+      // Fetch all transactions for export
+      const token = getAuthToken();
+      if (!token) {
+        toast.error("Authentication required");
+        return;
+      }
+      
+      const params = new URLSearchParams({
+        page: "0",
+        size: "10000", // Large size to get all transactions
+      });
+      if (statusFilter) params.append("status", statusFilter);
+
+      const response = await fetch(
+        getApiUrl(`/api/admin/wallet/razorpay-transactions?${params}`),
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch transactions for export");
+      }
+      
+      const data = await response.json();
+      const allTransactions = data.content || [];
+      
+      // Prepare data for Excel export
+      const excelData = allTransactions.map((tx: any) => ({
+        id: tx.id || '',
+        userId: tx.userId || '',
+        driverId: tx.driverId || '',
+        rideId: tx.rideId || '',
+        amount: tx.amount || 0,
+        currency: tx.currency || 'INR',
+        provider: tx.provider || '',
+        type: tx.type || '',
+        status: tx.status || '',
+        providerPaymentId: tx.providerPaymentId || '',
+        providerRefundId: tx.providerRefundId || '',
+        providerPaymentLinkId: tx.providerPaymentLinkId || '',
+        notes: tx.notes || '',
+        createdAt: tx.createdAt ? formatDateTimeIST(tx.createdAt) : '',
+      }));
+      
+      // Define columns
+      const columns = [
+        { header: 'ID', key: 'id', width: 10 },
+        { header: 'User ID', key: 'userId', width: 20 },
+        { header: 'Driver ID', key: 'driverId', width: 15 },
+        { header: 'Ride ID', key: 'rideId', width: 15 },
+        { header: 'Amount', key: 'amount', width: 15 },
+        { header: 'Currency', key: 'currency', width: 10 },
+        { header: 'Provider', key: 'provider', width: 15 },
+        { header: 'Type', key: 'type', width: 15 },
+        { header: 'Status', key: 'status', width: 12 },
+        { header: 'Payment ID', key: 'providerPaymentId', width: 30 },
+        { header: 'Refund ID', key: 'providerRefundId', width: 30 },
+        { header: 'Payment Link ID', key: 'providerPaymentLinkId', width: 30 },
+        { header: 'Notes', key: 'notes', width: 30 },
+        { header: 'Created At', key: 'createdAt', width: 25 },
+      ];
+      
+      await exportToExcel(excelData, columns, `razorpay-transactions-${new Date().toISOString().split('T')[0]}`);
+      toast.success('Excel file downloaded successfully');
+    } catch (error: any) {
+      console.error('Error downloading Excel:', error);
+      toast.error(error.message || 'Failed to download Excel file. Please install xlsx: npm install xlsx');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status?.toUpperCase()) {
       case "SUCCESS":
@@ -1280,7 +1362,15 @@ const RazorpayTransactionsPanel = () => {
             <MenuItem value="FAILED">Failed</MenuItem>
           </Select>
         </FormControl>
-              <Button
+        <Button
+          variant="outlined"
+          startIcon={<FileDownloadIcon />}
+          onClick={handleDownloadExcel}
+          disabled={loading}
+        >
+          Download Excel
+        </Button>
+        <Button
           variant="outlined"
           onClick={() => {
             fetchTransactions();
@@ -1289,7 +1379,7 @@ const RazorpayTransactionsPanel = () => {
           disabled={loading}
         >
           {loading ? <CircularProgress size={20} /> : "Refresh"}
-              </Button>
+        </Button>
       </div>
 
       {error && <Alert severity="error">{error}</Alert>}

@@ -312,7 +312,14 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
       items: [
         { name: "General Settings", href: "/admin/settings", icon: "⚙️" },
         { name: "API Keys", href: "/admin/settings/api-keys", icon: "🔑" },
-        { name: "Wallet Management", href: "/admin/wallet", icon: "💰" },
+        {
+          name: "Wallet Management",
+          icon: "💰",
+          children: [
+            { name: "Manage Wallet", href: "/admin/wallet" },
+            { name: "Wallet Transactions", href: "/admin/wallet/transactions" },
+          ],
+        },
         { name: "Banner Setup", href: "/admin/banner-setup", icon: "🖼️" },
         { name: "Legal Documents", href: "/admin/legal-documents", icon: "📄" },
         { name: "Mail Server", href: "/admin/mail-server", icon: "📧" },

@@ -111,6 +111,7 @@ export const config = {
       RAZORPAY_TRANSACTIONS: "/api/admin/wallet/razorpay-transactions",
       RAZORPAY_TRANSACTION_BY_ID: "/api/admin/wallet/razorpay-transactions/:id",
       RAZORPAY_TRANSACTION_STATS: "/api/admin/wallet/razorpay-transactions/stats",
+      WALLET_TRANSACTIONS: "/api/admin/wallet/transactions",
       ZONES: "/api/admin/zones",
       ZONE_BY_ID: "/api/admin/zones/:id",
       FLEET_LOCATIONS: "/api/admin/fleet/locations",
