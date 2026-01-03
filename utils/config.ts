@@ -261,6 +261,8 @@ export const config = {
       SUBSCRIPTION_PLAN_ENABLE: "/api/admin/subscription-plans/:id/enable",
       SUBSCRIPTION_PLAN_DISABLE: "/api/admin/subscription-plans/:id/disable",
       SUBSCRIPTION_HISTORY: "/api/admin/subscription-plans/history",
+      DRIVER_COUPONS: "/api/admin/driver-coupons",
+      DRIVER_COUPON_BY_ID: "/api/admin/driver-coupons/:id",
     } as Record<string, string>,
   },
 } as {

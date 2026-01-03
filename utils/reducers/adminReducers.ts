@@ -91,6 +91,8 @@ import {
   adminDriverAccessProcessDailyFeesUrl,
   adminCouponsUrl,
   adminCouponByIdUrl,
+  adminDriverCouponsUrl,
+  adminDriverCouponByIdUrl,
   adminDiscountsUrl,
   adminDiscountByIdUrl,
   adminDriverLevelsUrl,
@@ -1147,6 +1149,67 @@ export const deleteCoupon = createAsyncThunk(
   async (couponId: string, { rejectWithValue }) => {
     try {
       await adminAxios.delete(adminCouponByIdUrl(couponId));
+      return couponId;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+// Driver Coupon Management (for driver subscriptions)
+export const getDriverCoupons = createAsyncThunk(
+  "admin/getDriverCoupons",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.get(adminDriverCouponsUrl);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const getDriverCouponById = createAsyncThunk(
+  "admin/getDriverCouponById",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.get(adminDriverCouponByIdUrl(id));
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const createDriverCoupon = createAsyncThunk(
+  "admin/createDriverCoupon",
+  async (couponData: any, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.post(adminDriverCouponsUrl, couponData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const updateDriverCoupon = createAsyncThunk(
+  "admin/updateDriverCoupon",
+  async ({ couponId, couponData }: { couponId: string; couponData: any }, { rejectWithValue }) => {
+    try {
+      const response = await adminAxios.put(adminDriverCouponByIdUrl(couponId), couponData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+export const deleteDriverCoupon = createAsyncThunk(
+  "admin/deleteDriverCoupon",
+  async (couponId: string, { rejectWithValue }) => {
+    try {
+      await adminAxios.delete(adminDriverCouponByIdUrl(couponId));
       return couponId;
     } catch (error) {
       return rejectWithValue(extractErrorMessage(error));

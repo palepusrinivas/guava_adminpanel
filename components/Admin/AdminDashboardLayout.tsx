@@ -163,6 +163,14 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
             { name: "Subscription History", href: "/admin/subscription-plans/history" },
           ],
         },
+        {
+          name: "Driver Coupons",
+          icon: "🎫",
+          children: [
+            { name: "Coupon List", href: "/admin/driver-coupons" },
+            { name: "Add New Coupon", href: "/admin/driver-coupons/new" },
+          ],
+        },
       ],
     },
     {

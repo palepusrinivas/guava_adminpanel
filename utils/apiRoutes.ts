@@ -76,6 +76,8 @@ export const adminTripsUrl = getApiUrl(config.ENDPOINTS.ADMIN.TRIPS);
 export const adminTripByIdUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.TRIP_BY_ID.replace(':id', id));
 export const adminCouponsUrl = getApiUrl(config.ENDPOINTS.ADMIN.COUPONS);
 export const adminCouponByIdUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.COUPON_BY_ID.replace(':id', id));
+export const adminDriverCouponsUrl = getApiUrl(config.ENDPOINTS.ADMIN.DRIVER_COUPONS);
+export const adminDriverCouponByIdUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.DRIVER_COUPON_BY_ID.replace(':id', id));
 export const adminBannersUrl = getApiUrl(config.ENDPOINTS.ADMIN.BANNERS);
 export const adminBannerByIdUrl = (id: string) => getApiUrl(config.ENDPOINTS.ADMIN.BANNER_BY_ID.replace(':id', id));
 export const adminLegalDocumentsUrl = getApiUrl(config.ENDPOINTS.ADMIN.LEGAL_DOCUMENTS);
