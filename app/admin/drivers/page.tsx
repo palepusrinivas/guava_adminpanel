@@ -26,6 +26,7 @@ export default function AdminDriversPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
   const [searchQuery, setSearchQuery] = useState("");
+  const [subscriptionFilter, setSubscriptionFilter] = useState<boolean | null>(null);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [totalElements, setTotalElements] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -36,9 +37,12 @@ export default function AdminDriversPage() {
     setErrorMsg(null);
     try {
       // Backend expects 0-based page numbers
-      const params: { page: number; size: number; search?: string } = { page: currentPage, size: pageSize };
+      const params: { page: number; size: number; search?: string; hasSubscription?: boolean } = { page: currentPage, size: pageSize };
       if (searchQuery && searchQuery.trim()) {
         params.search = searchQuery.trim();
+      }
+      if (subscriptionFilter !== null) {
+        params.hasSubscription = subscriptionFilter;
       }
       const response = await dispatch(getDrivers(params));
       if (getDrivers.fulfilled.match(response)) {
@@ -111,14 +115,14 @@ export default function AdminDriversPage() {
 
   useEffect(() => {
     fetchDrivers();
-  }, [dispatch, currentPage, pageSize, searchQuery]);
+  }, [dispatch, currentPage, pageSize, searchQuery, subscriptionFilter]);
 
-  // Reset to first page when search changes
+  // Reset to first page when search or filter changes
   useEffect(() => {
-    if (searchQuery) {
+    if (searchQuery || subscriptionFilter !== null) {
       setCurrentPage(0);
     }
-  }, [searchQuery]);
+  }, [searchQuery, subscriptionFilter]);
 
   const handleCreateDriver = async (driverData: any) => {
     try {
@@ -181,6 +185,8 @@ export default function AdminDriversPage() {
         error={errorMsg}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        subscriptionFilter={subscriptionFilter}
+        onSubscriptionFilterChange={setSubscriptionFilter}
       />
     </div>
   );

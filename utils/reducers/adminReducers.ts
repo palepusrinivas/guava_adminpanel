@@ -284,7 +284,7 @@ export const deleteUser = createAsyncThunk(
 // Driver Management
 export const getDrivers = createAsyncThunk(
   "admin/getDrivers",
-  async (params: { page?: number; size?: number; search?: string } = {}, { rejectWithValue }) => {
+  async (params: { page?: number; size?: number; search?: string; hasSubscription?: boolean } = {}, { rejectWithValue }) => {
     try {
       const response = await adminAxios.get(adminDriversUrl, { params });
       return response.data;

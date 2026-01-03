@@ -155,7 +155,14 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
     {
       title: "SUBSCRIPTION MANAGEMENT",
       items: [
-        { name: "Subscription Plans", href: "/admin/subscription-plans", icon: "💳" },
+        {
+          name: "Subscription Plans",
+          icon: "💳",
+          children: [
+            { name: "Plans", href: "/admin/subscription-plans" },
+            { name: "Subscription History", href: "/admin/subscription-plans/history" },
+          ],
+        },
       ],
     },
     {

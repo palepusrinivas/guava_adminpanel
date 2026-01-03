@@ -24,6 +24,10 @@ import {
   Alert,
   CircularProgress,
   Divider,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import {
   Notifications as NotificationsIcon,
@@ -59,20 +63,25 @@ export default function AdminNotifications() {
   );
   const [activeTab, setActiveTab] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
+  const [filterType, setFilterType] = useState<string>("");
   const pageSize = 20;
 
   useEffect(() => {
     fetchNotifications();
     fetchUnreadCount();
-  }, [currentPage, activeTab]);
+  }, [currentPage, activeTab, filterType]);
 
   const fetchNotifications = async () => {
     try {
       if (activeTab === 0) {
-        // All notifications
-        await dispatch(getAdminNotifications({ page: currentPage, size: pageSize })).unwrap();
+        // All notifications with optional filter
+        await dispatch(getAdminNotifications({ 
+          page: currentPage, 
+          size: pageSize,
+          type: filterType || undefined 
+        })).unwrap();
       } else {
-        // Unread notifications
+        // Unread notifications (filter not supported for unread)
         await dispatch(getUnreadAdminNotifications({ page: currentPage, size: pageSize })).unwrap();
       }
     } catch (error: any) {
@@ -112,6 +121,11 @@ export default function AdminNotifications() {
   const handleRefresh = () => {
     fetchNotifications();
     fetchUnreadCount();
+  };
+
+  const handleFilterChange = (event: any) => {
+    setFilterType(event.target.value);
+    setCurrentPage(0); // Reset to first page when filter changes
   };
 
   const getNotificationIcon = (type: string) => {
@@ -190,7 +204,11 @@ export default function AdminNotifications() {
       {/* Tabs */}
       <Card sx={{ mb: 3 }}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-          <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)}>
+          <Tabs value={activeTab} onChange={(_, newValue) => {
+            setActiveTab(newValue);
+            setFilterType(""); // Clear filter when switching tabs
+            setCurrentPage(0); // Reset page when switching tabs
+          }}>
             <Tab
               label={
                 <Badge badgeContent={unreadCount} color="error">
@@ -201,6 +219,39 @@ export default function AdminNotifications() {
             <Tab label="Unread Only" />
           </Tabs>
         </Box>
+
+        {/* Filter for All Notifications tab */}
+        {activeTab === 0 && (
+          <Box sx={{ p: 2, bgcolor: "action.hover", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
+            <FormControl size="small" sx={{ minWidth: 200 }}>
+              <InputLabel id="notification-type-filter-label">Filter by Type</InputLabel>
+              <Select
+                labelId="notification-type-filter-label"
+                id="notification-type-filter"
+                value={filterType}
+                label="Filter by Type"
+                onChange={handleFilterChange}
+              >
+                <MenuItem value="">
+                  <em>All Types</em>
+                </MenuItem>
+                <MenuItem value="USER_REGISTRATION">User Registrations</MenuItem>
+                <MenuItem value="DRIVER_REGISTRATION">Driver Registrations</MenuItem>
+                <MenuItem value="RIDE_CANCELLATION">Ride Cancellations</MenuItem>
+              </Select>
+            </FormControl>
+            {filterType && (
+              <Button
+                variant="text"
+                size="small"
+                onClick={() => setFilterType("")}
+                sx={{ color: "text.secondary" }}
+              >
+                Clear Filter
+              </Button>
+            )}
+          </Box>
+        )}
 
         {activeTab === 1 && unreadCount > 0 && (
           <Box sx={{ p: 2, bgcolor: "action.hover", display: "flex", justifyContent: "flex-end" }}>

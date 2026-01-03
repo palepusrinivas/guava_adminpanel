@@ -36,6 +36,8 @@ interface DriverManagementProps {
   error: string | null;
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
+  subscriptionFilter?: boolean | null;
+  onSubscriptionFilterChange?: (filter: boolean | null) => void;
 }
 
 const driverValidationSchema = yup.object({
@@ -64,6 +66,8 @@ function DriverManagement({
   error,
   searchQuery = "",
   onSearchChange,
+  subscriptionFilter = null,
+  onSubscriptionFilterChange,
 }: DriverManagementProps) {
   const router = useRouter();
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -143,28 +147,46 @@ function DriverManagement({
         </button>
       </div>
 
-      {/* Search Bar */}
+      {/* Search Bar and Filters */}
       <div className="bg-white shadow rounded-md p-4">
-        <div className="relative">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => {
-              if (onSearchChange) {
-                onSearchChange(e.target.value);
-              }
-            }}
-            placeholder="Search by email, phone number, or name..."
-            className="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-          />
-          <svg
-            className="h-5 w-5 text-gray-400 absolute left-3 top-2.5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                if (onSearchChange) {
+                  onSearchChange(e.target.value);
+                }
+              }}
+              placeholder="Search by email, phone number, or name..."
+              className="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
+            <svg
+              className="h-5 w-5 text-gray-400 absolute left-3 top-2.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <div>
+            <select
+              value={subscriptionFilter === null ? "" : subscriptionFilter ? "true" : "false"}
+              onChange={(e) => {
+                if (onSubscriptionFilterChange) {
+                  const value = e.target.value;
+                  onSubscriptionFilterChange(value === "" ? null : value === "true");
+                }
+              }}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            >
+              <option value="">All Drivers</option>
+              <option value="true">With Subscription</option>
+              <option value="false">Without Subscription</option>
+            </select>
+          </div>
         </div>
       </div>
 
