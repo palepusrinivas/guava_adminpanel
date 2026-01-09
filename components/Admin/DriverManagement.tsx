@@ -13,6 +13,7 @@ interface Driver {
   rating: number;
   latitude: number;
   longitude: number;
+  isOnline?: boolean;
   subscriptionActive?: boolean;
   subscriptionType?: string;
   vehicle?: {
@@ -235,6 +236,9 @@ function DriverManagement({
                       Rating
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Subscription
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -248,7 +252,7 @@ function DriverManagement({
                 <tbody className="bg-white divide-y divide-gray-200">
                 {drivers.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center">
+                    <td colSpan={8} className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center">
                         <svg className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -283,6 +287,14 @@ function DriverManagement({
                         <div className="flex items-center">
                           <span className="text-yellow-400">★</span>
                           <span className="ml-1 text-sm text-gray-900">{driver.rating ?? 0}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className={`w-2 h-2 rounded-full mr-2 ${driver.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                          <span className={`text-sm font-medium ${driver.isOnline ? 'text-green-700' : 'text-gray-600'}`}>
+                            {driver.isOnline ? 'Online' : 'Offline'}
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

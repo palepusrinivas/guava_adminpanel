@@ -80,10 +80,18 @@ export default function FleetMapPage() {
   const allDrivers = apiDrivers;
 
   // Filter drivers based on active tab
+  // Backend returns: "on_ride", "available", "offline"
+  // Frontend tabs: "on-trip" (maps to "on_ride"), "idle" (maps to "available"), "customer" (not used)
   const filteredDrivers = allDrivers.filter((driver) => {
     if (activeTab === "all") return true;
-    if (activeTab === "on-trip") return driver.status === "on-trip";
-    if (activeTab === "idle") return driver.status === "idle";
+    if (activeTab === "on-trip") {
+      // Backend returns "on_ride" for drivers on trip (drivers with currentRide)
+      return driver.status === "on_ride" || driver.status === "on-trip";
+    }
+    if (activeTab === "idle") {
+      // Backend returns "available" for idle/available drivers
+      return driver.status === "available" || driver.status === "idle";
+    }
     if (activeTab === "customer") return driver.status === "customer";
     return true;
   }).filter((driver) =>
@@ -197,8 +205,8 @@ export default function FleetMapPage() {
 
   const tabs = [
     { id: "all", label: "All Drivers", count: allDrivers.length },
-    { id: "on-trip", label: "On-Trip", count: allDrivers.filter(d => d.status === "on-trip").length },
-    { id: "idle", label: "Idle", count: allDrivers.filter(d => d.status === "idle").length },
+    { id: "on-trip", label: "On-Trip", count: allDrivers.filter(d => d.status === "on_ride" || d.status === "on-trip").length },
+    { id: "idle", label: "Idle", count: allDrivers.filter(d => d.status === "available" || d.status === "idle").length },
     { id: "customer", label: "Customers", count: 0 },
   ];
 
@@ -477,15 +485,18 @@ export default function FleetMapPage() {
                   <h2 className="text-2xl font-bold text-white">{selectedDriver.name}</h2>
                   <div className="flex items-center gap-2 mt-1">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      selectedDriver.status === "on-trip"
+                      selectedDriver.status === "on_ride" || selectedDriver.status === "on-trip"
                         ? "bg-green-500 text-white"
-                        : selectedDriver.status === "idle"
+                        : selectedDriver.status === "available" || selectedDriver.status === "idle"
                         ? "bg-yellow-500 text-white"
                         : selectedDriver.status === "customer"
                         ? "bg-blue-500 text-white"
                         : "bg-gray-500 text-white"
                     }`}>
-                      {selectedDriver.status.toUpperCase()}
+                      {(selectedDriver.status === "on_ride" || selectedDriver.status === "on-trip") ? "ON TRIP" :
+                       (selectedDriver.status === "available" || selectedDriver.status === "idle") ? "IDLE" :
+                       selectedDriver.status === "customer" ? "CUSTOMER" :
+                       "OFFLINE"}
                     </span>
                     {selectedDriver.isNew && (
                       <span className="px-3 py-1 bg-white text-teal-700 text-xs font-semibold rounded-full">
@@ -585,15 +596,18 @@ export default function FleetMapPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">Current Status:</span>
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      selectedDriver.status === "on-trip"
+                      selectedDriver.status === "on_ride" || selectedDriver.status === "on-trip"
                         ? "bg-green-100 text-green-700"
-                        : selectedDriver.status === "idle"
+                        : selectedDriver.status === "available" || selectedDriver.status === "idle"
                         ? "bg-yellow-100 text-yellow-700"
                         : selectedDriver.status === "customer"
                         ? "bg-blue-100 text-blue-700"
                         : "bg-gray-100 text-gray-700"
                     }`}>
-                      {selectedDriver.status.toUpperCase()}
+                      {(selectedDriver.status === "on_ride" || selectedDriver.status === "on-trip") ? "ON TRIP" :
+                       (selectedDriver.status === "available" || selectedDriver.status === "idle") ? "IDLE" :
+                       selectedDriver.status === "customer" ? "CUSTOMER" :
+                       "OFFLINE"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">

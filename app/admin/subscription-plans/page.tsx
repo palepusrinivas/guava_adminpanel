@@ -40,6 +40,7 @@ import {
   Refresh as RefreshIcon,
 } from "@mui/icons-material";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 import { config } from "@/utils/config";
 import adminAxios from "@/utils/axiosConfig";
 import { formatDateTimeIST } from "@/utils/dateUtils";
@@ -72,6 +73,7 @@ const SUBSCRIPTION_TYPES = [
 ];
 
 export default function SubscriptionPlansPage() {
+  const router = useRouter();
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
@@ -235,6 +237,15 @@ export default function SubscriptionPlansPage() {
             sx={{ mr: 2 }}
           >
             Refresh
+          </Button>
+          <Button
+            variant="outlined"
+            color="secondary"
+            startIcon={<AddIcon />}
+            onClick={() => router.push("/admin/subscription-plans/create-subscription")}
+            sx={{ mr: 2 }}
+          >
+            Create Driver Subscription
           </Button>
           <Button
             variant="contained"

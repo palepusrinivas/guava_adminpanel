@@ -160,6 +160,7 @@ function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
           icon: "💳",
           children: [
             { name: "Plans", href: "/admin/subscription-plans" },
+            { name: "Create Driver Subscription", href: "/admin/subscription-plans/create-subscription" },
             { name: "Subscription History", href: "/admin/subscription-plans/history" },
           ],
         },
