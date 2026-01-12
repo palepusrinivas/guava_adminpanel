@@ -51,6 +51,12 @@ interface TripManagementState {
     searchTerm: string;
     dateFilter: string;
   };
+  pagination: {
+    page: number; // 0-based
+    size: number;
+    totalElements: number;
+    totalPages: number;
+  };
 }
 
 const initialState: TripManagementState = {
@@ -73,6 +79,12 @@ const initialState: TripManagementState = {
     searchTerm: "",
     dateFilter: "all",
   },
+  pagination: {
+    page: 0,
+    size: 20, // smaller default for faster UI
+    totalElements: 0,
+    totalPages: 0,
+  },
 };
 
 const tripManagementSlice = createSlice({
@@ -81,12 +93,22 @@ const tripManagementSlice = createSlice({
   reducers: {
     setStatusFilter: (state, action) => {
       state.filters.status = action.payload;
+      state.pagination.page = 0;
     },
     setSearchTerm: (state, action) => {
       state.filters.searchTerm = action.payload;
+      state.pagination.page = 0;
     },
     setDateFilter: (state, action) => {
       state.filters.dateFilter = action.payload;
+      state.pagination.page = 0;
+    },
+    setPage: (state, action) => {
+      state.pagination.page = action.payload;
+    },
+    setPageSize: (state, action) => {
+      state.pagination.size = action.payload;
+      state.pagination.page = 0;
     },
     clearFilters: (state) => {
       state.filters = {
@@ -94,6 +116,7 @@ const tripManagementSlice = createSlice({
         searchTerm: "",
         dateFilter: "all",
       };
+      state.pagination.page = 0;
     },
   },
   extraReducers: (builder) => {
@@ -107,6 +130,10 @@ const tripManagementSlice = createSlice({
         state.isLoading = false;
         state.trips = action.payload.trips || [];
         state.statistics = action.payload.statistics || initialState.statistics;
+        state.pagination.totalElements = action.payload.totalElements ?? state.pagination.totalElements;
+        state.pagination.totalPages = action.payload.totalPages ?? state.pagination.totalPages;
+        state.pagination.page = action.payload.currentPage ?? state.pagination.page;
+        state.pagination.size = action.payload.size ?? state.pagination.size;
         state.error = null;
       })
       .addCase(getAllTrips.rejected, (state, action) => {
@@ -130,7 +157,14 @@ const tripManagementSlice = createSlice({
   },
 });
 
-export const { setStatusFilter, setSearchTerm, setDateFilter, clearFilters } = tripManagementSlice.actions;
+export const {
+  setStatusFilter,
+  setSearchTerm,
+  setDateFilter,
+  setPage,
+  setPageSize,
+  clearFilters,
+} = tripManagementSlice.actions;
 export default tripManagementSlice.reducer;
 
 

@@ -860,7 +860,10 @@ export const deleteTripFare = createAsyncThunk<
 // Trip Management
 export const getAllTrips = createAsyncThunk(
   "admin/getAllTrips",
-  async (params: { status?: string; search?: string; dateFilter?: string } = {}, { rejectWithValue }) => {
+  async (
+    params: { status?: string; search?: string; dateFilter?: string; page?: number; size?: number } = {},
+    { rejectWithValue }
+  ) => {
     try {
       const response = await adminAxios.get(adminTripsUrl, { params });
       return response.data;

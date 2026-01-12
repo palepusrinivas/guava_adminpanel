@@ -26,6 +26,12 @@ interface TripManagementProps {
   onSearch: (searchTerm: string) => void;
   onDateFilterChange: (filter: string) => void;
   currentStatus: TripStatus;
+  currentPage: number; // 0-based
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
 }
 
 const TripManagement: React.FC<TripManagementProps> = ({
@@ -37,6 +43,12 @@ const TripManagement: React.FC<TripManagementProps> = ({
   onSearch,
   onDateFilterChange,
   currentStatus,
+  currentPage,
+  pageSize,
+  totalElements,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
@@ -452,6 +464,49 @@ const TripManagement: React.FC<TripManagementProps> = ({
               </tbody>
             </table>
           )}
+        </div>
+
+        {/* Pagination */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border-t border-gray-200 bg-white">
+          <div className="text-sm text-gray-600">
+            Showing <span className="font-semibold text-gray-900">{trips.length}</span> of{" "}
+            <span className="font-semibold text-gray-900">{totalElements}</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <label className="text-sm text-gray-600">
+              Page size{" "}
+              <select
+                className="ml-2 px-2 py-1 border border-gray-300 rounded-md"
+                value={pageSize}
+                onChange={(e) => onPageSizeChange(Number(e.target.value))}
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </label>
+
+            <button
+              className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+              onClick={() => onPageChange(Math.max(0, currentPage - 1))}
+              disabled={isLoading || currentPage <= 0}
+            >
+              ◀ Prev
+            </button>
+            <div className="text-sm text-gray-700">
+              Page <span className="font-semibold">{currentPage + 1}</span> of{" "}
+              <span className="font-semibold">{Math.max(1, totalPages)}</span>
+            </div>
+            <button
+              className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={isLoading || totalPages === 0 || currentPage >= totalPages - 1}
+            >
+              Next ▶
+            </button>
+          </div>
         </div>
       </div>
 

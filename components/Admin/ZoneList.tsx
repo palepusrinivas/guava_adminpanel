@@ -15,8 +15,11 @@ type TabType = "all" | "active" | "inactive";
 function ZoneList({ zones, isLoading, onEdit, onDelete, onView }: ZoneListProps) {
   const [activeTab, setActiveTab] = useState<TabType>("all");
 
+  // FIX: Ensure zones is an array before filtering
+  const safeZones = Array.isArray(zones) ? zones : [];
+  
   // Filter zones based on active tab
-  const filteredZones = zones.filter((zone) => {
+  const filteredZones = safeZones.filter((zone) => {
     if (activeTab === "active") return zone.active === true;
     if (activeTab === "inactive") return zone.active === false;
     return true; // 'all' tab
@@ -35,7 +38,7 @@ function ZoneList({ zones, isLoading, onEdit, onDelete, onView }: ZoneListProps)
         <div className="flex items-center justify-between px-6 py-4">
           <h2 className="text-lg font-semibold text-gray-900">Zone List</h2>
           <div className="text-sm text-gray-600">
-            Total Zones: <span className="font-semibold text-gray-900">{zones.length}</span>
+            Total Zones: <span className="font-semibold text-gray-900">{safeZones.length}</span>
           </div>
         </div>
 

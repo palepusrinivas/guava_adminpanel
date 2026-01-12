@@ -19,7 +19,8 @@ export default function HeatMapPage() {
   const { zones } = useAppSelector((state) => state.zone);
 
   // Zone list for UI only; counts are not mocked
-  const zoneData = zones.map(zone => ({
+  // FIX: Ensure zones is an array before calling .map()
+  const zoneData = (Array.isArray(zones) ? zones : []).map(zone => ({
     id: zone.id.toString(),
     name: zone.name,
     rideCount: 0,
@@ -27,7 +28,8 @@ export default function HeatMapPage() {
   }));
 
   // Calculate total trips
-  const totalTrips = heatmap.data.reduce((sum, point) => sum + (point.weight || 1), 0);
+  // FIX: Ensure heatmap.data is an array before calling .reduce()
+  const totalTrips = (Array.isArray(heatmap?.data) ? heatmap.data : []).reduce((sum, point) => sum + (point.weight || 1), 0);
 
   // Compare view and daily sample data removed
 
@@ -159,7 +161,7 @@ export default function HeatMapPage() {
         </div>
         <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
           <div className="text-sm text-gray-600">Active Zones</div>
-          <div className="text-2xl font-bold text-green-600">{zones.length}</div>
+          <div className="text-2xl font-bold text-green-600">{Array.isArray(zones) ? zones.length : 0}</div>
         </div>
       </div>
 
@@ -167,9 +169,9 @@ export default function HeatMapPage() {
       {viewMode === "overview" && (
         <div>
           <EnhancedHeatMap
-            data={heatmap.data}
-            isLoading={heatmap.isLoading}
-            error={heatmap.error}
+            data={heatmap?.data || []}
+            isLoading={heatmap?.isLoading || false}
+            error={heatmap?.error || null}
             zones={zoneData}
             onZoneSelect={setSelectedZone}
             showZoneList={true}

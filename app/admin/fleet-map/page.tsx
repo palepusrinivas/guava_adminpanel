@@ -49,32 +49,34 @@ export default function FleetMapPage() {
 
   // Transform API data to match our Driver interface
   // Filter out drivers with invalid coordinates
-  const apiDrivers: Driver[] = fleetLocations
-    .map((driver) => {
-      // Get coordinates from various possible fields
-      const lat = driver.lat || driver.latitude;
-      const lng = driver.lng || driver.longitude;
-      
-      // Skip drivers with invalid coordinates (null, undefined, 0, 0)
-      if (!lat || !lng || lat === 0 || lng === 0) {
-        return null;
-      }
-      
-      return {
-        id: driver.id?.toString() || driver.driverId?.toString() || "",
-        name: driver.name || "Unknown Driver",
-        phone: driver.phone || driver.mobile || "N/A",
-        vehicleNo: driver.vehicleNo || driver.vehicleNumber || "N/A",
-        model: driver.model || driver.vehicleModel || "N/A",
-        status: driver.status || "available",
-        isNew: driver.isNew || false,
-        position: {
-          lat: lat,
-          lng: lng,
-        },
-      } as Driver;
-    })
-    .filter((driver): driver is Driver => driver !== null);
+  const apiDrivers: Driver[] = Array.isArray(fleetLocations)
+    ? fleetLocations
+        .map((driver) => {
+          // Get coordinates from various possible fields
+          const lat = driver.lat || driver.latitude;
+          const lng = driver.lng || driver.longitude;
+          
+          // Skip drivers with invalid coordinates (null, undefined, 0, 0)
+          if (!lat || !lng || lat === 0 || lng === 0) {
+            return null;
+          }
+          
+          return {
+            id: driver.id?.toString() || driver.driverId?.toString() || "",
+            name: driver.name || "Unknown Driver",
+            phone: driver.phone || driver.mobile || "N/A",
+            vehicleNo: driver.vehicleNo || driver.vehicleNumber || "N/A",
+            model: driver.model || driver.vehicleModel || "N/A",
+            status: driver.status || "available",
+            isNew: driver.isNew || false,
+            position: {
+              lat: lat,
+              lng: lng,
+            },
+          } as Driver;
+        })
+        .filter((driver): driver is Driver => driver !== null)
+    : [];
 
   // Use only API data (no mock/fallback)
   const allDrivers = apiDrivers;
@@ -347,7 +349,8 @@ export default function FleetMapPage() {
                     className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-teal-500 focus:border-teal-500 min-w-[150px]"
                   >
                     <option value="all">All Zones</option>
-                    {zones.map((zone) => (
+                    {/* FIX: Ensure zones is an array before calling .map() */}
+                    {(Array.isArray(zones) ? zones : []).map((zone) => (
                       <option key={zone.id} value={zone.id}>
                         {zone.name}
                       </option>

@@ -26,20 +26,34 @@ export default function AdminDriversPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [subscriptionFilter, setSubscriptionFilter] = useState<boolean | null>(null);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [totalElements, setTotalElements] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Debounce search to avoid API calls on every keystroke
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery.trim());
+    }, 400);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
   const fetchDrivers = async () => {
+    // Avoid firing requests while user is still typing (debounce window)
+    if (searchQuery.trim() !== debouncedSearchQuery.trim()) {
+      return;
+    }
+
     setLoading(true);
     setErrorMsg(null);
     try {
       // Backend expects 0-based page numbers
       const params: { page: number; size: number; search?: string; hasSubscription?: boolean } = { page: currentPage, size: pageSize };
-      if (searchQuery && searchQuery.trim()) {
-        params.search = searchQuery.trim();
+      if (debouncedSearchQuery && debouncedSearchQuery.trim()) {
+        params.search = debouncedSearchQuery.trim();
       }
       if (subscriptionFilter !== null) {
         params.hasSubscription = subscriptionFilter;
@@ -47,9 +61,7 @@ export default function AdminDriversPage() {
       const response = await dispatch(getDrivers(params));
       if (getDrivers.fulfilled.match(response)) {
         const payload = response.payload;
-        
-        console.log("Driver API Response:", payload); // Debug log
-        
+
         let list = [];
         let total = 0;
         
@@ -71,9 +83,6 @@ export default function AdminDriversPage() {
             total = payload.total || payload.count || payload.drivers.length;
           }
         }
-        
-        console.log("Parsed drivers list:", list); // Debug log
-        
         // Map driver data - handle different field names
         const cleanedDrivers = list.map((driver: any) => ({
           id: driver.id?.toString() || driver.driverId?.toString() || "",
@@ -90,9 +99,7 @@ export default function AdminDriversPage() {
             vehicleType: driver.vehicle.vehicleType || driver.vehicle.vehicle_type,
           } : undefined
         })).filter((d: any) => d.id); // Filter out drivers without ID
-        
-        console.log("Cleaned drivers:", cleanedDrivers); // Debug log
-        
+
         setDrivers(cleanedDrivers);
         setTotalElements(total || cleanedDrivers.length);
       } else {
@@ -115,14 +122,12 @@ export default function AdminDriversPage() {
 
   useEffect(() => {
     fetchDrivers();
-  }, [dispatch, currentPage, pageSize, searchQuery, subscriptionFilter]);
+  }, [dispatch, currentPage, pageSize, debouncedSearchQuery, subscriptionFilter]);
 
   // Reset to first page when search or filter changes
   useEffect(() => {
-    if (searchQuery || subscriptionFilter !== null) {
-      setCurrentPage(0);
-    }
-  }, [searchQuery, subscriptionFilter]);
+    setCurrentPage(0);
+  }, [debouncedSearchQuery, subscriptionFilter]);
 
   const handleCreateDriver = async (driverData: any) => {
     try {

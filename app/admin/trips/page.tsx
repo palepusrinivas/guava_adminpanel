@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/utils/store/store";
 import { getAllTrips } from "@/utils/reducers/adminReducers";
-import { setStatusFilter, setSearchTerm, setDateFilter } from "@/utils/slices/tripManagementSlice";
+import { setStatusFilter, setSearchTerm, setDateFilter, setPage, setPageSize } from "@/utils/slices/tripManagementSlice";
 import TripManagement from "@/components/Admin/TripManagement";
 import type { TripStatus } from "@/utils/slices/tripManagementSlice";
 
@@ -11,15 +11,14 @@ export default function TripsPage() {
   const { trips, statistics, isLoading, error, filters } = useAppSelector(
     (state) => state.tripManagement
   );
+  const { pagination } = useAppSelector((state) => state.tripManagement);
 
   useEffect(() => {
-    // Fetch trips on mount
-    dispatch(getAllTrips({}));
-  }, [dispatch]);
-
-  useEffect(() => {
-    // Refetch when filters change
-    const params: { status?: string; search?: string; dateFilter?: string } = {};
+    // Fetch trips when filters/pagination change (single source of truth; avoids double-fetch on mount).
+    const params: { status?: string; search?: string; dateFilter?: string; page?: number; size?: number } = {
+      page: pagination.page,
+      size: pagination.size,
+    };
     
     if (filters.status !== "all") {
       params.status = filters.status;
@@ -34,7 +33,7 @@ export default function TripsPage() {
     }
 
     dispatch(getAllTrips(Object.keys(params).length > 0 ? params : {}));
-  }, [filters.status, filters.searchTerm, filters.dateFilter, dispatch]);
+  }, [filters.status, filters.searchTerm, filters.dateFilter, pagination.page, pagination.size, dispatch]);
 
   const handleStatusChange = (status: TripStatus) => {
     dispatch(setStatusFilter(status));
@@ -58,6 +57,12 @@ export default function TripsPage() {
       onSearch={handleSearch}
       onDateFilterChange={handleDateFilterChange}
       currentStatus={filters.status}
+      currentPage={pagination.page}
+      pageSize={pagination.size}
+      totalElements={pagination.totalElements}
+      totalPages={pagination.totalPages}
+      onPageChange={(page) => dispatch(setPage(page))}
+      onPageSizeChange={(size) => dispatch(setPageSize(size))}
     />
   );
 }

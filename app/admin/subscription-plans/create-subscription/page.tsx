@@ -74,6 +74,8 @@ export default function CreateDriverSubscriptionPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [driversLoading, setDriversLoading] = useState(false);
+  const [driverSearchInput, setDriverSearchInput] = useState("");
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
@@ -91,7 +93,10 @@ export default function CreateDriverSubscriptionPage() {
     const loadData = async () => {
       setLoading(true);
       try {
-        await Promise.all([fetchDrivers(), fetchPlans()]);
+        // Load plans immediately, drivers will load on-demand via search
+        await fetchPlans();
+        // Load initial small batch of drivers (50 instead of 1000)
+        await fetchDrivers("");
       } catch (error) {
         console.error("Error loading data:", error);
       } finally {
@@ -100,14 +105,33 @@ export default function CreateDriverSubscriptionPage() {
     };
     loadData();
   }, []);
+  
+  // Debounced search for drivers
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (driverSearchInput.trim().length >= 2 || driverSearchInput.trim().length === 0) {
+        fetchDrivers(driverSearchInput.trim());
+      }
+    }, 300); // 300ms debounce
+    
+    return () => clearTimeout(timeoutId);
+  }, [driverSearchInput]);
 
-  const fetchDrivers = async () => {
+  const fetchDrivers = async (searchTerm: string = "") => {
     try {
-      const response = await adminAxios.get(config.ENDPOINTS.ADMIN.DRIVERS, {
-        params: { page: 0, size: 1000 }, // Fetch all drivers for autocomplete
-      });
+      setDriversLoading(true);
+      // OPTIMIZATION: Load only 50 drivers initially, or use search for filtered results
+      // This is much faster than loading 1000 drivers
+      const params: any = { 
+        page: 0, 
+        size: searchTerm ? 100 : 50 // More results when searching, fewer for initial load
+      };
       
-      console.log("Drivers API Response:", response.data); // Debug log
+      if (searchTerm && searchTerm.trim().length >= 2) {
+        params.search = searchTerm.trim();
+      }
+      
+      const response = await adminAxios.get(config.ENDPOINTS.ADMIN.DRIVERS, { params });
       
       // Handle Spring Data Page response structure
       let driverList: Driver[] = [];
@@ -124,8 +148,6 @@ export default function CreateDriverSubscriptionPage() {
         }
       }
       
-      console.log("Parsed drivers list:", driverList.length, "drivers"); // Debug log
-      
       // Ensure each driver has required fields for display
       const validDrivers = driverList.map(driver => ({
         id: driver.id,
@@ -136,18 +158,25 @@ export default function CreateDriverSubscriptionPage() {
       
       setDrivers(validDrivers);
       
-      if (validDrivers.length === 0) {
-        console.warn("No drivers found in response");
+      if (validDrivers.length === 0 && searchTerm) {
+        console.log("No drivers found for search:", searchTerm);
       }
     } catch (error: any) {
       console.error("Error fetching drivers:", error);
-      console.error("Error response:", error.response?.data);
-      toast.error(
-        error.response?.data?.error || 
-        error.response?.data?.message || 
-        "Failed to fetch drivers"
-      );
-      throw error; // Re-throw to be caught by Promise.all
+      if (!searchTerm) {
+        // Only show error for initial load, not for search
+        toast.error(
+          error.response?.data?.error || 
+          error.response?.data?.message || 
+          "Failed to fetch drivers"
+        );
+      }
+      // Don't throw for search errors, just log them
+      if (!searchTerm) {
+        throw error;
+      }
+    } finally {
+      setDriversLoading(false);
     }
   };
 
@@ -287,26 +316,28 @@ export default function CreateDriverSubscriptionPage() {
                   }
                   value={selectedDriver}
                   onChange={handleDriverChange}
-                  isOptionEqualToValue={(option, value) => option.id === value.id}
-                  filterOptions={(options, params) => {
-                    const { inputValue } = params;
-                    const filtered = options.filter((option) => {
-                      const searchStr = inputValue.toLowerCase();
-                      return (
-                        option.name?.toLowerCase().includes(searchStr) ||
-                        option.mobile?.toLowerCase().includes(searchStr) ||
-                        option.email?.toLowerCase().includes(searchStr)
-                      );
-                    });
-                    return filtered;
+                  onInputChange={(_, newInputValue) => {
+                    setDriverSearchInput(newInputValue);
                   }}
-                  noOptionsText={drivers.length === 0 ? "Loading drivers..." : "No drivers found"}
-                  loading={loading}
+                  inputValue={driverSearchInput}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  filterOptions={(options) => options} // Disable client-side filtering, use server-side search
+                  noOptionsText={
+                    driversLoading 
+                      ? "Searching drivers..." 
+                      : driverSearchInput.length >= 2 
+                        ? "No drivers found. Try a different search term." 
+                        : "Type at least 2 characters to search"
+                  }
+                  loading={driversLoading}
                   renderInput={(params) => (
                     <TextField
                       {...params}
                       label="Select Driver *"
-                      placeholder="Search by name, mobile, or email"
+                      placeholder="Type to search by name, mobile, or email (min 2 characters)"
+                      helperText={driverSearchInput.length > 0 && driverSearchInput.length < 2 
+                        ? "Type at least 2 characters to search" 
+                        : `${drivers.length} driver${drivers.length !== 1 ? 's' : ''} found`}
                     />
                   )}
                   renderOption={(props, option) => (
