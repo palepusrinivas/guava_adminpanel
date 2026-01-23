@@ -511,7 +511,12 @@ const TripManagement: React.FC<TripManagementProps> = ({
       </div>
 
       {/* Trip Details Modal */}
-      <Dialog open={isModalOpen} onClose={handleCloseModal} maxWidth="md" fullWidth>
+      <Dialog 
+        open={isModalOpen} 
+        onClose={handleCloseModal} 
+        maxWidth="md" 
+        fullWidth
+      >
         <DialogTitle>
           <Typography variant="h6" fontWeight="bold">
             Trip Details - {selectedTrip?.tripId}
@@ -610,6 +615,18 @@ const TripManagement: React.FC<TripManagementProps> = ({
                         <Typography variant="body1" fontWeight={500}>{selectedTrip.customerId}</Typography>
                       </Grid>
                     )}
+                    {selectedTrip.customerEmail && (
+                      <Grid item xs={6}>
+                        <Typography variant="body2" color="text.secondary">Email</Typography>
+                        <Typography variant="body1" fontWeight={500}>{selectedTrip.customerEmail}</Typography>
+                      </Grid>
+                    )}
+                    {selectedTrip.customerPhone && (
+                      <Grid item xs={6}>
+                        <Typography variant="body2" color="text.secondary">Phone</Typography>
+                        <Typography variant="body1" fontWeight={500}>{selectedTrip.customerPhone}</Typography>
+                      </Grid>
+                    )}
                     {selectedTrip.pickupLocation && (
                       <Grid item xs={12}>
                         <Typography variant="body2" color="text.secondary">Pickup Location</Typography>
@@ -656,6 +673,18 @@ const TripManagement: React.FC<TripManagementProps> = ({
                       <Grid item xs={6}>
                         <Typography variant="body2" color="text.secondary">Driver ID</Typography>
                         <Typography variant="body1" fontWeight={500}>{selectedTrip.driverId}</Typography>
+                      </Grid>
+                    )}
+                    {selectedTrip.driverEmail && (
+                      <Grid item xs={6}>
+                        <Typography variant="body2" color="text.secondary">Email</Typography>
+                        <Typography variant="body1" fontWeight={500}>{selectedTrip.driverEmail}</Typography>
+                      </Grid>
+                    )}
+                    {selectedTrip.driverPhone && (
+                      <Grid item xs={6}>
+                        <Typography variant="body2" color="text.secondary">Phone</Typography>
+                        <Typography variant="body1" fontWeight={500}>{selectedTrip.driverPhone}</Typography>
                       </Grid>
                     )}
                   </Grid>

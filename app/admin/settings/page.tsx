@@ -30,6 +30,8 @@ import {
   Notifications as NotificationsIcon,
   Settings as SettingsIcon,
   Save as SaveIcon,
+  Backup as BackupIcon,
+  Download as DownloadIcon,
 } from "@mui/icons-material";
 import toast from "react-hot-toast";
 import adminAxios from "@/utils/axiosConfig";
@@ -189,12 +191,14 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
   const [settings, setSettings] = useState<Record<string, any>>({});
+  const [downloadingBackup, setDownloadingBackup] = useState(false);
 
   const categories = [
     { id: "payment", label: "Payment", icon: <PaymentIcon /> },
     { id: "maps", label: "Maps & Location", icon: <MapIcon /> },
     { id: "notifications", label: "Notifications", icon: <NotificationsIcon /> },
     { id: "general", label: "General", icon: <SettingsIcon /> },
+    { id: "backup", label: "Database Backup", icon: <BackupIcon /> },
   ];
 
   useEffect(() => {
@@ -255,6 +259,65 @@ export default function SettingsPage() {
         [field]: value,
       },
     }));
+  };
+
+  const handleDownloadBackup = async () => {
+    if (!confirm("This will create and download a complete database backup. This may take a few minutes. Continue?")) {
+      return;
+    }
+
+    setDownloadingBackup(true);
+    try {
+      // Use adminAxios but with responseType: 'blob' for file download
+      const response = await adminAxios.get("/api/admin/backup/download", {
+        responseType: "blob",
+      });
+
+      // Get filename from Content-Disposition header or use default
+      const contentDisposition = response.headers["content-disposition"] || response.headers["Content-Disposition"];
+      let filename = "gauva_database_backup.sql";
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Create blob and download
+      const blob = new Blob([response.data], { type: "application/sql" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success("Database backup downloaded successfully!");
+    } catch (error: any) {
+      console.error("Error downloading backup:", error);
+      let errorMessage = "Failed to download database backup";
+      
+      // Try to extract error message from blob response if available
+      if (error.response?.data instanceof Blob) {
+        try {
+          const text = await error.response.data.text();
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch {
+          // If parsing fails, use default message
+        }
+      } else if (error.response?.data?.error || error.response?.data?.message) {
+        errorMessage = error.response.data.error || error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setDownloadingBackup(false);
+    }
   };
 
   const currentCategory = categories[tabValue].id;
@@ -320,9 +383,60 @@ export default function SettingsPage() {
         </Tabs>
       </Paper>
 
+      {/* Backup Section (Special handling) */}
+      {currentCategory === "backup" && (
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Box mb={3}>
+            <Typography variant="h6" fontWeight="bold" gutterBottom>
+              📦 Database Backup
+            </Typography>
+            <Typography variant="body2" color="text.secondary" paragraph>
+              Download a complete backup of your database. This backup includes all tables, data, and schema.
+              The backup is in PostgreSQL SQL format and can be restored using psql or pg_restore.
+            </Typography>
+            <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
+              <Typography variant="body2" fontWeight="bold" gutterBottom>
+                ⚠️ Security Notice
+              </Typography>
+              <Typography variant="body2">
+                Database backups contain sensitive information. Please:
+              </Typography>
+              <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 20 }}>
+                <li>Store backups in a secure location</li>
+                <li>Encrypt backups if storing them long-term</li>
+                <li>Do not share backup files with unauthorized personnel</li>
+                <li>Delete backups after they are no longer needed</li>
+              </ul>
+            </Alert>
+          </Box>
+          <Box>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={downloadingBackup ? <CircularProgress size={20} color="inherit" /> : <DownloadIcon />}
+              onClick={handleDownloadBackup}
+              disabled={downloadingBackup}
+              sx={{ 
+                bgcolor: "#120E43",
+                "&:hover": { bgcolor: "#0d0a2e" },
+                minWidth: 200
+              }}
+            >
+              {downloadingBackup ? "Creating Backup..." : "Download Database Backup"}
+            </Button>
+            <Typography variant="caption" display="block" sx={{ mt: 2, color: "text.secondary" }}>
+              Backup format: PostgreSQL SQL (plain text)
+              <br />
+              Restore command: <code style={{ background: "#f5f5f5", padding: "2px 4px", borderRadius: "3px" }}>psql -U username -d database_name &lt; backup_file.sql</code>
+            </Typography>
+          </Box>
+        </Paper>
+      )}
+
       {/* Settings Grid */}
-      <Grid container spacing={3}>
-        {filteredConfigs.map((config) => (
+      {currentCategory !== "backup" && (
+        <Grid container spacing={3}>
+          {filteredConfigs.map((config) => (
           <Grid item xs={12} md={6} key={config.key}>
             <Card>
               <CardContent>
@@ -429,6 +543,7 @@ export default function SettingsPage() {
           </Grid>
         ))}
       </Grid>
+      )}
     </Box>
   );
 }

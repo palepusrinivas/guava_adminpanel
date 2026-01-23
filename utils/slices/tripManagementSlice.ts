@@ -9,8 +9,12 @@ export interface Trip {
   date: string;
   customerName: string;
   customerId?: string;
+  customerEmail?: string;
+  customerPhone?: string;
   driverName: string | null;
   driverId?: string;
+  driverEmail?: string;
+  driverPhone?: string;
   tripType: "ride_request" | "parcel";
   vehicleType?: string; // "BIKE", "CAR", "AUTO", "MEGA", "SMALL_SEDAN", etc.
   status: TripStatus;

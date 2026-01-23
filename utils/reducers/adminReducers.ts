@@ -469,7 +469,11 @@ export const getZones = createAsyncThunk(
       }
       
       const response = await adminAxios.get(adminZonesUrl);
-      return response.data;
+      // Backend returns paginated response with 'content' array
+      // Extract the zones array from the response
+      const zones = response.data?.content || response.data || [];
+      console.log("[getZones] Fetched zones:", zones.length, "zones");
+      return Array.isArray(zones) ? zones : [];
     } catch (error) {
       if (axios.isAxiosError(error)) {
         return rejectWithValue(error.response?.data || "Failed to fetch zones");
